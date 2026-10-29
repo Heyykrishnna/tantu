@@ -1,0 +1,23 @@
+{
+  "name": "tantu",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A connected workspace for tasks, projects, calendars, email, and knowledge.",
+  "engines": {
+    "node": ">=24.0.0 <25",
+    "npm": ">=11.0.0 <12"
+  },
+  "packageManager": "npm@11.8.0",
+  "scripts": {
+    "setup": "npm --prefix frontend ci && npm --prefix backend ci",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "lint": "npm --prefix frontend run lint && npm --prefix backend run lint",
+    "typecheck": "npm --prefix frontend run typecheck && npm --prefix backend run typecheck",
+    "test": "npm --prefix backend run test",
+    "build": "npm --prefix frontend run build && npm --prefix backend run build",
+    "start:frontend": "npm --prefix frontend run start",
+    "start:backend": "npm --prefix backend run start",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build"
+  }
+}
