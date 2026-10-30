@@ -149,6 +149,38 @@ const shapes = {
       <circle cx="19" cy="12" r="1" />
     </>
   ),
+  decision: (
+    <>
+      <path d="m9 12 2 2 4-4" />
+      <path d="M5 7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" />
+    </>
+  ),
+  network: (
+    <>
+      <circle cx="12" cy="5" r="3" />
+      <circle cx="5" cy="19" r="3" />
+      <circle cx="19" cy="19" r="3" />
+      <path d="M7.5 17 10 7.5m6.5 9.5L14 7.5" />
+    </>
+  ),
+  plan: (
+    <>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18M8 14h4M8 18h6" />
+    </>
+  ),
+  kit: (
+    <>
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </>
+  ),
+  brain: (
+    <>
+      <path d="M12 2a4.5 4.5 0 0 0-4.5 4.5c0 .7.16 1.37.45 1.97A4.5 4.5 0 0 0 4.5 13a4.5 4.5 0 0 0 3 4.24V18a3 3 0 0 0 6 0v-.76A4.5 4.5 0 0 0 16.5 13a4.5 4.5 0 0 0-3.45-4.53c.29-.6.45-1.27.45-1.97A4.5 4.5 0 0 0 12 2z" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof shapes;

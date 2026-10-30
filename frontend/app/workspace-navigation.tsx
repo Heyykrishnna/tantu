@@ -9,6 +9,11 @@ export type WorkspaceView =
   | "pages"
   | "capture"
   | "promises"
+  | "decisions"
+  | "graph"
+  | "planning"
+  | "kits"
+  | "meetings"
   | "projects"
   | "calendar"
   | "mail"
@@ -117,8 +122,13 @@ export default function WorkspaceNavigation({
               ["capture", "Capture"],
               ["tasks", "Tasks"],
               ["promises", "Promises"],
+              ["planning", "Plan My Day"],
+              ["decisions", "Decisions"],
+              ["graph", "Context Graph"],
               ["pages", "Pages"],
               ["collections", "Collections"],
+              ["kits", "Workspace Kits"],
+              ["meetings", "Meeting Briefs"],
               ["projects", "Projects"],
               ["calendar", "Calendar"],
               ["mail", "Mail"],
@@ -139,7 +149,17 @@ export default function WorkspaceNavigation({
                       ? "folder"
                       : target === "collections"
                         ? "layers"
-                        : target
+                        : target === "decisions"
+                          ? "decision"
+                          : target === "graph"
+                            ? "network"
+                            : target === "planning"
+                              ? "plan"
+                              : target === "kits"
+                                ? "kit"
+                                : target === "meetings"
+                                  ? "brain"
+                                  : target
                 }
               />
               {label}

@@ -36,3 +36,4 @@ GRANT SELECT,INSERT,DELETE ON tantu.knowledge_embeds TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.capture_items,tantu.capture_reviews,tantu.promises,tantu.automation_rules,tantu.automation_runs TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.search_projections,tantu.archive_manifests,tantu.archive_tombstones TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.workspace_quotas,tantu.user_preferences,tantu.export_jobs TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.decisions,tantu.decision_revisions,tantu.context_nodes,tantu.context_edges TO tantu_runtime;

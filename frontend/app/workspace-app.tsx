@@ -24,6 +24,8 @@ import ProjectPanel from "./project-panel";
 import CapturePanel from "./capture-panel";
 import PromisePanel from "./promise-panel";
 import RulesPanel from "./rules-panel";
+import DecisionPanel from "./decision-panel";
+import ContextGraphPanel from "./context-graph-panel";
 import SearchModal from "./search-modal";
 import SignIn from "./sign-in";
 import RecordEditor from "./record-editor";
@@ -390,6 +392,11 @@ export default function WorkspaceApp() {
     pages: "Pages",
     capture: "Quick Capture",
     promises: "Promise Tracker",
+    decisions: "Decisions",
+    graph: "Context Graph",
+    planning: "Plan My Day",
+    kits: "Workspace Kits",
+    meetings: "Meeting Briefs",
     rules: "Automation Rules",
     activity: "Activity",
     settings: "Workspace settings",
@@ -657,6 +664,18 @@ export default function WorkspaceApp() {
               workspaceId={workspaceId}
               csrf={csrf}
               currentUserId={user.id}
+            />
+          ) : view === "decisions" ? (
+            <DecisionPanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
+            />
+          ) : view === "graph" ? (
+            <ContextGraphPanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
             />
           ) : view === "rules" ? (
             <RulesPanel
