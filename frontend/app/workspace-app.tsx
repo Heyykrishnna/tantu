@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import { acknowledgment, api, ApiError, canonical, choice, items, page, record, session, string, workspace } from "../lib/api";
 import type { User, Workspace } from "../lib/api";
 import type { CanonicalRecord } from "../lib/contracts";
+import ProjectPanel from "./project-panel";
 import SignIn from "./sign-in";
 import RecordEditor from "./record-editor";
 import WorkspaceSettings from "./workspace-settings";
@@ -58,7 +59,7 @@ export default function WorkspaceApp() {
     const url = new URLSearchParams(window.location.search);
     setWorkspaceId(spaces.find((item) => item.id === url.get("w"))?.id ?? spaces[0]?.id ?? "");
     const initialView = url.get("view");
-    if (initialView && ["tasks", "pages", "activity", "settings", "operations"].includes(initialView)) setView(choice(initialView, ["tasks", "pages", "activity", "settings", "operations"]));
+    if (initialView && ["tasks", "pages", "activity", "settings", "operations", "projects"].includes(initialView)) setView(choice(initialView, ["tasks", "pages", "activity", "settings", "operations", "projects"]));
   }, []);
   const authenticationFailure = useCallback((error: unknown) => {
     if (error instanceof ApiError && error.status === 401) setSignedOut(true);
@@ -161,7 +162,7 @@ export default function WorkspaceApp() {
     window.history.replaceState(null, "", `/?w=${workspaceId}&view=${view}${entry ? "&r=" + entry.id : ""}`);
   }
 
-  const viewTitle = { tasks: "Tasks", pages: "Pages", activity: "Activity", settings: "Workspace settings", operations: "Operations" }[view];
+  const viewTitle = { tasks: "Tasks", pages: "Pages", activity: "Activity", settings: "Workspace settings", operations: "Operations", projects: "Projects" }[view];
   const navigation = user ? <WorkspaceNavigation user={user} workspaces={workspaces} workspaceId={workspaceId} view={view} manager={manager} busy={busy} onNavigate={navigate} onCreateWorkspace={newWorkspace} onSearch={() => { drawer.current?.close(); dialog.current?.showModal(); }} onLogout={() => void logout()} /> : null;
 
   if (loading) return <main className="grid min-h-dvh place-content-center gap-5 px-6 text-center" role="status"><div className="mx-auto inline-flex items-center gap-2.5"><Brand /></div><div className={`flex items-center justify-center gap-2 text-[12px] ${mutedClass}`}><Icon name="refresh" className="size-3.5 motion-safe:animate-spin" />Opening your workspace…</div></main>;
@@ -182,6 +183,7 @@ export default function WorkspaceApp() {
         <div className="mb-5 grid gap-2 empty:hidden"><Notice role="alert" tone="error">{message}</Notice><Notice tone="success">{notice}</Notice></div>
         {!currentWorkspace ? <section className={`${panelClass} mx-auto my-8 max-w-lg p-7 sm:p-10`}><span className="mb-6 inline-flex rounded-xl bg-violet-400/10 p-3 text-[#9c94e3]"><Icon name="folder" className="size-6" /></span><h1 className={`${headingClass} mb-3 text-[25px]`}>Make space for your work.</h1><p className={`mb-7 text-[12px] leading-relaxed ${mutedClass}`}>Create a workspace for your tasks and ideas. You decide what stays private and what you share.</p><form onSubmit={newWorkspace} className="grid gap-5"><Field label="Workspace name"><input name="name" required maxLength={100} placeholder="Personal workspace" className={inputClass} /></Field><Button type="submit" variant="primary" disabled={busy}>Create your workspace<Icon name="arrow" className="size-4" /></Button></form></section>
         : view === "settings" ? <WorkspaceSettings key={workspaceId} workspace={currentWorkspace} csrf={csrf} onJoined={() => void authenticate()} />
+        : view === "projects" ? <ProjectPanel key={workspaceId} workspaceId={workspaceId} userId={user.id} csrf={csrf} onOpenTask={(id) => { navigate("tasks"); void open(id, "tasks"); }} />
         : view === "activity" || view === "operations" ? <ActivityPanel key={workspaceId + view} workspaceId={workspaceId} csrf={csrf} operations={view === "operations"} /> : <>
           <header className="mb-7 flex flex-wrap items-center justify-between gap-4"><div><div className="mb-2 flex items-center gap-2"><h1 className={`${headingClass} text-[25px] leading-tight`}>{view === "tasks" ? "My tasks" : "Your pages"}</h1><span className="rounded-md border border-[#dedff0] bg-[#f0effa] px-1.5 text-[10px] text-[#8c83bc] dark:border-[#3b364d] dark:bg-[#2b2838] dark:text-[#aca2e1]">{currentWorkspace.role}</span></div><p className={`text-[12px] ${mutedClass}`}>{view === "tasks" ? "A clear view of what’s next. One task at a time." : "Notes, plans, and the ideas that connect your work."}</p></div>{currentWorkspace.role !== "guest" && <Button variant="primary" aria-label={view === "tasks" ? "+ New task" : "+ New page"} onClick={() => { setSelected(null); setEditorOpen(true); setEditorVersion((value) => value + 1); window.history.replaceState(null, "", `/?w=${workspaceId}&view=${view}&new=1`); }}><Icon name="plus" className="size-4" />New {view === "tasks" ? "task" : "page"}</Button>}</header>
           <RecordOverview entries={entries} kind={view === "tasks" ? "task" : "page"} loading={loadingRecords} />

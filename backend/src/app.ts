@@ -1,3 +1,4 @@
+import { projectRoutes } from "./modules/projects/routes.js";
 import { randomUUID } from "node:crypto";
 import helmet from "@fastify/helmet";
 import Fastify, { LogController } from "fastify";
@@ -58,6 +59,7 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
     recordRoutes(app, identity, new Records(dependencies.database, queue));
     fileRoutes(app, identity, files);
     operationalRoutes(app, identity, queue);
+    projectRoutes(app, identity);
     app.get("/health/ready", async (_request, reply) => {
       try {
         await dependencies.database.pool.query("SELECT 1");
