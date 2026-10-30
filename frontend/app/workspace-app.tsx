@@ -24,6 +24,7 @@ import ProjectPanel from "./project-panel";
 import CapturePanel from "./capture-panel";
 import PromisePanel from "./promise-panel";
 import RulesPanel from "./rules-panel";
+import SearchModal from "./search-modal";
 import SignIn from "./sign-in";
 import RecordEditor from "./record-editor";
 import WorkspaceSettings from "./workspace-settings";
@@ -59,6 +60,7 @@ export default function WorkspaceApp() {
   const [entries, setEntries] = useState<CanonicalRecord[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [selected, setSelected] = useState<CanonicalRecord | null>(null);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorVersion, setEditorVersion] = useState(0);
   const [query, setQuery] = useState("");
@@ -115,6 +117,9 @@ export default function WorkspaceApp() {
         [
           "tasks",
           "pages",
+          "capture",
+          "promises",
+          "rules",
           "activity",
           "settings",
           "operations",
@@ -128,6 +133,9 @@ export default function WorkspaceApp() {
           choice(initialView, [
             "tasks",
             "pages",
+            "capture",
+            "promises",
+            "rules",
             "activity",
             "settings",
             "operations",
@@ -176,7 +184,7 @@ export default function WorkspaceApp() {
     const keyboard = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        dialog.current?.showModal();
+        setSearchModalOpen(true);
       }
     };
     const back = () => window.location.reload();
@@ -403,7 +411,7 @@ export default function WorkspaceApp() {
       onCreateWorkspace={newWorkspace}
       onSearch={() => {
         drawer.current?.close();
-        dialog.current?.showModal();
+        setSearchModalOpen(true);
       }}
       onLogout={() => void logout()}
     />
@@ -915,6 +923,24 @@ export default function WorkspaceApp() {
           Escape to close · Your current access applies to every search
         </p>
       </dialog>
+      <SearchModal
+        isOpen={searchModalOpen}
+        workspaceId={workspaceId}
+        onClose={() => setSearchModalOpen(false)}
+        onSelectResult={(targetType, recordId) => {
+          if (targetType === "task") {
+            navigate("tasks");
+            void open(recordId, "tasks");
+          } else if (targetType === "page") {
+            navigate("pages");
+            void open(recordId, "pages");
+          } else if (targetType === "project") {
+            navigate("projects");
+          } else if (targetType === "promise") {
+            navigate("promises");
+          }
+        }}
+      />
     </div>
   );
 }

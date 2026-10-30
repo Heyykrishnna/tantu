@@ -1,5 +1,6 @@
 import { captureRoutes } from "./modules/capture-relationships/routes.js";
 import { automationRoutes } from "./modules/automation/routes.js";
+import { searchArchiveRoutes } from "./modules/search-archive/routes.js";
 import { templateRoutes } from "./modules/knowledge/template-routes.js";
 import { sourceRoutes } from "./modules/knowledge/source-routes.js";
 import { collaborationRoutes } from "./modules/knowledge/collaboration-routes.js";
@@ -98,6 +99,7 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
     sourceRoutes(app, identity);
     captureRoutes(app, identity);
     automationRoutes(app, identity);
+    searchArchiveRoutes(app, identity);
     app.get("/health/ready", async (_request, reply) => {
       try {
         await dependencies.database.pool.query("SELECT 1");
