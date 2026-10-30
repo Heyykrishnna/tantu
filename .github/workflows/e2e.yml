@@ -1,0 +1,55 @@
+name: End-to-End Testing
+
+on:
+  push:
+    paths:
+      - 'discovery/**'
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/e2e.yml'
+  pull_request:
+    paths:
+      - 'discovery/**'
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-playwright:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            discovery/package-lock.json
+      - name: Install dependencies
+        run: |
+          npm --prefix frontend ci
+          npm --prefix discovery ci
+      - name: Install Playwright browser dependencies
+        working-directory: discovery
+        run: npx playwright install --with-deps chromium
+      - name: Run discovery unit test suite
+        run: npm --prefix discovery test
+      - name: Execute Playwright browser journeys
+        working-directory: discovery
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-artifacts
+          path: discovery/.artifacts/
+          if-no-files-found: ignore

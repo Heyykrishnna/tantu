@@ -1,0 +1,49 @@
+name: Backend Testing & Validation
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - 'contracts/**'
+      - 'package.json'
+      - '.nvmrc'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'contracts/**'
+      - 'package.json'
+      - '.nvmrc'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install backend dependencies
+        run: npm --prefix backend ci
+      - name: Run backend ESLint
+        run: npm --prefix backend run lint
+      - name: Run strict TypeScript check
+        run: npm --prefix backend run typecheck
+      - name: Verify OpenAPI contract synchronization
+        run: npm --prefix backend run contracts:check
+      - name: Run backend unit and integration test suite
+        run: npm --prefix backend run test
+      - name: Build backend production distribution
+        run: npm --prefix backend run build
