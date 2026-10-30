@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { Queue, eventQueue } from "../../src/workers/queue.js";
 import { publishEvents } from "../../src/workers/events.js";
 import { fixture } from "./support.js";
-import type { CanonicalRecord } from "../../src/modules/work/contracts.js";
+import type { CanonicalRecord } from "../../src/modules/work-management/contracts.js";
 
 test("canonical records: persistence, replay, version conflicts, RLS, inheritance and durable jobs", { timeout: 30_000 }, async () => {
   const f = await fixture();

@@ -19,7 +19,9 @@
     "test:integration": "node --import tsx --test test/integration/*.test.ts",
     "bootstrap": "node --env-file-if-exists=.env --import tsx scripts/bootstrap.ts",
     "worker": "node --env-file-if-exists=.env --import tsx src/workers/server.ts",
-    "start:worker": "node --env-file-if-exists=.env dist/workers/server.js"
+    "start:worker": "node --env-file-if-exists=.env dist/workers/server.js",
+    "contracts:types": "node scripts/export-types.mjs",
+    "contracts:check": "node scripts/export-types.mjs --check"
   },
   "dependencies": {
     "@fastify/helmet": "13.2.0",

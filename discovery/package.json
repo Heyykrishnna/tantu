@@ -14,7 +14,8 @@
     "test": "node --import tsx --test test/*.unit.test.ts",
     "test:browser": "playwright test",
     "test:postgres": "node --import tsx --test test/postgres.integration.test.ts",
-    "check": "npm run lint && npm run typecheck && npm test"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "test:l1a:browser": "playwright test --config playwright.l1a.config.ts"
   },
   "dependencies": {
     "@js-temporal/polyfill": "0.5.1",

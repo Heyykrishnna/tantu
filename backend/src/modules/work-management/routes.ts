@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { object, text, uuid } from "../../http/schema.js";
-import type { Identity } from "../identity/service.js";
+import type { Identity } from "../workspace-access/service.js";
 import type { Records } from "./service.js";
 import { createSchema, deleteSchema, recordColumns, recordParams, updateSchema } from "./contracts.js";
 import type { CanonicalRecord, RecordInput } from "./contracts.js";

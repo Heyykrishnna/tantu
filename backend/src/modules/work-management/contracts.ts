@@ -18,9 +18,9 @@ export interface CanonicalRecord {
   id: string; workspaceId: string; ownerId: string; kind: "task" | "page"; title: string;
   visibility: "private" | "workspace"; parentId: string | null; body: Document; status: "open" | "done";
   priority: "low" | "normal" | "high" | "urgent"; deadline: string | null; estimateMinutes: number | null;
-  version: number; createdAt: string; updatedAt: string;
+  version: number; canEdit: boolean; createdAt: string; updatedAt: string;
 }
-export const recordColumns = 'id,workspace_id AS "workspaceId",owner_id AS "ownerId",kind,title,visibility,parent_id AS "parentId",body,status,priority,deadline::text,estimate_minutes AS "estimateMinutes",version,created_at AS "createdAt",updated_at AS "updatedAt"';
+export const recordColumns = 'id,workspace_id AS "workspaceId",owner_id AS "ownerId",kind,title,visibility,parent_id AS "parentId",body,status,priority,deadline::text,estimate_minutes AS "estimateMinutes",version,(owner_id=tantu.actor() OR tantu.can_access(id,true)) AS "canEdit",created_at AS "createdAt",updated_at AS "updatedAt"';
 const fields = { title: { ...text(200), pattern: "\\S" }, visibility: { enum: ["private", "workspace"] }, parentId: { anyOf: [uuid, { type: "null" }] }, body: documentSchema, status: { enum: ["open", "done"] }, priority: { enum: ["low", "normal", "high", "urgent"] }, deadline: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] }, estimateMinutes: { anyOf: [{ type: "integer", minimum: 1, maximum: 10080 }, { type: "null" }] }, operationId: uuid };
 export const createSchema = object(fields, ["title", "operationId"]);
 export const updateSchema = object({ ...fields, expectedVersion: { type: "integer", minimum: 1 } }, ["operationId", "expectedVersion", "title"]);

@@ -5,7 +5,7 @@ import { Pool } from "pg";
 import { startPostgresFixture } from "../../../discovery/src/postgres-fixture.js";
 import { Database } from "../../src/platform/database/database.js";
 import { migrate } from "../../src/platform/database/migrate.js";
-import { createAccount } from "../../src/modules/identity/service.js";
+import { createAccount } from "../../src/modules/workspace-access/service.js";
 import { createApp } from "../../src/app.js";
 import { readEnvironment } from "../../src/config/environment.js";
 import { initializeJobs } from "../../src/workers/queue.js";
@@ -28,9 +28,9 @@ export async function fixture(overrides: Partial<RuntimeSettings> = {}) {
   const app = createApp(readEnvironment({ NODE_ENV: "test" }), { database, settings: runtime });
   async function account(email: string) {
     const userId = await database.transaction(undefined, (client) => createAccount(client, email, email.split("@")[0] ?? "Account", testPassword));
-    const response = await app.inject({ method: "POST", url: "/api/v1/auth/login", headers: { origin: settings.origin }, payload: { email, password: testPassword } });
+    const response = await app.inject({ method: "POST", url: "/api/v1/auth/login", headers: { origin: runtime.origin }, payload: { email, password: testPassword } });
     if (response.statusCode !== 200) throw new Error("Fixture login failed: " + response.body);
-    const headers = { origin: settings.origin, cookie: response.cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "), "x-csrf-token": response.json<{ csrf: string }>().csrf };
+    const headers = { origin: runtime.origin, cookie: response.cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "), "x-csrf-token": response.json<{ csrf: string }>().csrf };
     const workspace = await app.inject({ method: "POST", url: "/api/v1/workspaces", headers, payload: { name: "Workspace" } });
     if (workspace.statusCode !== 201) throw new Error("Fixture workspace failed: " + workspace.body);
     return { userId, headers, workspaceId: workspace.json<{ id: string }>().id };

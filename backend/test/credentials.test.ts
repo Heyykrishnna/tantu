@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { hashPassword, verifyPassword } from "../src/modules/identity/credentials.js";
+import { hashPassword, verifyPassword } from "../src/modules/workspace-access/credentials.js";
 import { readRuntimeSettings } from "../src/config/runtime.js";
 import { readEnvironment } from "../src/config/environment.js";
 

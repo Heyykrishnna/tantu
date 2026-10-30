@@ -3,7 +3,7 @@ import type { PoolClient } from "pg";
 import type { RuntimeSettings } from "../../config/runtime.js";
 import type { Database, Scope } from "../../platform/database/database.js";
 import { Failure } from "../../platform/failure.js";
-import { digest } from "../identity/credentials.js";
+import { digest } from "../workspace-access/credentials.js";
 import { scanQueue } from "../../workers/queue.js";
 import type { Queue } from "../../workers/queue.js";
 import { currentJobAccess, jobScope } from "../../workers/events.js";

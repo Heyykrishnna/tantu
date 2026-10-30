@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { object, text, uuid } from "../../http/schema.js";
 import { Failure } from "../../platform/failure.js";
-import type { Identity } from "../identity/service.js";
+import type { Identity } from "../workspace-access/service.js";
 import { fileColumns } from "./service.js";
 import type { FileMetadata, Files, Upload } from "./service.js";
 import { scanQueue } from "../../workers/queue.js";

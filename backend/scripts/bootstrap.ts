@@ -1,5 +1,5 @@
 import { Database } from "../src/platform/database/database.js";
-import { createAccount } from "../src/modules/identity/service.js";
+import { createAccount } from "../src/modules/workspace-access/service.js";
 
 const connectionString = process.env.DATABASE_URL;
 const email = process.env.BOOTSTRAP_EMAIL;

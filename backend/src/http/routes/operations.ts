@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { object, uuid, workspaceParams } from "../schema.js";
-import type { Identity } from "../../modules/identity/service.js";
+import type { Identity } from "../../modules/workspace-access/service.js";
 import type { Queue } from "../../workers/queue.js";
 import { Failure } from "../../platform/failure.js";
 import { sqlAdapter } from "../../platform/database/adapter.js";

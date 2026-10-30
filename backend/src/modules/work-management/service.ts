@@ -3,7 +3,7 @@ import type { Database, Scope } from "../../platform/database/database.js";
 import type { Queue } from "../../workers/queue.js";
 import { eventQueue } from "../../workers/queue.js";
 import { Failure } from "../../platform/failure.js";
-import { digest } from "../identity/credentials.js";
+import { digest } from "../workspace-access/credentials.js";
 import { recordColumns } from "./contracts.js";
 import type { CanonicalRecord, RecordInput } from "./contracts.js";
 

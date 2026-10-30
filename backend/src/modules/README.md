@@ -1,6 +1,6 @@
 # Domain module ownership
 
-This is the canonical module map for the backend scaffold. Reserved directories are empty by design; there are no product routes, fake responses, or no-op service implementations.
+This is the canonical module map. L1A implements workspace access, canonical task/page persistence and secure file services; the remaining domains retain their reserved boundaries. Task/page mutations share one canonical record service under work-management, so pages and tasks do not acquire competing identity, version or permission systems. File services are cross-domain attachment infrastructure. No provider routes or fabricated production responses are registered.
 
 | Module | Responsibility | Future operations | Required behavioral evidence |
 | --- | --- | --- | --- |
