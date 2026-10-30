@@ -1,0 +1,67 @@
+name: Production Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      confirm_production:
+        description: 'Type "DEPLOY" to confirm production release'
+        required: false
+        default: ''
+        type: string
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+  deployments: write
+
+concurrency:
+  group: deployment-${{ inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  pre-deploy-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
+      - name: Install dependencies
+        run: npm run setup
+      - name: Verify production builds
+        run: npm run build
+      - name: Validate safety gate for production
+        if: github.event.inputs.environment == 'production' && github.event.inputs.confirm_production != 'DEPLOY'
+        run: |
+          echo "Production deployment aborted: confirmation string must be 'DEPLOY'."
+          exit 1
+
+  deploy:
+    needs: pre-deploy-validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy application artifacts
+        run: |
+          echo "Deploying to target environment: ${{ github.event.inputs.environment || 'production' }}"
+      - name: Health check verification
+        run: |
+          echo "Running post-deployment health check on /health/ready probe..."

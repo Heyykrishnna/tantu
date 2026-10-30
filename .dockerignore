@@ -1,0 +1,15 @@
+.git
+.github
+node_modules
+*/node_modules
+.next
+*/.next
+dist
+*/dist
+.artifacts
+*/.artifacts
+local-docs
+phases
+*.md
+*.log
+.DS_Store
