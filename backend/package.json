@@ -15,13 +15,15 @@
     "test": "node --import tsx --test test/*.test.ts",
     "build": "tsc --project tsconfig.build.json",
     "start": "node --env-file-if-exists=.env dist/server.js",
-    "migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts",
+    "migrate": "node --env-file-if-exists=.env.operator --import tsx scripts/migrate.ts",
     "test:integration": "node --import tsx --test test/integration/*.test.ts",
-    "bootstrap": "node --env-file-if-exists=.env --import tsx scripts/bootstrap.ts",
+    "bootstrap": "node --env-file-if-exists=.env.operator --import tsx scripts/bootstrap.ts",
     "worker": "node --env-file-if-exists=.env --import tsx src/workers/server.ts",
     "start:worker": "node --env-file-if-exists=.env dist/workers/server.js",
     "contracts:types": "node scripts/export-types.mjs",
-    "contracts:check": "node scripts/export-types.mjs --check"
+    "contracts:check": "node scripts/export-types.mjs --check && node --import tsx scripts/export-openapi.ts --check",
+    "contracts:openapi": "node --import tsx scripts/export-openapi.ts",
+    "cleanup:files": "node --env-file-if-exists=.env.operator --import tsx scripts/cleanup-files.ts"
   },
   "dependencies": {
     "@fastify/helmet": "13.2.0",

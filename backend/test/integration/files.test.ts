@@ -66,6 +66,10 @@ test("private files: quarantine, protocol framing, signed access, revocation and
     await assert.rejects(files.store.read(id), /ENOENT/);
     assert.equal((await f.owner.query("SELECT * FROM tantu.deletions WHERE removed_at IS NOT NULL")).rowCount, 1);
     assert.equal((await f.app.inject({ method: "POST", url: fileBase, headers: a.headers, payload: { ...payload, operationId: randomUUID(), name: "../escape.txt" } })).statusCode, 400);
+    assert.equal((await f.app.inject({ method: "POST", url: fileBase, headers: a.headers, payload: { ...payload, operationId: randomUUID(), content: "not base64!" } })).statusCode, 400);
+    const maximum = Buffer.alloc(5 * 1024 * 1024, 65);
+    assert.equal((await f.app.inject({ method: "POST", url: fileBase, headers: a.headers, payload: { ...payload, operationId: randomUUID(), content: maximum.toString("base64") } })).statusCode, 201);
+    assert.equal((await f.app.inject({ method: "POST", url: fileBase, headers: a.headers, payload: { ...payload, operationId: randomUUID(), content: Buffer.concat([maximum, Buffer.from("a")]).toString("base64") } })).statusCode, 413);
     await f.owner.query("UPDATE tantu.memberships SET active=false WHERE user_id=$1 AND workspace_id=$2", [a.userId, a.workspaceId]);
     assert.equal((await f.app.inject({ url: fileBase, headers: a.headers })).statusCode, 404);
   } finally { await queue.stop(); await f.close(); await promisify(scanner.close.bind(scanner))(); }

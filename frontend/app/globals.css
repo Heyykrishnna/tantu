@@ -134,3 +134,8 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 [data-theme="dark"] .workspace-switch select, [data-theme="dark"] .sidebar nav button[aria-current="page"], [data-theme="dark"] .record-row.selected, [data-theme="dark"] .list-heading { background: #354335; color: var(--ink); }
 [data-theme="dark"] .sidebar nav button, [data-theme="dark"] .sidebar-footer, [data-theme="dark"] .workspace-footer, [data-theme="dark"] .notice, [data-theme="dark"] .tag { color: var(--ink); }
 [data-theme="dark"] .notice, [data-theme="dark"] .tag { background: #454735; }
+
+[data-theme="dark"] input::placeholder, [data-theme="dark"] textarea::placeholder { color: #bcc4b6; }
+[data-theme="dark"] .avatar { color: #242d28; }
+[data-theme="dark"] .welcome-story { background: #303e2d; }
+[data-theme="dark"] .welcome-story > p:not(.eyebrow), [data-theme="dark"] .welcome-note { color: var(--muted); }

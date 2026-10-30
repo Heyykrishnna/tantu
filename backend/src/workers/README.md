@@ -1,7 +1,9 @@
-# Durable worker boundary
+# Durable workers
 
-No worker process or background timer is started by this scaffold. Future worker entry points will run approved provider operations, reconciliation, projections, archive jobs, and automation through the selected durable job system.
+The separate worker process runs pg-boss canonical-event checkpoints and quarantined file scans. It checks current scope at execution, uses bounded retries/backoff, monotonic attempt/token fences and queue-row locks, and commits database effects with job acknowledgement. Internal jobs have a 60-second expiration and a dead-letter path; no mail or calendar provider effect is implemented.
 
-Workers must revalidate current authority, use leases/checkpoints and bounded retries, publish truthful outcomes, and close resources on shutdown. Replayed app-owned events deduplicate by operation/event identity. An uncertain mail send requires reconciliation before another attempt.
+Start development workers with `npm run worker` from the backend package, or compiled workers with `npm run start:worker`. Migration operators initialize queues; runtime instances disable schema migration. HTTP never silently starts a consumer.
 
-Keep persistent workers separate from the HTTP lifecycle and frontend hosting. Add a worker command only when its queue, handlers, operational health, failure tests, and deployment lifecycle are implemented.
+The local worker handles one job at a time per process. Signal shutdown stops new claims, lets bounded current work finish, then closes queue/database resources. File processing uses the private shared directory and a trusted ClamAV endpoint. An outage keeps data quarantined/unavailable. Scope revocation discards unauthorized queued processing rather than using stale authority.
+
+Authorized workspace operations expose bounded metadata and permit cancellation of pending jobs or retry of failed internal work. A separate operator-only cleanup command reconciles deleted-ancestor files, revoked deletion jobs and aged crash orphans. See the [runbook](../../../docs/l1a/operations.md). Future remote operations must add explicit reviewed intent and uncertain-result reconciliation before replay.

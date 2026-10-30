@@ -40,7 +40,7 @@ export function registerErrorHandlers(app: FastifyInstance): void {
 
     if (statusCode >= 500) {
       request.log.error({ event: "request_failed", requestId: request.id, statusCode });
-    }
+    } else request.log.warn({ event: "request_rejected", requestId: request.id, statusCode });
 
     return reply.code(statusCode).send({
       ...(error instanceof Failure ? { code: error.code, message: error.message } : describeError(statusCode)),

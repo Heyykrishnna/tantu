@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import helmet from "@fastify/helmet";
 import Fastify, { LogController } from "fastify";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, RouteOptions } from "fastify";
 import type { ServerConfig } from "./config/environment.js";
 import type { RuntimeSettings } from "./config/runtime.js";
 import { registerErrorHandlers } from "./http/errors.js";
@@ -18,7 +18,7 @@ import { operationalRoutes } from "./http/routes/operations.js";
 
 export interface AppDependencies { database: Database; settings: RuntimeSettings }
 
-export function createApp(config: ServerConfig, dependencies?: AppDependencies): FastifyInstance {
+export function createApp(config: ServerConfig, dependencies?: AppDependencies, captureRoute?: (options: RouteOptions) => void): FastifyInstance {
   const app = Fastify({
     logger:
       config.nodeEnvironment === "test"
@@ -44,6 +44,7 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies):
   });
 
   registerErrorHandlers(app);
+  if (captureRoute) app.addHook("onRoute", captureRoute);
   app.register(helmet);
   app.register(healthRoutes);
   if (dependencies) {

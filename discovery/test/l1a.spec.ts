@@ -21,7 +21,7 @@ test.beforeAll(async () => {
   server.stdout?.on("data", (chunk: Buffer) => { serverOutput = (serverOutput + chunk.toString()).slice(-20_000); });
   server.stderr?.on("data", (chunk: Buffer) => { serverOutput = (serverOutput + chunk.toString()).slice(-20_000); });
   for (let attempt = 0; attempt < 100; attempt++) {
-    try { if ((await fetch("http://localhost:3100")).ok) return; } catch (error) { if (!(error instanceof Error)) throw error; }
+    try { if (serverOutput.includes("Ready in") && (await fetch("http://localhost:3100")).ok) return; } catch (error) { if (!(error instanceof Error)) throw error; }
     if (server.exitCode !== null) throw new Error("Frontend stopped: " + serverOutput);
     await setTimeout(200);
   }
@@ -78,6 +78,15 @@ test("real task/page persistence, conflict recovery, keyboard and responsive she
   await expect(page.getByRole("button", { name: "Save changes", exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByLabel("Page text", { exact: true })).toHaveValue("# A careful beginning\n<script>unsafe text stays text</script>");
+  const parentId = new URL(page.url()).searchParams.get("r");
+  await page.getByRole("button", { name: "Add nested page", exact: true }).click();
+  await expect(page.getByLabel("Parent page ID", { exact: false })).toHaveValue(parentId ?? "");
+  await page.getByLabel("Title", { exact: true }).fill("Nested release checklist");
+  await page.getByRole("button", { name: "Create page", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Open parent page", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Open parent page", exact: true }).click();
+  await expect(page.getByLabel("Title", { exact: true })).toHaveValue("Release notes");
+  expect(new URL(page.url()).searchParams.get("r")).toBe(parentId);
   await page.getByRole("button", { name: "View history" }).click();
   await expect(page.getByText(/Version 1 ·/)).toBeVisible();
   await page.keyboard.press(process.platform === "darwin" ? "Meta+k" : "Control+k");
@@ -90,6 +99,9 @@ test("real task/page persistence, conflict recovery, keyboard and responsive she
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile.png", import.meta.url)), fullPage: true });
+  await page.getByRole("button", { name: "Toggle light and dark theme" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.screenshot({ path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile-dark.png", import.meta.url)), fullPage: true });
   expect(errors).toEqual([]);
 });
 

@@ -15,8 +15,8 @@ export class Database {
   }
 
   async verifyRole(): Promise<void> {
-    const result = await this.pool.query<{ unsafe: boolean }>("SELECT rolsuper OR rolbypassrls AS unsafe FROM pg_roles WHERE rolname=current_user");
-    if (result.rows[0]?.unsafe !== false) throw new Error("Runtime database role must not be superuser or bypass row security.");
+    const result = await this.pool.query<{ unsafe: boolean }>("SELECT rolsuper OR rolbypassrls OR EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='tantu' AND c.relkind IN ('r','p') AND pg_has_role(current_user,c.relowner,'MEMBER')) AS unsafe FROM pg_roles WHERE rolname=current_user");
+    if (result.rows[0]?.unsafe !== false) throw new Error("Runtime database role must not be superuser, bypass row security, or inherit canonical table ownership.");
     await this.pool.query("SELECT 1 FROM tantu.records LIMIT 0");
   }
 

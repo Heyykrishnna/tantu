@@ -1,11 +1,11 @@
-# Network contract policy
+# Network contracts
 
-The frontend and backend are separate npm packages. There is no shared business-logic package or speculative domain DTO layer in this scaffold.
+The implemented local L1A API is [l1a.openapi.json](l1a.openapi.json), generated from registered Fastify request schemas and strict canonical response schemas. Auxiliary responses without a schema are explicitly described; they are not falsely advertised as fully specified. Browser response parsers validate the fields the UI uses.
 
-The implemented transport surface is `GET /health/live`, returning HTTP 200 with `{"status":"ok"}` when the backend process can handle a request. It is liveness only. Other routes return a sanitized error with `code`, `message`, and a server-generated `requestId`.
+Canonical task/page TypeScript interfaces are generated into the frontend from the backend source. Run `npm --prefix backend run contracts:types` and `npm --prefix backend run contracts:openapi` after changing interfaces or route schemas. `contracts:check` rejects stale artifacts. Generation captures registration metadata without starting HTTP, connecting a database or creating data.
 
-The [L0 OpenAPI baseline](openapi.json) specifies strict draft request schemas, current-authorization requirements, operation/version identity, bounded search, reviewed external effects, and stable failures. Only liveness is implemented; every product operation is explicitly marked `draft-not-registered`. The isolated discovery suite compiles and tests these schemas without registering product routes.
+The [L0 OpenAPI baseline](openapi.json) is preserved as a historical draft. Its product operations are marked `draft-not-registered`; it must not be treated as the current implemented-route registry. Future calendar, mail, search and reviewed-effect operations remain unregistered until their actual slices are built.
 
-The domain prefix is `/api/v1`. Generate or validate frontend clients against the authoritative contract as endpoints are implemented rather than hand-maintaining a second domain model. Contract checks do not prove production authorization or provider behavior.
+Current `/api/v1` routes use a server-side session cookie, live workspace/record authorization and CSRF/Origin checks for unsafe requests. Canonical mutations require UUID operation identity; updates/deletes require expected versions. Lists use bounded keyset pagination. Errors expose only stable code, sanitized message and generated request ID. `/health/live` is process liveness; `/health/ready` is an HTTP database probe.
 
-Every mutating contract must define actor/scope, input validation, record version, operation identity, stable errors, pending remote effects, and permission checks. Searches and collections must use bounded pagination and must not reveal unauthorized records through counts, snippets, relationships, or cursors.
+The backend owns authorization and durability. Generated types and successful schema checks cannot certify provider support, malware detection, manual accessibility or production readiness. See [L1A evidence](../docs/l1a/readiness.md).

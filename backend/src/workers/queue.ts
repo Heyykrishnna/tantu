@@ -20,14 +20,26 @@ export async function initializeJobs(pool: Pool): Promise<void> {
 export class Queue {
   readonly boss: PgBoss;
   constructor(readonly database: Database) {
-    this.boss = new PgBoss({ db: sqlAdapter(database.pool), schema: "tantu_jobs", migrate: false, createSchema: false, supervise: false, schedule: false });
+    this.boss = new PgBoss({ db: sqlAdapter(database.pool), schema: "tantu_jobs", migrate: false, createSchema: false, supervise: false, schedule: false, reindex: false });
     this.boss.on("error", () => process.stderr.write("Queue operation failed.\n"));
+    this.boss.on("warning", () => process.stderr.write(JSON.stringify({ event: "queue_warning" }) + "\n"));
   }
   async start(): Promise<void> { await this.boss.start(); }
   async stop(): Promise<void> { await this.boss.stop(); }
 
   async enqueue(client: PoolClient, queue: string, id: string, data: { workspaceId: string; userId: string; recordId: string; fileId?: string }): Promise<void> {
     await this.boss.send(queue, data, { id, db: sqlAdapter(client) });
+  }
+
+  async failAttempt(queue: string, id: string, attempt: number, token: string): Promise<boolean> {
+    return this.database.transaction(undefined, async (client) => {
+      const claim = await client.query("SELECT id FROM tantu.job_claims WHERE id=$1 AND attempt=$2 AND token=$3 AND NOT completed FOR UPDATE", [id, attempt, token]);
+      if (!claim.rowCount) return false;
+      const active = await client.query("SELECT id FROM tantu_jobs.job WHERE name=$1 AND id=$2 AND retry_count=$3 AND state='active' FOR UPDATE", [queue, id, attempt]);
+      if (!active.rowCount) return false;
+      await this.boss.fail(queue, id, { code: "PROCESSING_FAILED" }, { db: sqlAdapter(client) });
+      return true;
+    });
   }
 
   async runOne(queue: string, effect: (client: PoolClient, data: unknown) => Promise<void>): Promise<boolean> {
@@ -47,7 +59,7 @@ export class Queue {
         await this.boss.complete(queue, job.id, null, { db: sqlAdapter(client) });
       });
     } catch {
-      await this.boss.fail(queue, job.id, { code: "PROCESSING_FAILED" });
+      await this.failAttempt(queue, job.id, job.retryCount, token);
     }
     return true;
   }

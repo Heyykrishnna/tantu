@@ -2,169 +2,71 @@
 
 **Your work, finally connected.**
 
-tantu is a connected workspace for individuals and small teams, designed to bring tasks, projects, calendars, email, and knowledge into a single workflow. Incoming information becomes reviewed work, linked context, scheduled time, and trackable commitments.
+tantu is a private workspace for tasks and pages, designed to grow into connected project, calendar, mail and knowledge workflows for individuals and small teams.
 
-**Status:** Application boilerplate with an isolated local L0 qualification suite. The project includes a Next.js frontend starter and a runnable TypeScript/Fastify backend foundation. Product workflows, authentication, persistence, provider integrations, and historical search remain planned.
+**Current delivery: L1A local foundation.** The application includes password sign-in, workspaces and invitations, current-access authorization, PostgreSQL task/page persistence, version conflicts and replay protection, durable jobs, quarantined files, activity and operational controls. L1B mail/calendar/project work and L1C launch integration remain planned. Production approval is conditional; see [L1A readiness](docs/l1a/readiness.md).
 
-The [Product Requirements Document](docs/product-requirements.md) and [delivery roadmap](docs/roadmap.md) capture the product baseline. The [backend foundation decision](docs/decisions/0001-backend-foundation.md) records the scaffold choices. The [L0 readiness record](docs/l0/readiness.md) distinguishes measured engineering evidence from unresolved production and provider gates.
+## What you can use
 
-## Product direction
+- Sign in, create a workspace, switch workspaces and invite members or record-scoped guests.
+- Create, edit, complete and delete canonical tasks with deadlines, priorities and estimates.
+- Create nested pages with paragraph/heading documents and version history metadata.
+- Recover browser-session drafts and retry a lost save acknowledgement without creating a duplicate task.
+- Keep records private or share them with workspace members. Administrators receive no implicit private-record access.
+- Upload bounded private files into quarantine. Downloads require a clean scan, a current session, live record access and a short-lived signed token.
+- Inspect authorized activity and internal jobs, cancel pending work and retry failed internal processing.
 
-Work often arrives in email, gets tracked in a task manager, occupies time in a calendar, and depends on separate documents. tantu connects those records so people can understand what matters, act on it, and follow the outcome without repeatedly copying information.
+The interface includes a keyboard command palette, title search, light/dark themes and responsive layouts. Native form controls and automated keyboard/mobile tests support the local accessibility baseline; manual assistive-technology qualification remains open.
 
-The intended workflow is:
+## Run locally
 
-1. Capture a message, note, link, or request.
-2. Review its owner, deadline, project, and sharing audience.
-3. Create one canonical task linked to its source.
-4. Reserve time with a calendar work block.
-5. Connect relevant pages, decisions, and commitments.
-6. Complete the work and optionally review a reply.
-
-A private source stays private. Linking an email to a shared task does not grant mailbox access; sharing selected excerpts or files requires an explicit review.
-
-## Planned capabilities
-
-| Area | Coherent launch scope |
-| --- | --- |
-| Work management | Tasks, subtasks, dependencies, recurrence, projects, milestones, and list, board, table, and timeline views. |
-| Calendar | Day, week, month, and agenda views; task blocks; overlays; conflict handling; timezones and recurrence; Google and Microsoft connections. |
-| Mail | Gmail and Microsoft 365 conversations, drafts, compose/reply, attachments, provider-specific organization, rules, and task conversion. |
-| Knowledge | Nested pages, a block editor, typed collections, linked views, relations, backlinks, comments, and history. |
-| Capture and commitments | A capture queue, reviewed conversion into work, explicit source references, and manually confirmed promises. |
-| Search and platform | Authorized full-text search, controlled historical archives, personal/shared spaces, roles, activity, export, customization, and sync health. |
-
-These are planned capabilities, not implemented product endpoints. Core workflows must remain usable without AI, with responsive interfaces and accessible alternatives to drag interactions.
-
-## Distinctive features
-
-| Feature | Purpose | Release |
-| --- | --- | --- |
-| **Capture-to-Action** | Turn incoming information into reviewed work while preserving its source and audience. | L1 |
-| **Promise Tracker** | Track confirmed commitments, responsible people, agreed dates, and outcomes. | L1, manual workflow |
-| **Context Graph** | Explore authorized relationships across work, knowledge, events, promises, and decisions. | L2 |
-| **Plan My Day** | Propose an editable schedule based on availability, priorities, dependencies, and estimates. | L2 |
-| **Workload Weather** | Explain estimated effort relative to available capacity, including unknown inputs. | L2 |
-| **Workspace Kits** | Reuse workspace setups, templates, views, and supported workflows. | L2 |
-| **Decision Memory** | Preserve decisions, ownership, rationale, and affected work. | L2 |
-
-## Implemented foundation
-
-| Component | Current state |
-| --- | --- |
-| Frontend | Next.js 16.4.3, React 19.3.0, strict TypeScript, Tailwind CSS 4, and the generated starter page. |
-| Backend | Fastify 5 with strict TypeScript, validated environment settings, a separate application factory and listener, liveness, security headers, safe errors, and graceful shutdown. |
-| Module boundaries | Reserved locations and ownership documentation for all nine PRD domains, platform adapters, migrations, and durable workers. |
-| Engineering workflow | Root commands for package setup, development, lint, type checking, tests, and builds; independent npm lockfiles. |
-| Foundation tests | Backend configuration boundaries, HTTP liveness, error sanitization, schema validation, and payload limits. |
-
-The backend exposes `GET /health/live`, returning `{"status":"ok"}`. This reports process liveness only. Database, worker, provider, and product readiness are not claimed. Unimplemented routes return 404.
-
-The production backend installs no database driver, authentication service, OAuth client, queue, AI client, or MinLZ package. PostgreSQL and queue dependencies and the pinned Go archive module are isolated in the discovery/qualification suites. Reserved domain folders contain no business implementations or fake responses.
-
-## Getting started
-
-Use Node.js 24 and npm 11. The development version is recorded in `.nvmrc`. After cloning the repository, run from the project root:
+Use Node.js 24, npm 11 and PostgreSQL 16+. Install the three locked packages:
 
 ```bash
 npm run setup
 ```
 
-Start the frontend and backend in separate terminals:
-
-```bash
-npm run dev:frontend
-```
+Follow the [local setup guide](docs/l1a/setup.md) to create separate database roles, run migrations, configure the private file directory and create the first account. Start each process in its own terminal:
 
 ```bash
 npm run dev:backend
+npm run dev:worker
+npm run dev:frontend
 ```
 
-- Frontend: [localhost:3000](http://localhost:3000).
-- Backend liveness: [localhost:4000/health/live](http://localhost:4000/health/live).
+Open [localhost:3000](http://localhost:3000). The frontend proxies `/api/v1` to Fastify on loopback port 4000. Backend configuration is listed in [backend/.env.example](backend/.env.example); local environment files are ignored. System fonts keep frontend builds independent of external font services.
 
-The default scaffold requires no external services or credentials. Optional backend overrides are documented in [backend/.env.example](backend/.env.example) and the [backend guide](backend/README.md). Local `.env` files are ignored; example configuration is tracked.
+A working ClamAV daemon is required to release quarantined files. A scanner outage keeps files unavailable; it never silently approves them. The local filesystem adapter is intended for a single private installation. Managed object storage, key management and deployment policy require separate qualification.
 
-The frontend uses `next/font/google` for Geist fonts, so its build may require network access.
+## Validate
 
-## Development commands
+```bash
+npm run check:l1a
+```
 
-Run these commands from the project root. The root package orchestrates the application and isolated discovery packages; it does not require a separate dependency installation.
+This runs application/discovery lint and strict type checks, unit tests, both production builds, real PostgreSQL integration and backup/restore tests, actual browser journeys, contract-sync checks, all three npm audits and documentation/ignore checks. Synthetic evidence is written only to ignored artifacts.
 
-| Command | Behavior |
-| --- | --- |
-| `npm run setup` | Install the frontend, backend, and isolated discovery package from their lockfiles. |
-| `npm run dev:frontend` | Start the Next.js development server. |
-| `npm run dev:backend` | Start the TypeScript backend in watch mode. |
-| `npm run lint` | Run application and discovery ESLint checks. |
-| `npm run typecheck` | Generate frontend route types, then check application and discovery TypeScript. |
-| `npm test` | Run backend foundation and isolated discovery unit tests. |
-| `npm run build` | Build the frontend and compile the backend. |
-| `npm run check` | Run lint, type checking, unit tests, and both application builds. |
-| `npm run check:l0` | Also run prototype browser checks, disposable PostgreSQL qualification, archive checks, dependency audits, and baseline validation. |
-| `npm run start:frontend` | Serve a previously built frontend. |
-| `npm run start:backend` | Run the compiled backend. |
+`npm run check` runs source checks, unit tests and builds. `npm run check:l0` retains the earlier isolated provider-policy, recurrence, collaboration, search and Go/MinLZ qualification suite. The CI workflow runs that baseline plus the L1A database, browser and contract checks. A workflow file does not by itself prove a remote run succeeded.
 
-The production frontend has no application test suite yet. The discovery package separately tests synthetic journeys, contracts, collaboration, recurrence, policy fixtures, a disposable database, and the pinned archive library. These experiments do not qualify live providers or production authorization. A pinned-action CI workflow reproduces the local engineering checks; execution on GitHub is not implied by its presence.
+## Architecture and contracts
 
-## Architecture
+The application uses Next.js/React with one TypeScript/Fastify modular backend. PostgreSQL owns identity, membership, canonical records, operation results, revisions, audit metadata and outbox events. A separate pg-boss worker processes internal events and file scans. Accepted record writes, durable results and queued work commit atomically.
 
-The scaffold adopts TypeScript/Fastify for the primary backend and preserves the TypeScript/Next.js frontend. Domain behavior will live in a modular monolith with focused interfaces for Workspace and Access, Work Management, Knowledge, Scheduling, Mail, Capture and Relationships, Search and Archive, Sync, and Automation.
+Runtime connections cannot be superusers or bypass row security. Record/file policies enforce current tenant, membership, visibility, grants and ancestor deletion state. Structured edits use expected versions; operation keys reject changed-payload reuse. Operational logs exclude content and credentials.
 
-The planned persistence layer uses PostgreSQL for canonical app-owned records and a transactional outbox. Durable workers will reconcile provider changes and update derived views. Private object storage will hold approved files and immutable archives. Google and Microsoft adapters will preserve provider-specific mail and calendar behavior.
+The [implemented API](contracts/l1a.openapi.json) is generated from registered request schemas and canonical response schemas. Frontend canonical types are generated from backend interfaces and checked for drift. The [L0 contract](contracts/openapi.json) remains a historical draft, including unimplemented future-provider operations.
 
-Providers remain authoritative for provider-owned messages and events. App storage owns tasks, pages, and reviewed snapshots. Search and graph views are derived and must apply current permissions. Frontend clients will use versioned, runtime-validated [network contracts](contracts/README.md).
-
-MinLZ remains an isolated [Go archive boundary](archive/README.md) for eligible historical data and exact-byte search. Production enablement requires format integrity, independent oracle parity, cross-block matching, current access/deletion checks, and bounded-resource evidence. No compression or search benchmark is claimed.
-
-## Privacy and reliability
-
-The product requirements preserve these guarantees as implementation targets:
-
-- Private email and personal records require explicit content grants; workspace administration does not imply mailbox access.
-- Current permissions apply to records, snippets, counts, relationships, exports, optional AI retrieval, and queued actions.
-- Sending email, inviting attendees, and applying proposed schedules require user review.
-- AI remains optional and disabled until an authorized owner enables it.
-- Accepted app-owned writes commit with their outbox events; external operations expose pending, confirmed, failed, or unknown outcomes.
-- Ambiguous sends are reconciled before retrying. Task deadlines, work blocks, and external events retain distinct identities.
-- Logs and analytics exclude private message bodies, document content, recipients, attachments, and query text.
-
-These are acceptance requirements, not completed production certifications. The current backend establishes transport-level defaults only.
-
-## Delivery roadmap
-
-| Stage | Focus |
-| --- | --- |
-| **L0 — Validation** | Journeys, permissions, provider prerequisites, architecture qualification, policy decisions, and search/archive experiments. |
-| **L1a — Foundation** | Identity, spaces, canonical records, task/page core, durable jobs, secure files, and operational health. |
-| **L1b — Connected work** | Projects, launch views, calendar, Google/Microsoft mail, collaborative knowledge, and recovery. |
-| **L1c — Launch integration** | Capture, manual promises, search, controlled archives, portability, customization, accessibility, and launch evidence. |
-| **L2 — Connected intelligence** | Context Graph, planning, workload, kits, Decision Memory, optional AI, and richer collaboration. |
-| **L3 — Expansion and governance** | Additional providers, integrations, enterprise controls, and native/self-hosting evaluations under separate decisions. |
-
-Dates and completion claims require implementation evidence. Future discovery ideas remain separate from committed launch scope. See the [roadmap](docs/roadmap.md) for dependencies and qualification criteria.
-
-## Contributing
-
-Follow applicable agent instructions, preserve unrelated work, and keep implementation aligned with the PRD and recorded decisions. Frontend changes must also follow [frontend/AGENTS.md](frontend/AGENTS.md) and the documentation bundled with the installed Next.js version.
-
-Use focused branches such as `feat/task-capture`, `fix/calendar-timezone`, or `builds/backend-boilerplate`; do not use the `codex/` prefix. Run `npm run check`, add behavior-focused coverage for new functionality, and report exact outcomes and environmental limitations.
-
-Keep secrets, dependency directories, builds, logs, and local planning material out of commits. Detailed implementation and checkout guidance is in the [development guide](docs/development.md).
+The isolated [Go archive qualification](archive/qualification/README.md) does not enable production historical ingestion or search. Google/Microsoft adapters, real-time collaboration, rich editor extensions, collections, automation and AI are not registered product capabilities yet.
 
 ## Documentation
 
-- [Product requirements](docs/product-requirements.md)
-- [Delivery roadmap and project design](docs/roadmap.md)
-- [Development and checkout guide](docs/development.md)
-- [Backend foundation decision](docs/decisions/0001-backend-foundation.md)
-- [Frontend guide](frontend/README.md)
-- [Backend guide](backend/README.md)
-- [L0 local readiness and limitations](docs/l0/readiness.md)
-- [Discovery qualification guide](discovery/README.md)
+- [Local setup](docs/l1a/setup.md), [implementation](docs/l1a/implementation.md), [operations](docs/l1a/operations.md) and [readiness](docs/l1a/readiness.md).
+- [Backend](backend/README.md), [frontend](frontend/README.md), [development](docs/development.md) and [network contracts](contracts/README.md).
+- [Product requirements](docs/product-requirements.md) and [delivery roadmap](docs/roadmap.md), preserving the original planning baseline.
+- [L0 evidence and unresolved decisions](docs/l0/readiness.md).
 
-The PRD and roadmap preserve the 29 October 2026 planning baseline. Current package READMEs and adopted decisions describe what the scaffold actually implements.
+Private phase plans and the requested technology explanations stay outside Git. Do not force-add local documentation, environment files, logs or generated evidence. Keep commits focused and run the relevant validation before delivery.
 
 ## License
 
-A project license has not been specified. Add an explicit license before distributing the project under open-source terms. Third-party dependencies retain their respective licenses.
+A project license has not been specified. Third-party dependencies retain their respective licenses.

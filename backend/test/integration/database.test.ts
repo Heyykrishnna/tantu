@@ -22,6 +22,10 @@ test("ordered migrations, least-privilege runtime and transactional rollback", {
     const unsafe = new Database(fixture.configuration);
     try { await assert.rejects(unsafe.verifyRole(), /must not be superuser/); }
     finally { await unsafe.close(); }
+    await pool.query("CREATE ROLE inherited_owner LOGIN NOSUPERUSER NOBYPASSRLS; GRANT l0_owner TO inherited_owner");
+    const inherited = new Database({ ...fixture.configuration, user: "inherited_owner" });
+    try { await assert.rejects(inherited.verifyRole(), /inherit canonical table ownership/); }
+    finally { await inherited.close(); }
     await assert.rejects(db.transaction(undefined, async (client) => {
       await client.query("INSERT INTO tantu.workspaces(name) VALUES('rolled back')");
       throw new Error("rollback");

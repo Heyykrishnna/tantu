@@ -1,6 +1,6 @@
 # L0 readiness and evidence
 
-Baseline: 30 October 2026. Project-owner execution choice: local validation with documented defaults. Engineering experiments are reproducible and isolated; the product backend remains boilerplate.
+Baseline: 30 October 2026. Project-owner execution choice: local validation with documented defaults. The L0 experiments are reproducible and isolated. That recorded baseline used a boilerplate product backend; the subsequent [L1A implementation](../l1a/readiness.md) now provides actual local application behavior.
 
 ## Gate decision
 

@@ -22,7 +22,7 @@ test("liveness reports the running process with security headers", async (contex
   assert.equal(response.headers["x-content-type-options"], "nosniff");
 });
 
-test("unimplemented product routes return a safe not-found response", async (context) => {
+test("the transport-only test factory does not expose routes without application dependencies", async (context) => {
   const app = createApp(config);
   context.after(() => app.close());
 

@@ -26,3 +26,11 @@ export const createSchema = object(fields, ["title", "operationId"]);
 export const updateSchema = object({ ...fields, expectedVersion: { type: "integer", minimum: 1 } }, ["operationId", "expectedVersion", "title"]);
 export const recordParams = object({ workspaceId: uuid, recordId: uuid });
 export const deleteSchema = object({ operationId: uuid, expectedVersion: { type: "integer", minimum: 1 } });
+export const canonicalSchema = object({
+  id: uuid, workspaceId: uuid, ownerId: uuid, kind: { enum: ["task", "page"] },
+  title: fields.title, visibility: fields.visibility, parentId: fields.parentId,
+  body: documentSchema, status: fields.status, priority: fields.priority, deadline: fields.deadline,
+  estimateMinutes: fields.estimateMinutes, version: { type: "integer", minimum: 1 }, canEdit: { type: "boolean" },
+  createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+});
+export const listSchema = object({ items: { type: "array", maxItems: 50, items: canonicalSchema }, nextCursor: { anyOf: [uuid, { type: "null" }] } });

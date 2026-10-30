@@ -19,8 +19,9 @@ export class Files {
   constructor(readonly database: Database, readonly queue: Queue, readonly settings: RuntimeSettings) { this.store = new FileStore(settings.storagePath); }
 
   async upload(scope: Scope, recordId: string, input: Upload): Promise<FileMetadata> {
-    if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(input.content)) throw new Failure(400, "INVALID_FILE", "File content must be valid base64.");
+    if (input.content.length > 6_990_508) throw new Failure(413, "FILE_TOO_LARGE", "Choose a file no larger than 5 MiB.");
     const bytes = Buffer.from(input.content, "base64");
+    if (bytes.toString("base64") !== input.content) throw new Failure(400, "INVALID_FILE", "File content must be valid base64.");
     if (!bytes.length || bytes.length > maximumFileBytes) throw new Failure(413, "FILE_TOO_LARGE", "Choose a nonempty file no larger than 5 MiB.");
     if (input.mediaType === "application/pdf" && !bytes.subarray(0, 5).equals(Buffer.from("%PDF-"))) throw new Failure(400, "INVALID_FILE", "The file does not have a PDF signature.");
     const fileDigest = digest(bytes);

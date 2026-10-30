@@ -14,7 +14,13 @@ async function start(): Promise<void> {
   const queue = new Queue(database);
   const files = new Files(database, queue, settings);
   let stopping = false;
-  const stop = () => { stopping = true; };
+  let deadline: NodeJS.Timeout | undefined;
+  const stop = () => {
+    if (stopping) return;
+    stopping = true;
+    deadline = globalThis.setTimeout(() => { process.stderr.write("Worker shutdown deadline exceeded.\n"); process.exit(1); }, 30_000);
+    deadline.unref();
+  };
   process.once("SIGINT", stop);
   process.once("SIGTERM", stop);
   try {
@@ -27,7 +33,7 @@ async function start(): Promise<void> {
       await queue.runOne(scanQueue, (client, data) => files.process(client, data));
       await setTimeout(500);
     }
-  } finally { await queue.stop(); await database.close(); }
+  } finally { await queue.stop(); await database.close(); if (deadline) clearTimeout(deadline); }
 }
 
 start().catch(() => { process.stderr.write("Worker stopped after an operational failure.\n"); process.exitCode = 1; });

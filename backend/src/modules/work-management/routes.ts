@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { object, text, uuid } from "../../http/schema.js";
 import type { Identity } from "../workspace-access/service.js";
 import type { Records } from "./service.js";
-import { createSchema, deleteSchema, recordColumns, recordParams, updateSchema } from "./contracts.js";
+import { canonicalSchema, createSchema, deleteSchema, listSchema, recordColumns, recordParams, updateSchema } from "./contracts.js";
 import type { CanonicalRecord, RecordInput } from "./contracts.js";
 import { Failure } from "../../platform/failure.js";
 
@@ -10,7 +10,7 @@ export function recordRoutes(app: FastifyInstance, identity: Identity, records: 
   const db = identity.database;
   for (const [plural, kind] of [["tasks", "task"], ["pages", "page"]] as const) {
     const base = `/api/v1/workspaces/:workspaceId/${plural}`;
-    app.get<{ Params: { workspaceId: string }; Querystring: { cursor?: string; limit?: string; q?: string } }>(base, { schema: { params: object({ workspaceId: uuid }), querystring: object({ cursor: uuid, limit: { type: "string", pattern: "^(?:[1-9]|[1-4][0-9]|50)$" }, q: text(100) }, []) } }, async (request) => {
+    app.get<{ Params: { workspaceId: string }; Querystring: { cursor?: string; limit?: string; q?: string } }>(base, { schema: { params: object({ workspaceId: uuid }), querystring: object({ cursor: uuid, limit: { type: "string", pattern: "^(?:[1-9]|[1-4][0-9]|50)$" }, q: text(100) }, []), response: { 200: listSchema } } }, async (request) => {
       const scope = await identity.scope(request, request.params.workspaceId);
       const limit = Number(request.query.limit ?? "25");
       return db.transaction(scope, async (client) => {
@@ -19,11 +19,11 @@ export function recordRoutes(app: FastifyInstance, identity: Identity, records: 
         return { items, nextCursor: result.rows.length > limit ? items.at(-1)?.id ?? null : null };
       });
     });
-    app.post<{ Params: { workspaceId: string }; Body: RecordInput & { operationId: string } }>(base, { schema: { params: object({ workspaceId: uuid }), body: createSchema } }, async (request, reply) => {
+    app.post<{ Params: { workspaceId: string }; Body: RecordInput & { operationId: string } }>(base, { schema: { params: object({ workspaceId: uuid }), body: createSchema, response: { 201: canonicalSchema } } }, async (request, reply) => {
       const scope = await identity.scope(request, request.params.workspaceId, true);
       return reply.code(201).send(await records.mutate(scope, kind, request.body.operationId, request.body));
     });
-    app.get<{ Params: { workspaceId: string; recordId: string } }>(base + "/:recordId", { schema: { params: recordParams } }, async (request) => {
+    app.get<{ Params: { workspaceId: string; recordId: string } }>(base + "/:recordId", { schema: { params: recordParams, response: { 200: canonicalSchema } } }, async (request) => {
       const scope = await identity.scope(request, request.params.workspaceId);
       return db.transaction(scope, async (client) => {
         const result = await client.query<CanonicalRecord>(`SELECT ${recordColumns} FROM tantu.records WHERE id=$1 AND kind=$2`, [request.params.recordId, kind]);
@@ -32,7 +32,7 @@ export function recordRoutes(app: FastifyInstance, identity: Identity, records: 
         return row;
       });
     });
-    app.patch<{ Params: { workspaceId: string; recordId: string }; Body: RecordInput & { operationId: string; expectedVersion: number } }>(base + "/:recordId", { schema: { params: recordParams, body: updateSchema } }, async (request) => {
+    app.patch<{ Params: { workspaceId: string; recordId: string }; Body: RecordInput & { operationId: string; expectedVersion: number } }>(base + "/:recordId", { schema: { params: recordParams, body: updateSchema, response: { 200: canonicalSchema } } }, async (request) => {
       const scope = await identity.scope(request, request.params.workspaceId, true);
       return records.mutate(scope, kind, request.body.operationId, request.body, request.params.recordId, request.body.expectedVersion);
     });

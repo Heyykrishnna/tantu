@@ -2,11 +2,16 @@ import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import { Failure } from "../../platform/failure.js";
 
 const options = { N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+let activeDerivations = 0;
 
-function derive(password: string, salt: string): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    scrypt(password, salt, 64, options, (error, key) => { if (error) reject(error); else resolve(key); });
-  });
+async function derive(password: string, salt: string): Promise<Buffer> {
+  if (activeDerivations >= 4) throw new Failure(429, "AUTH_BUSY", "Sign-in is busy. Try again shortly.");
+  activeDerivations++;
+  try {
+    return await new Promise((resolve, reject) => {
+      scrypt(password, salt, 64, options, (error, key) => { if (error) reject(error); else resolve(key); });
+    });
+  } finally { activeDerivations--; }
 }
 
 export function digest(value: string | Buffer): string { return createHash("sha256").update(value).digest("hex"); }

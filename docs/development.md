@@ -1,53 +1,27 @@
 # Development guide
 
-## Scope of the scaffold
+## Checkout and packages
 
-The project has a Next.js frontend starter, a TypeScript/Fastify backend foundation, and documented boundaries for future domain and infrastructure work. This is application boilerplate; no task, calendar, mail, knowledge, authentication, database, worker, or AI workflow is implemented.
+A single clone contains the Next.js frontend, TypeScript/Fastify backend and isolated discovery/qualification package. Each npm package has its own lockfile. Use Node.js 24/npm 11 and run `npm run setup` from the root; root commands delegate with `npm --prefix`.
 
-The [backend foundation decision](decisions/0001-backend-foundation.md) records the concrete technology choice. The [PRD](product-requirements.md) and [roadmap](roadmap.md) remain the dated product baseline.
+The [PRD](product-requirements.md) and [roadmap](roadmap.md) preserve the product baseline. The [L1A installation guide](l1a/setup.md) describes the implemented local application and actual environment requirements. Domain ownership remains in the [module guide](../backend/src/modules/README.md).
 
-## Source checkout
+## Development lifecycle
 
-Frontend and backend source files are tracked directly in the root repository. A single clone contains both packages; no submodule initialization or separate frontend repository is required.
+Configure separate PostgreSQL migration/runtime roles, apply migrations, generate a private file-signing key and bootstrap the initial account. Run the HTTP backend, durable worker and frontend in separate terminals using `dev:backend`, `dev:worker` and `dev:frontend`. Open localhost:3000 so the browser Origin matches the backend setting. The same-origin rewrite avoids cross-origin cookie settings.
 
-Root setup commands install each package from its own lockfile. Keep a single Git history for application source while preserving the independent package boundaries.
+The HTTP factory is separate from listening and accepts explicit database/settings dependencies for isolated tests. Test fixtures create private disposable PostgreSQL clusters with no network listeners; they never select a database from application environment variables. The browser suite starts the production frontend and actual Fastify HTTP service on ports 3100/4000 and fails if those ports are occupied. Stop a development backend before running it.
 
-## Runtime and package management
+## Validation and synchronization
 
-Use Node.js 24 with npm 11; `.nvmrc` records the local development version. Root and backend package engines describe the supported major versions. The frontend’s existing framework and dependency versions are preserved.
+Run `npm run check:l1a` for source lint/types, unit tests, both builds, database/backup/restore/crash tests, browser journeys, generated-contract checks, three dependency audits and documentation checks. PostgreSQL 16+ tools and local Chrome or Playwright Chromium are required. Set `PG_BIN` if necessary. Test logs, reports and screenshots stay in ignored artifacts.
 
-Frontend and backend are independent application packages; the discovery harness is a third, isolated development package. Each has its own npm lockfile. Root scripts delegate with `npm --prefix`; there is no npm workspace migration, shared dependency installation, or duplicate root lockfile. Run `npm run setup` from the root to install all three locked packages.
+`npm run check:l0` retains the earlier isolated engineering experiments and requires Python/Go in addition. CI runs that baseline and the L1A database/browser/contracts checks. Report commands actually executed; do not infer remote CI success from local output or a workflow file.
 
-Use package-specific `npm install` when deliberately changing dependencies, then review the relevant manifest and lockfile. Use `npm ci` for reproducible installation. Never copy dependencies or hand-edit lockfile resolutions to manufacture a passing install.
+When canonical interfaces or route schemas change, run `npm --prefix backend run contracts:types` and `npm --prefix backend run contracts:openapi`. Check generated diffs and run `contracts:check`. Do not hand-edit generated contract artifacts or suppress compiler/library errors. No formatter is configured; lint and type checks remain mandatory.
 
-## Local process lifecycle
+## Git and private material
 
-Run `npm run dev:frontend` and `npm run dev:backend` in separate terminals. The frontend listens on port 3000; the backend defaults to loopback port 4000. No frontend network calls are wired to product APIs yet.
+Dependency directories, builds, logs, coverage, local environments, phase plans and local technology guides are ignored. Track `.env.example` with variable names and safe empty secret fields. Never force-add private planning/evidence or include production credentials in diagnostics. Preserve unrelated work and stage only relevant files.
 
-The backend loads an optional package-local `.env`; process-level variables take precedence. Only `NODE_ENV`, `HOST`, `PORT`, and `LOG_LEVEL` are configured. Database/provider settings will be introduced with their implementations rather than as unused secret placeholders.
-
-The backend application factory does not bind a port. Tests use Fastify injection; the server entry point owns listening and bounded signal shutdown. `/health/live` checks the process only. Readiness must be added when real dependencies and their failure semantics exist.
-
-## Validation
-
-From the root:
-
-```bash
-npm run check
-```
-
-This runs application/discovery lint and type checks, backend and discovery unit tests, and both application builds. Frontend type generation happens inside its `typecheck` command. Tests cover configuration boundaries, security headers, sanitized errors, strict schemas, payload limits, and honest unimplemented routes.
-
-The frontend has no production application test suite. Run `npm run check:l0` for isolated prototype browser, PostgreSQL, archive, audit, and baseline checks. PostgreSQL tools, Python, Go, and a local browser are required; set `PG_BIN` or `TANTU_GO_BINARY` when necessary. Real-provider qualification, manual accessibility, container deployment, and production performance targets remain future work. Do not report those checks as passing based on the scaffold tests.
-
-## Git hygiene and local plans
-
-The root `.gitignore` excludes dependency directories, builds, coverage, logs, TypeScript caches, local environment files, and the entire `phases/` folder. `.env.example` files remain eligible for tracking. Ignore rules do not remove files already committed.
-
-The `local-docs/` folder is also ignored and contains the private technology guide. Detailed phase plans are local development material and must not be force-added or linked from tracked documentation. Current implementation status belongs in package READMEs and adopted decisions. Preserve unrelated local work and review the complete root diff before staging.
-
-## Domain implementation
-
-Start with a coherent authorized vertical slice. Add runtime schemas, domain behavior, persistence, failure states, and behavior tests together. Use the [module ownership guide](../backend/src/modules/README.md), [platform boundaries](../backend/src/platform/README.md), and [network contract policy](../contracts/README.md).
-
-Avoid speculative controllers, service wrappers, DTOs, migrations, queues, provider clients, and fake endpoints. Accepted app-owned writes and their outbox events must commit together. Provider mutations need durable reviewed intent, current authorization, and truthful pending/confirmed/failed/unknown state.
+The [operations runbook](l1a/operations.md) covers migration recovery, worker failures, file reconciliation, key/session rotation and local restoration. Production identity, malware-engine qualification, retention, deployment and manual accessibility remain explicit readiness conditions.
