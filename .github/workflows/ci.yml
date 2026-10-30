@@ -1,23 +1,26 @@
-name: Validate foundation and connected-work core
+name: CI Pipeline (Frontend + Backend)
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: validation-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  qualification:
+  ci-pipeline:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -25,7 +28,7 @@ jobs:
             frontend/package-lock.json
             backend/package-lock.json
             discovery/package-lock.json
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+      - uses: actions/setup-go@v5
         with:
           go-version: 1.24.0
           cache-dependency-path: archive/qualification/go.sum
@@ -40,15 +43,20 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a') as target:
               target.write('PG_BIN=' + str(candidates[-1]) + '\n')
           PY
-      - run: npm run setup
+      - name: Install dependencies
+        run: npm run setup
       - name: Install isolated browser dependencies
         working-directory: discovery
         run: npx playwright install --with-deps chromium
-      - run: npm run check:l0
-      - run: npm run check:l1b
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+      - name: Run code formatting, typecheck, unit tests, and production build
+        run: npm run check
+      - name: Run foundation synthetic qualification
+        run: npm run check:l0
+      - name: Run connected-work synthetic qualification
+        run: npm run check:l1b
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: local-synthetic-qualification
+          name: ci-pipeline-artifacts
           path: discovery/.artifacts/
           if-no-files-found: warn
