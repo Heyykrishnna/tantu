@@ -31,6 +31,6 @@ GRANT SELECT,INSERT,UPDATE ON tantu.calendar_preferences,tantu.provider_effect_r
 GRANT SELECT,INSERT,UPDATE ON tantu.mail_preferences,tantu.mail_rules TO tantu_runtime;
 GRANT EXECUTE ON FUNCTION tantu.claim_provider_reconciliation() TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.provider_folders,tantu.provider_folder_scans,tantu.provider_subscriptions,tantu.provider_notifications TO tantu_runtime;
-GRANT SELECT,INSERT,UPDATE ON tantu.knowledge_templates,tantu.template_reviews TO tantu_runtime;
-GRANT DELETE ON tantu.template_reviews TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.knowledge_templates,tantu.template_reviews TO tantu_runtime;
 GRANT SELECT,INSERT,DELETE ON tantu.knowledge_embeds TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.capture_items,tantu.capture_reviews,tantu.promises,tantu.automation_rules,tantu.automation_runs TO tantu_runtime;

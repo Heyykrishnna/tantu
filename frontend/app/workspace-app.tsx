@@ -21,6 +21,9 @@ import CollectionPanel from "./collection-panel";
 import MailPanel from "./mail-panel";
 import CalendarPanel from "./calendar-panel";
 import ProjectPanel from "./project-panel";
+import CapturePanel from "./capture-panel";
+import PromisePanel from "./promise-panel";
+import RulesPanel from "./rules-panel";
 import SignIn from "./sign-in";
 import RecordEditor from "./record-editor";
 import WorkspaceSettings from "./workspace-settings";
@@ -377,6 +380,9 @@ export default function WorkspaceApp() {
   const viewTitle = {
     tasks: "Tasks",
     pages: "Pages",
+    capture: "Quick Capture",
+    promises: "Promise Tracker",
+    rules: "Automation Rules",
     activity: "Activity",
     settings: "Workspace settings",
     operations: "Operations",
@@ -626,6 +632,29 @@ export default function WorkspaceApp() {
                 navigate("tasks");
                 void open(id, "tasks");
               }}
+            />
+          ) : view === "capture" ? (
+            <CapturePanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
+              onTaskCreated={(id) => {
+                navigate("tasks");
+                void open(id, "tasks");
+              }}
+            />
+          ) : view === "promises" ? (
+            <PromisePanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
+              currentUserId={user.id}
+            />
+          ) : view === "rules" ? (
+            <RulesPanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
             />
           ) : view === "activity" || view === "operations" ? (
             <ActivityPanel

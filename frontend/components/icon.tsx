@@ -129,6 +129,19 @@ const shapes = {
     </>
   ),
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+  capture: (
+    <>
+      <circle cx="12" cy="12" r="7" />
+      <path d="M12 2v3m0 14v3M2 12h3m14 0h3" />
+    </>
+  ),
+  promise: (
+    <>
+      <path d="m9 11 3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+    </>
+  ),
+  zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
   dots: (
     <>
       <circle cx="5" cy="12" r="1" />

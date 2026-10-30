@@ -7,10 +7,13 @@ import { Brand, Button, Field, inputClass } from "../components/ui";
 export type WorkspaceView =
   | "tasks"
   | "pages"
+  | "capture"
+  | "promises"
   | "projects"
   | "calendar"
   | "mail"
   | "collections"
+  | "rules"
   | "activity"
   | "settings"
   | "operations";
@@ -111,7 +114,9 @@ export default function WorkspaceNavigation({
         <nav aria-label="Workspace navigation" className="grid gap-1">
           {(
             [
+              ["capture", "Capture"],
               ["tasks", "Tasks"],
+              ["promises", "Promises"],
               ["pages", "Pages"],
               ["collections", "Collections"],
               ["projects", "Projects"],
@@ -128,11 +133,13 @@ export default function WorkspaceNavigation({
             >
               <Icon
                 name={
-                  target === "projects"
-                    ? "folder"
-                    : target === "collections"
-                      ? "layers"
-                      : target
+                  target === "promises"
+                    ? "promise"
+                    : target === "projects"
+                      ? "folder"
+                      : target === "collections"
+                        ? "layers"
+                        : target
                 }
               />
               {label}
@@ -151,6 +158,7 @@ export default function WorkspaceNavigation({
         <nav aria-label="Workspace management" className="grid gap-1">
           {(
             [
+              ["rules", "Automation Rules"],
               ["settings", "Workspace settings"],
               ...(manager ? [["operations", "Operations"] as const] : []),
             ] as const
@@ -161,7 +169,7 @@ export default function WorkspaceNavigation({
               aria-current={view === target ? "page" : undefined}
               className={`flex min-h-9 items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ${view === target ? "bg-white font-medium text-[#424b73] shadow-xs dark:bg-[#2c2c30] dark:text-[#eeeef4] dark:shadow-none" : "hover:bg-white/60 dark:hover:bg-[#222225] dark:hover:text-[#dddde5]"}`}
             >
-              <Icon name={target} />
+              <Icon name={target === "rules" ? "zap" : target} />
               {label}
             </button>
           ))}
