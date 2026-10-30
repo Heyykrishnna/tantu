@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { Pool } from "pg";
-import { startPostgresFixture } from "../../../discovery/src/postgres-fixture.js";
+import { startPostgresFixture } from "./postgres-fixture.js";
 import { Database } from "../../src/platform/database/database.js";
 import { migrate } from "../../src/platform/database/migrate.js";
 import { initializeJobs } from "../../src/workers/queue.js";

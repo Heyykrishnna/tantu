@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Pool } from "pg";
-import { startPostgresFixture } from "../../../discovery/src/postgres-fixture.js";
+import { startPostgresFixture } from "./postgres-fixture.js";
 import { Database } from "../../src/platform/database/database.js";
 import { migrate } from "../../src/platform/database/migrate.js";
 import { createAccount } from "../../src/modules/workspace-access/service.js";

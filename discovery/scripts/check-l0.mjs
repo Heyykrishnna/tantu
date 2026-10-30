@@ -16,7 +16,7 @@ const commands = [
   ["backend-audit", "npm", ["--prefix", "backend", "audit", "--audit-level=low"]],
   ["discovery-audit", "npm", ["--prefix", "discovery", "audit", "--audit-level=low"]],
   ["baseline", "node", ["discovery/scripts/validate-baseline.mjs"]],
-  ["workflow", process.env.TANTU_GO_BINARY || "go", ["run", "github.com/rhysd/actionlint/cmd/actionlint@v1.7.12", ".github/workflows/validate.yml"]],
+  ["workflow", process.env.TANTU_GO_BINARY || "go", ["run", "github.com/rhysd/actionlint/cmd/actionlint@v1.7.12", ".github/workflows/ci.yml"]],
 ];
 const stages = [];
 const revision = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
