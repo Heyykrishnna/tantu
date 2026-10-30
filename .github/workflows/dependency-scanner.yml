@@ -1,0 +1,39 @@
+name: Dependency Vulnerability Scanner
+
+on:
+  push:
+    paths:
+      - '**/package.json'
+      - '**/package-lock.json'
+      - '.github/workflows/dependency-scanner.yml'
+  pull_request:
+    paths:
+      - '**/package.json'
+      - '**/package-lock.json'
+      - '.github/workflows/dependency-scanner.yml'
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-scan-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Audit frontend dependencies
+        run: npm --prefix frontend audit --audit-level=high
+      - name: Audit backend dependencies
+        run: npm --prefix backend audit --audit-level=high
+      - name: Audit discovery dependencies
+        run: npm --prefix discovery audit --audit-level=high
