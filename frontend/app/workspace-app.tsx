@@ -29,6 +29,7 @@ import ContextGraphPanel from "./context-graph-panel";
 import PlanningPanel from "./planning-panel";
 import KitsPanel from "./kits-panel";
 import MeetingBriefsPanel from "./meeting-briefs-panel";
+import IntegrationsPanel from "./integrations-panel";
 import SearchModal from "./search-modal";
 import SignIn from "./sign-in";
 import RecordEditor from "./record-editor";
@@ -400,6 +401,8 @@ export default function WorkspaceApp() {
     planning: "Plan My Day",
     kits: "Workspace Kits",
     meetings: "Meeting Briefs",
+    integrations: "Integrations & APIs",
+    enterprise: "Enterprise & Governance",
     rules: "Automation Rules",
     activity: "Activity",
     settings: "Workspace settings",
@@ -694,6 +697,12 @@ export default function WorkspaceApp() {
             />
           ) : view === "meetings" ? (
             <MeetingBriefsPanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
+            />
+          ) : view === "integrations" ? (
+            <IntegrationsPanel
               key={workspaceId}
               workspaceId={workspaceId}
               csrf={csrf}
