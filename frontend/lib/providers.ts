@@ -1,0 +1,10 @@
+import { choice, list, record, string } from "./api";
+import { integer } from "./projects";
+export function connections(value: unknown) {
+  const data = record(value); const configured = record(data.configured);
+  return { configured: { google: configured.google === true, microsoft: configured.microsoft === true }, items: list(data.items, (value) => { const item = record(value); return { id: string(item.id), provider: choice(item.provider, ["google", "microsoft"]), address: string(item.address), status: string(item.status), version: integer(item.version), scopes: list(item.scopes, string) }; }) };
+}
+export function providerItems(value: unknown) { const data = record(value); return { items: list(data.items, (value) => { const item = record(value); return { id: string(item.id), subject: typeof item.subject === "string" ? item.subject : typeof item.title === "string" ? item.title : "Untitled", from: typeof item.from === "string" ? item.from : "", body: typeof item.body === "string" ? item.body : "", bodyState: typeof item.bodyState === "string" ? item.bodyState : "", labels: Array.isArray(item.labels) ? list(item.labels, string) : [], threadId: typeof item.threadId === "string" ? item.threadId : "", start: item.start ? JSON.stringify(item.start) : "", end: item.end ? JSON.stringify(item.end) : "", allDay: item.allDay === true }; }), coverage: string(data.coverage), nextCursor: data.nextCursor === null ? null : string(data.nextCursor) }; }
+export function draft(value: unknown) { const item = record(value); return { id: string(item.id), recipients: list(item.recipients, string), subject: string(item.subject), body: string(item.body), version: integer(item.version) }; }
+export function sendReview(value: unknown) { const item = record(value); return { id: string(item.id), from: string(item.from), recipients: list(item.recipients, string), subject: string(item.subject), body: string(item.body) }; }
+export function sends(value: unknown) { return list(record(value).items, (value) => { const item = record(value); return { id: string(item.id), draftId: string(item.draftId), state: string(item.state) }; }); }

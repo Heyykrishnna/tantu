@@ -1,3 +1,5 @@
+import { Providers } from "./modules/providers/service.js";
+import { providerRoutes } from "./modules/providers/routes.js";
 import { schedulingRoutes } from "./modules/scheduling/routes.js";
 import { recurrenceRoutes } from "./modules/scheduling/recurrence-routes.js";
 import { projectRoutes } from "./modules/projects/routes.js";
@@ -19,7 +21,7 @@ import { Files } from "./modules/files/service.js";
 import { fileRoutes } from "./modules/files/routes.js";
 import { operationalRoutes } from "./http/routes/operations.js";
 
-export interface AppDependencies { database: Database; settings: RuntimeSettings }
+export interface AppDependencies { database: Database; settings: RuntimeSettings; providers?: Providers }
 
 export function createApp(config: ServerConfig, dependencies?: AppDependencies, captureRoute?: (options: RouteOptions) => void): FastifyInstance {
   const app = Fastify({
@@ -63,6 +65,7 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
     operationalRoutes(app, identity, queue);
     projectRoutes(app, identity);
     schedulingRoutes(app, identity);
+    providerRoutes(app, identity, dependencies.providers ?? new Providers(dependencies.database, dependencies.settings), queue);
     recurrenceRoutes(app, identity, new Records(dependencies.database, queue));
     app.get("/health/ready", async (_request, reply) => {
       try {

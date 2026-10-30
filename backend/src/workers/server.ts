@@ -3,7 +3,9 @@ import { readEnvironment } from "../config/environment.js";
 import { readRuntimeSettings } from "../config/runtime.js";
 import { Database } from "../platform/database/database.js";
 import { Files } from "../modules/files/service.js";
-import { eventQueue, scanQueue, Queue } from "./queue.js";
+import { Providers } from "../modules/providers/service.js";
+import { processProviderSync } from "../modules/providers/routes.js";
+import { eventQueue, providerQueue, scanQueue, Queue } from "./queue.js";
 import { publishEvents } from "./events.js";
 
 async function start(): Promise<void> {
@@ -12,6 +14,7 @@ async function start(): Promise<void> {
   const settings = readRuntimeSettings(readEnvironment());
   const database = new Database({ connectionString });
   const queue = new Queue(database);
+  const providers = new Providers(database, settings);
   const files = new Files(database, queue, settings);
   let stopping = false;
   let deadline: NodeJS.Timeout | undefined;
@@ -30,6 +33,7 @@ async function start(): Promise<void> {
     while (!stopping) {
       await queue.boss.supervise();
       await queue.runOne(eventQueue, publishEvents());
+      await queue.runOne(providerQueue, async (_client, data) => processProviderSync(providers, queue, data));
       await queue.runOne(scanQueue, (client, data) => files.process(client, data));
       await setTimeout(500);
     }

@@ -15,3 +15,5 @@ GRANT SELECT,INSERT,DELETE ON tantu.project_tasks,tantu.task_dependencies TO tan
 GRANT SELECT,INSERT,UPDATE ON tantu.calendar_states,tantu.work_blocks TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.schedule_reviews TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE ON tantu.recurrences,tantu.recurrence_occurrences TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.oauth_states,tantu.provider_projections,tantu.provider_cursors TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE ON tantu.provider_connections,tantu.mail_drafts,tantu.send_reviews,tantu.send_intents TO tantu_runtime;

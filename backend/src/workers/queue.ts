@@ -5,6 +5,7 @@ import { sqlAdapter } from "../platform/database/adapter.js";
 import type { Database } from "../platform/database/database.js";
 
 export const eventQueue = "canonical-events";
+export const providerQueue = "provider-sync";
 export const scanQueue = "file-scans";
 
 export async function initializeJobs(pool: Pool): Promise<void> {
@@ -13,7 +14,7 @@ export async function initializeJobs(pool: Pool): Promise<void> {
   try {
     await boss.start();
     await boss.createQueue("dead-letters");
-    for (const name of [eventQueue, scanQueue]) await boss.createQueue(name, { retryLimit: 4, retryDelay: 5, retryBackoff: true, expireInSeconds: 60, deadLetter: "dead-letters", retentionSeconds: 604800 });
+    for (const name of [eventQueue, scanQueue, providerQueue]) await boss.createQueue(name, { retryLimit: 4, retryDelay: 5, retryBackoff: true, expireInSeconds: 60, deadLetter: "dead-letters", retentionSeconds: 604800 });
   } finally { await boss.stop(); }
 }
 
@@ -27,7 +28,7 @@ export class Queue {
   async start(): Promise<void> { await this.boss.start(); }
   async stop(): Promise<void> { await this.boss.stop(); }
 
-  async enqueue(client: PoolClient, queue: string, id: string, data: { workspaceId: string; userId: string; recordId: string; fileId?: string }): Promise<void> {
+  async enqueue(client: PoolClient, queue: string, id: string, data: { workspaceId: string; userId: string; recordId: string; fileId?: string; providerKind?: "mail" | "calendar" }): Promise<void> {
     await this.boss.send(queue, data, { id, db: sqlAdapter(client) });
   }
 
