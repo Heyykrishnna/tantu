@@ -41,3 +41,4 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.daily_plans,tantu.daily_plan_blocks T
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.workspace_kits,tantu.workspace_kit_installations,tantu.synced_blocks TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.ai_workspace_settings,tantu.meeting_briefs TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.developer_api_keys,tantu.webhooks,tantu.webhook_deliveries TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.enterprise_policies,tantu.dlp_redaction_logs,tantu.enterprise_audit_exports TO tantu_runtime;

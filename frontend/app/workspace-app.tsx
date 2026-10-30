@@ -30,6 +30,7 @@ import PlanningPanel from "./planning-panel";
 import KitsPanel from "./kits-panel";
 import MeetingBriefsPanel from "./meeting-briefs-panel";
 import IntegrationsPanel from "./integrations-panel";
+import EnterprisePanel from "./enterprise-panel";
 import SearchModal from "./search-modal";
 import SignIn from "./sign-in";
 import RecordEditor from "./record-editor";
@@ -703,6 +704,12 @@ export default function WorkspaceApp() {
             />
           ) : view === "integrations" ? (
             <IntegrationsPanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
+            />
+          ) : view === "enterprise" ? (
+            <EnterprisePanel
               key={workspaceId}
               workspaceId={workspaceId}
               csrf={csrf}
