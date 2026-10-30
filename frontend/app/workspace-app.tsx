@@ -26,6 +26,7 @@ import PromisePanel from "./promise-panel";
 import RulesPanel from "./rules-panel";
 import DecisionPanel from "./decision-panel";
 import ContextGraphPanel from "./context-graph-panel";
+import PlanningPanel from "./planning-panel";
 import SearchModal from "./search-modal";
 import SignIn from "./sign-in";
 import RecordEditor from "./record-editor";
@@ -673,6 +674,12 @@ export default function WorkspaceApp() {
             />
           ) : view === "graph" ? (
             <ContextGraphPanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
+            />
+          ) : view === "planning" ? (
+            <PlanningPanel
               key={workspaceId}
               workspaceId={workspaceId}
               csrf={csrf}
