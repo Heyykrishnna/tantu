@@ -5,6 +5,7 @@ import { portabilityQuotaRoutes } from "./modules/portability-quotas/routes.js";
 import { contextDecisionRoutes } from "./modules/context-decisions/routes.js";
 import { planningWorkloadRoutes } from "./modules/planning-workload/routes.js";
 import { kitsCollaborationRoutes } from "./modules/kits-collaboration/routes.js";
+import { aiMeetingRoutes } from "./modules/ai-meetings/routes.js";
 import { templateRoutes } from "./modules/knowledge/template-routes.js";
 import { sourceRoutes } from "./modules/knowledge/source-routes.js";
 import { collaborationRoutes } from "./modules/knowledge/collaboration-routes.js";
@@ -108,6 +109,7 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
     contextDecisionRoutes(app, identity);
     planningWorkloadRoutes(app, identity);
     kitsCollaborationRoutes(app, identity);
+    aiMeetingRoutes(app, identity);
     app.get("/health/ready", async (_request, reply) => {
       try {
         await dependencies.database.pool.query("SELECT 1");

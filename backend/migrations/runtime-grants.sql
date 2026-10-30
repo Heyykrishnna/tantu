@@ -39,3 +39,4 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.workspace_quotas,tantu.user_preferenc
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.decisions,tantu.decision_revisions,tantu.context_nodes,tantu.context_edges TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.daily_plans,tantu.daily_plan_blocks TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.workspace_kits,tantu.workspace_kit_installations,tantu.synced_blocks TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.ai_workspace_settings,tantu.meeting_briefs TO tantu_runtime;
