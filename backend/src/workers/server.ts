@@ -1,3 +1,4 @@
+import { reconcileDue } from "../modules/providers/reconciliation.js";
 import { setTimeout } from "node:timers/promises";
 import { readEnvironment } from "../config/environment.js";
 import { readRuntimeSettings } from "../config/runtime.js";
@@ -32,7 +33,9 @@ async function start(): Promise<void> {
     await database.verifyRole();
     await files.store.initialize();
     await queue.start();
+    let nextReconciliation = 0;
     while (!stopping) {
+      if (Date.now() >= nextReconciliation) { await reconcileDue(providers,queue); nextReconciliation=Date.now()+30000; }
       await queue.boss.supervise();
       await queue.runOne(eventQueue, publishEvents());
       await queue.runOne(effectQueue, async (_client, data) => { const scope = jobScope(data); if (typeof data !== "object" || data === null || !("effectId" in data) || typeof data.effectId !== "string") throw new Error("Invalid provider effect job."); await executeProviderEffect(providers, scope, data.effectId); });

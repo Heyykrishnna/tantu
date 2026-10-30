@@ -1,0 +1,10 @@
+import type { Providers } from "./service.js";
+import { array, object, string } from "../../platform/value.js";
+import type { ProjectionPage } from "./projections.js";
+export async function calendarWindow(providers: Providers, token: string, cursor: string | null): Promise<ProjectionPage> {
+  const previous = cursor?.startsWith("window:") ? object(JSON.parse(Buffer.from(cursor.slice(7), "base64url").toString("utf8"))) : {};
+  const from = typeof previous.from === "string" ? previous.from : new Date(Date.now() - 30 * 86400000).toISOString(); const to = typeof previous.to === "string" ? previous.to : new Date(Date.now() + 90 * 86400000).toISOString();
+  const path = "https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&showDeleted=true&maxResults=100&timeMin=" + encodeURIComponent(from) + "&timeMax=" + encodeURIComponent(to) + (typeof previous.next === "string" ? "&pageToken=" + encodeURIComponent(previous.next) : "");
+  const result = object(await providers.http.request("google", token, path)); const values = array(result.items ?? []); if (values.length > 1000) throw new Error("Calendar window page limit exceeded."); const next = typeof result.nextPageToken === "string" ? result.nextPageToken : null;
+  return { items: values.map(value => { const event = object(value); const id = string(event.id); return { id, ...(event.status === "cancelled" ? { deleted: true } : {}), data: { id, title: typeof event.summary === "string" ? event.summary : "", start: event.start, end: event.end, recurrence: [], recurringEventId: event.recurringEventId ?? null, originalStartTime: event.originalStartTime ?? null, etag: event.etag, status: event.status, allDay: typeof object(event.start ?? {}).date === "string", endSemantics: "exclusive" } }; }), cursor: next ? "window:" + Buffer.from(JSON.stringify({ from, to, next })).toString("base64url") : "window-done", complete: !next, coverage: `primary calendar expanded occurrences and exceptions; rolling window ${from} through ${to}; exclusive all-day end` };
+}

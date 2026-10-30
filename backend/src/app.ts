@@ -1,6 +1,8 @@
 import { collaborationRoutes } from "./modules/knowledge/collaboration-routes.js";
 import { collectionRoutes } from "./modules/knowledge/collection-routes.js";
 import { relationRoutes } from "./modules/knowledge/relations-routes.js";
+import { providerHealthRoutes } from "./modules/providers/health-routes.js";
+import { notificationRoutes } from "./modules/providers/notification-routes.js";
 import { Providers } from "./modules/providers/service.js";
 import { providerRoutes } from "./modules/providers/routes.js";
 import { schedulingRoutes } from "./modules/scheduling/routes.js";
@@ -79,9 +81,11 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
     preferenceRoutes(app, identity);
     const providers = dependencies.providers ?? new Providers(dependencies.database, dependencies.settings);
     providerRoutes(app, identity, providers, queue);
+    notificationRoutes(app, providers, queue);
+    providerHealthRoutes(app, identity);
     calendarEffectRoutes(app, identity, providers, queue);
     mailWorkflowRoutes(app, identity, providers);
-    mailActionRoutes(app,identity,providers,queue);
+    mailActionRoutes(app, identity, providers, queue);
     recurrenceRoutes(app, identity, new Records(dependencies.database, queue));
     collaborationRoutes(app, identity, new Records(dependencies.database, queue));
     collectionRoutes(app, identity);

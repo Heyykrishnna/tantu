@@ -6,7 +6,7 @@ export class ProviderFailure extends Failure {
 export function allowedUrl(provider: Provider, path: string): URL {
   const url = new URL(path, provider === "google" ? "https://gmail.googleapis.com" : "https://graph.microsoft.com");
   const roots = provider === "google" ? ["https://gmail.googleapis.com/gmail/v1/users/me/", "https://www.googleapis.com/calendar/v3/"] : ["https://graph.microsoft.com/v1.0/me/"];
-  if (url.username || url.password || url.hash || !roots.some((root) => url.href.startsWith(root))) throw new Error("Provider URL is outside its allowed API boundary.");
+  if (url.username || url.password || url.hash || !(roots.some((root) => url.href.startsWith(root)) || provider === "microsoft" && url.origin === "https://graph.microsoft.com" && /^\/v1\.0\/subscriptions(?:\/[a-zA-Z0-9-]+)?$/.test(url.pathname) && !url.search)) throw new Error("Provider URL is outside its allowed API boundary.");
   return url;
 }
 export function retrySeconds(value: string | null, now = Date.now()): number {

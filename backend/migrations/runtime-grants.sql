@@ -29,3 +29,5 @@ GRANT DELETE ON tantu.work_reviews TO tantu_runtime;
 GRANT SELECT,INSERT,DELETE ON tantu.project_references TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE ON tantu.calendar_preferences,tantu.provider_effect_reviews,tantu.provider_effects TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE ON tantu.mail_preferences,tantu.mail_rules TO tantu_runtime;
+GRANT EXECUTE ON FUNCTION tantu.claim_provider_reconciliation() TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.provider_folders,tantu.provider_folder_scans,tantu.provider_subscriptions,tantu.provider_notifications TO tantu_runtime;

@@ -1,4 +1,5 @@
 "use client";
+import ProviderHealth from "./provider-health";
 import MailboxActions from "./mailbox-actions";
 import MailWorkflows from "./mail-workflows";
 import ProviderCalendarActions from "./provider-calendar-actions";
@@ -374,7 +375,8 @@ export default function MailPanel({
               )}
               {kind === "mail" && (
                 <>
-                  <MailboxActions
+                  <ProviderHealth key={accountId + "-health"} workspaceId={workspaceId} connectionId={accountId} />
+                <MailboxActions
                     key={accountId + "-actions"}
                     workspaceId={workspaceId}
                     connectionId={accountId}

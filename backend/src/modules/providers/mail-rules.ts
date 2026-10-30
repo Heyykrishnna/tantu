@@ -1,0 +1,4 @@
+import type { PoolClient } from "pg";
+export async function applyMailRules(client: PoolClient, connectionId: string, ids: string[]): Promise<void> {
+  await client.query("INSERT INTO tantu.mail_preferences(workspace_id,connection_id,message_id,tag) SELECT p.workspace_id,p.connection_id,p.external_id,r.tag FROM tantu.provider_projections p JOIN LATERAL(SELECT tag FROM tantu.mail_rules r WHERE r.connection_id=p.connection_id AND r.enabled AND strpos(lower(p.data->>r.field),lower(r.contains))>0 ORDER BY r.id LIMIT 1)r ON true WHERE p.connection_id=$1 AND p.kind='mail' AND p.external_id=ANY($2::text[]) ON CONFLICT(connection_id,message_id) DO UPDATE SET tag=excluded.tag,version=tantu.mail_preferences.version+1 WHERE tantu.mail_preferences.tag IS DISTINCT FROM excluded.tag", [connectionId, ids]);
+}

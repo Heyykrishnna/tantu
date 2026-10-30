@@ -38,7 +38,7 @@ export function mailActionRoutes(app: FastifyInstance, identity: Identity, provi
             const input = mailAction(effect.request); const token = await providers.access(client, account);
             const current = valueObject(await providers.http.request(account.provider, token, account.provider === "google" ? `/gmail/v1/users/me/messages/${encodeURIComponent(input.messageId)}?format=metadata` : `/v1.0/me/messages/${encodeURIComponent(input.messageId)}?$select=id,isRead,parentFolderId`));
             const labels = Array.isArray(current.labelIds) ? array(current.labelIds) : [];
-            const confirmed = account.provider === "google" ? input.action === "read" ? !labels.includes("UNREAD") : input.action === "unread" ? labels.includes("UNREAD") : labels.includes(input.targetId) : input.action === "move" ? current.parentFolderId === input.targetId : current.isRead === (input.action === "read");
+            const confirmed = account.provider === "google" ? Array.isArray(current.labelIds) && ( input.action === "read" ? !labels.includes("UNREAD") : input.action === "unread" ? labels.includes("UNREAD") : labels.includes(input.targetId)) : input.action === "move" ? current.parentFolderId === input.targetId : current.isRead === (input.action === "read");
             if (confirmed) await client.query("UPDATE tantu.provider_effects SET state='confirmed' WHERE id=$1", [request.params.effectId]);
             return { state: confirmed ? "confirmed" : "unknown" };
         });
