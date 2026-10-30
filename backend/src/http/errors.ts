@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { Failure } from "../platform/failure.js";
 
 function describeError(statusCode: number) {
   switch (statusCode) {
@@ -42,7 +43,7 @@ export function registerErrorHandlers(app: FastifyInstance): void {
     }
 
     return reply.code(statusCode).send({
-      ...describeError(statusCode),
+      ...(error instanceof Failure ? { code: error.code, message: error.message } : describeError(statusCode)),
       requestId: request.id,
     });
   });
