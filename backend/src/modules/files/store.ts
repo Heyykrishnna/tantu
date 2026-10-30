@@ -5,7 +5,7 @@ import { join } from "node:path";
 export const maximumFileBytes = 5 * 1024 * 1024;
 
 export class FileStore {
-  constructor(readonly directory: string) {}
+  constructor(readonly directory: string) { }
   path(id: string): string {
     if (!/^[a-f0-9-]{36}$/.test(id)) throw new Error("Invalid storage identity.");
     return join(this.directory, id);

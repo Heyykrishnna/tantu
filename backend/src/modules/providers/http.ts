@@ -15,14 +15,14 @@ export function retrySeconds(value: string | null, now = Date.now()): number {
   return Number.isFinite(seconds) ? Math.max(1, Math.min(3600, seconds)) : 60;
 }
 export class ProviderHttp {
-  constructor(readonly fetcher: typeof fetch = fetch) {}
+  constructor(readonly fetcher: typeof fetch = fetch) { }
   async request(provider: Provider, token: string, path: string, method = "GET", body?: unknown): Promise<unknown> {
     const response = await this.fetcher(allowedUrl(provider, path), { method, redirect: "error", signal: AbortSignal.timeout(15_000), headers: { authorization: `Bearer ${token}`, ...(provider === "microsoft" ? { Prefer: 'IdType="ImmutableId", outlook.body-content-type="text", outlook.timezone="UTC"' } : {}), ...(body === undefined ? {} : { "content-type": "application/json" }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     if (!response.ok) { await response.body?.cancel(); throw new ProviderFailure(response.status, retrySeconds(response.headers.get("retry-after"))); }
     if (response.status === 202 || response.status === 204) { await response.body?.cancel(); return { accepted: true }; }
     const reader = response.body?.getReader(); if (!reader) throw new Error("Provider response was empty.");
     const chunks: Uint8Array[] = []; let bytes = 0;
-    try { for (;;) { const part = await reader.read(); if (part.done) break; bytes += part.value.length; if (bytes > 2_097_152) throw new Error("Provider response limit exceeded."); chunks.push(part.value); } }
+    try { for (; ;) { const part = await reader.read(); if (part.done) break; bytes += part.value.length; if (bytes > 2_097_152) throw new Error("Provider response limit exceeded."); chunks.push(part.value); } }
     finally { await reader.cancel(); reader.releaseLock(); }
     const value: unknown = JSON.parse(Buffer.concat(chunks).toString("utf8")); return value;
   }

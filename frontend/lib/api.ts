@@ -28,14 +28,18 @@ export function list<T>(value: unknown, parse: (item: unknown) => T): T[] {
 function document(value: unknown): Document {
   const data = record(value);
   if (data.type !== "doc") throw new Error("The document format is unsupported.");
-  return { type: "doc", content: list(data.content, (value) => {
-    const block = record(value);
-    return { type: choice(block.type, ["paragraph", "heading"]), content: list(block.content, (value) => {
-      const text = record(value);
-      if (text.type !== "text") throw new Error("The document text is unsupported.");
-      return { type: "text", text: string(text.text) };
-    }) };
-  }) };
+  return {
+    type: "doc", content: list(data.content, (value) => {
+      const block = record(value);
+      return {
+        type: choice(block.type, ["paragraph", "heading"]), content: list(block.content, (value) => {
+          const text = record(value);
+          if (text.type !== "text") throw new Error("The document text is unsupported.");
+          return { type: "text", text: string(text.text) };
+        })
+      };
+    })
+  };
 }
 export function canonical(value: unknown): CanonicalRecord {
   const data = record(value);

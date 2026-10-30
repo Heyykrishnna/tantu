@@ -32,9 +32,9 @@ export function registerErrorHandlers(app: FastifyInstance): void {
         : undefined;
     const statusCode =
       typeof reportedStatus === "number" &&
-      Number.isInteger(reportedStatus) &&
-      reportedStatus >= 400 &&
-      reportedStatus <= 599
+        Number.isInteger(reportedStatus) &&
+        reportedStatus >= 400 &&
+        reportedStatus <= 599
         ? reportedStatus
         : 500;
 
