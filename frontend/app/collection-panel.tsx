@@ -1,6 +1,6 @@
 "use client";
 import CollectionViews from "./collection-views";
-import type {CollectionView} from "./collection-views";
+import type { CollectionView } from "./collection-views";
 import CollectionTemplates from "./collection-templates";
 
 import { useCallback, useEffect, useState } from "react";
@@ -68,9 +68,12 @@ export default function CollectionPanel({
   const [editRow, setEditRow] = useState("");
   const [filter, setFilter] = useState("");
   const [sort, setSort] = useState("title");
-  const [columns,setColumns]=useState<string[]|null>(null);
-  const [group,setGroup]=useState("none");
-  const [propertyFilter,setPropertyFilter]=useState({propertyId:"",value:""});
+  const [columns, setColumns] = useState<string[] | null>(null);
+  const [group, setGroup] = useState("none");
+  const [propertyFilter, setPropertyFilter] = useState({
+    propertyId: "",
+    value: "",
+  });
   const [mode, setMode] = useState<"table" | "list">("table");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -131,7 +134,9 @@ export default function CollectionPanel({
   async function select(id: string) {
     const data = await api(base + "/" + id, collection);
     setDetail(data);
-    setColumns(null);setGroup("none");setPropertyFilter({propertyId:"",value:""});
+    setColumns(null);
+    setGroup("none");
+    setPropertyFilter({ propertyId: "", value: "" });
     setDefinitions(data.properties);
     setReview(null);
     setEditRow("");
@@ -235,21 +240,50 @@ export default function CollectionPanel({
   const newSource = sources.find((source) => source.id === editRow);
   const visible =
     detail?.items
-      .filter((row) =>
-        row.record.title.toLowerCase().includes(filter.toLowerCase()) && (!propertyFilter.propertyId || display(row.values[propertyFilter.propertyId]).toLowerCase().includes(propertyFilter.value.toLowerCase())),
+      .filter(
+        (row) =>
+          row.record.title.toLowerCase().includes(filter.toLowerCase()) &&
+          (!propertyFilter.propertyId ||
+            display(row.values[propertyFilter.propertyId])
+              .toLowerCase()
+              .includes(propertyFilter.value.toLowerCase())),
       )
-      .sort((a, b) =>
-        (group !== "none" ? display(a.values[group]).localeCompare(display(b.values[group])) : 0) || (sort === "title"
-          ? a.record.title.localeCompare(b.record.title)
-          : display(a.values[sort]).localeCompare(
-              display(b.values[sort]),
-              undefined,
-              { numeric: true },
-            )),
+      .sort(
+        (a, b) =>
+          (group !== "none"
+            ? display(a.values[group]).localeCompare(display(b.values[group]))
+            : 0) ||
+          (sort === "title"
+            ? a.record.title.localeCompare(b.record.title)
+            : display(a.values[sort]).localeCompare(
+                display(b.values[sort]),
+                undefined,
+                { numeric: true },
+              )),
       ) ?? [];
-  const visibleProperties=detail?.properties.filter(property=>columns===null||columns.includes(property.id))??[];
-  const view:CollectionView={mode,sort:"title",group:"none",status:"all",columns:columns??detail?.properties.map(property=>property.id)??[],filter,propertySort:sort,propertyGroup:group,propertyFilter};
-  function applyView(value:CollectionView){setMode(value.mode);setColumns(value.columns);setFilter(value.filter);setSort(value.propertySort);setGroup(value.propertyGroup);setPropertyFilter(value.propertyFilter);}
+  const visibleProperties =
+    detail?.properties.filter(
+      (property) => columns === null || columns.includes(property.id),
+    ) ?? [];
+  const view: CollectionView = {
+    mode,
+    sort: "title",
+    group: "none",
+    status: "all",
+    columns: columns ?? detail?.properties.map((property) => property.id) ?? [],
+    filter,
+    propertySort: sort,
+    propertyGroup: group,
+    propertyFilter,
+  };
+  function applyView(value: CollectionView) {
+    setMode(value.mode);
+    setColumns(value.columns);
+    setFilter(value.filter);
+    setSort(value.propertySort);
+    setGroup(value.propertyGroup);
+    setPropertyFilter(value.propertyFilter);
+  }
   const valueField = (property: Property, value: unknown) =>
     property.type === "formula" ? (
       <p className={`text-[11px] ${mutedClass}`}>
@@ -405,8 +439,21 @@ export default function CollectionPanel({
                 </select>
               </Field>
             </div>
-            <CollectionViews key={detail.id} workspaceId={workspaceId} collectionId={detail.id} csrf={csrf} properties={detail.properties} current={view} onApply={applyView}/>
-            <CollectionTemplates workspaceId={workspaceId} collectionId={detail.id} csrf={csrf} canEdit={detail.canEdit}/>
+            <CollectionViews
+              key={detail.id}
+              workspaceId={workspaceId}
+              collectionId={detail.id}
+              csrf={csrf}
+              properties={detail.properties}
+              current={view}
+              onApply={applyView}
+            />
+            <CollectionTemplates
+              workspaceId={workspaceId}
+              collectionId={detail.id}
+              csrf={csrf}
+              canEdit={detail.canEdit}
+            />
             <div className={`${panelClass} overflow-auto`}>
               {!visible.length ? (
                 <p className="p-6 text-[12px]">
@@ -420,7 +467,14 @@ export default function CollectionPanel({
                   <thead>
                     <tr>
                       <th className="px-4 py-3">Record</th>
-                      {group!=="none"&&<th className="px-4 py-3">Group: {detail.properties.find(property=>property.id===group)?.name??"Unavailable"}</th>}
+                      {group !== "none" && (
+                        <th className="px-4 py-3">
+                          Group:{" "}
+                          {detail.properties.find(
+                            (property) => property.id === group,
+                          )?.name ?? "Unavailable"}
+                        </th>
+                      )}
                       {visibleProperties.map((property) => (
                         <th
                           className="whitespace-nowrap px-4 py-3"
@@ -453,7 +507,11 @@ export default function CollectionPanel({
                             </span>
                           )}
                         </td>
-                        {group!=="none"&&<td className="px-4 py-3">{display(row.values[group])}</td>}
+                        {group !== "none" && (
+                          <td className="px-4 py-3">
+                            {display(row.values[group])}
+                          </td>
+                        )}
                         {visibleProperties.map((property) => (
                           <td
                             className="max-w-xs truncate px-4 py-3"
@@ -490,7 +548,11 @@ export default function CollectionPanel({
                       >
                         {row.record.title}
                       </button>
-                      <Badge>{group!=="none"?display(row.values[group]):row.record.kind}</Badge>
+                      <Badge>
+                        {group !== "none"
+                          ? display(row.values[group])
+                          : row.record.kind}
+                      </Badge>
                     </li>
                   ))}
                 </ul>
@@ -725,7 +787,9 @@ export default function CollectionPanel({
                     </h2>
                     <p className="text-[12px]">
                       {review.removed.length} removed properties ·{" "}
-                      {review.affected} visible rows need repair. Affected saved views: {review.affectedViews.join(", ")||"None visible to you"}
+                      {review.affected} visible rows need repair. Affected saved
+                      views:{" "}
+                      {review.affectedViews.join(", ") || "None visible to you"}
                     </p>
                     <p className={`text-[11px] ${mutedClass}`}>
                       {review.repair}

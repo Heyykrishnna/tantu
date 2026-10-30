@@ -16,7 +16,7 @@ export async function workFingerprint(client: PoolClient, targets: WorkTarget[],
   }
   const ids = targets.map(target => target.id);
   const blocks = (await client.query('SELECT id,task_id AS "taskId",version,locked,starts_at AS "startsAt" FROM tantu.work_blocks WHERE task_id=ANY($1::uuid[]) AND NOT cancelled AND ends_at>now() ORDER BY id FOR UPDATE', [ids])).rows;
-  const dependencies = (await client.query('SELECT d.prerequisite_id AS "prerequisiteId",d.dependent_id AS "dependentId",r.version,r.status,r.deadline::text FROM tantu.task_dependencies d JOIN tantu.records r ON r.id=d.dependent_id WHERE d.prerequisite_id=ANY($1::uuid[]) ORDER BY d.prerequisite_id,d.dependent_id', [ids])).rows;
+  const dependencies = (await client.query('SELECT d.prerequisite_id AS "prerequisiteId",d.dependent_id AS "dependentId",r.version,r.status,r.title,r.deadline::text,p.deadline::text AS "prerequisiteDeadline",(p.deadline IS NOT NULL AND r.deadline IS NOT NULL AND p.deadline>r.deadline) AS "deadlineRisk" FROM tantu.task_dependencies d JOIN tantu.records r ON r.id=d.dependent_id JOIN tantu.records p ON p.id=d.prerequisite_id WHERE d.prerequisite_id=ANY($1::uuid[]) ORDER BY d.prerequisite_id,d.dependent_id', [ids])).rows;
   const coordination = (await client.query("SELECT task_id,version FROM tantu.task_coordination WHERE task_id=ANY($1::uuid[]) ORDER BY task_id", [ids])).rows;
   return { fingerprint: digest(JSON.stringify({ targets, blocks, dependencies, coordination })), blocks, dependencies };
 }

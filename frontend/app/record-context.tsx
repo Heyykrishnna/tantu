@@ -28,7 +28,9 @@ export default function RecordContext({
 }) {
   const [data, setData] = useState<ReturnType<typeof context> | null>(null);
   const [sources, setSources] = useState<CanonicalRecord[]>([]);
-  const [mentionOptions,setMentionOptions]=useState<{id:string;name:string}[]>([]);
+  const [mentionOptions, setMentionOptions] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const base = `/workspaces/${workspaceId}/records/${entry.id}`;
@@ -50,7 +52,28 @@ export default function RecordContext({
       });
     return () => controller.abort();
   }, [base]);
-  useEffect(()=>{if(!entry.canEdit)return;const controller=new AbortController();api(base+"/mention-options",items(value=>{const row=record(value);return{id:string(row.id),name:string(row.name)};}),{signal:controller.signal}).then(setMentionOptions).catch((error:unknown)=>{if(!controller.signal.aborted)setMessage(error instanceof Error?error.message:"Mention options unavailable.");});return()=>controller.abort();},[base,entry.canEdit]);
+  useEffect(() => {
+    if (!entry.canEdit) return;
+    const controller = new AbortController();
+    api(
+      base + "/mention-options",
+      items((value) => {
+        const row = record(value);
+        return { id: string(row.id), name: string(row.name) };
+      }),
+      { signal: controller.signal },
+    )
+      .then(setMentionOptions)
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted)
+          setMessage(
+            error instanceof Error
+              ? error.message
+              : "Mention options unavailable.",
+          );
+      });
+    return () => controller.abort();
+  }, [base, entry.canEdit]);
   async function submit(
     event: FormEvent<HTMLFormElement>,
     action: "comments" | "relations" | "duplicate-page" | "restore-body",
@@ -65,7 +88,10 @@ export default function RecordContext({
         action === "comments"
           ? {
               body: String(fields.get("body")),
-              mentions: fields.getAll("mentions").map(value=>String(value)).filter(Boolean),
+              mentions: fields
+                .getAll("mentions")
+                .map((value) => String(value))
+                .filter(Boolean),
             }
           : action === "relations"
             ? {
@@ -127,7 +153,12 @@ export default function RecordContext({
         <Notice role="alert" tone="error">
           {message}
         </Notice>
-        <SourcePreviews base={base} csrf={csrf} editable={entry.canEdit} sources={sources.filter(source=>source.id!==entry.id)}/>
+        <SourcePreviews
+          base={base}
+          csrf={csrf}
+          editable={entry.canEdit}
+          sources={sources.filter((source) => source.id !== entry.id)}
+        />
         {data?.relations.map((relation) => (
           <p
             key={relation.sourceId + relation.targetId + relation.type}
@@ -184,7 +215,20 @@ export default function RecordContext({
             onSubmit={(event) => void submit(event, "comments")}
             className="grid gap-3"
           >
-            <Field label="Mention people with current source access"><select name="mentions" multiple className={inputClass} size={Math.min(4,Math.max(2,mentionOptions.length))}>{mentionOptions.map(person=><option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>
+            <Field label="Mention people with current source access">
+              <select
+                name="mentions"
+                multiple
+                className={inputClass}
+                size={Math.min(4, Math.max(2, mentionOptions.length))}
+              >
+                {mentionOptions.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field label="Add a comment">
               <textarea
                 name="body"

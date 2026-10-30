@@ -3,10 +3,196 @@ import { useEffect, useState } from "react";
 import { acknowledgment, api, items, list, record, string } from "../lib/api";
 import { integer } from "../lib/projects";
 import { Button, Field, Notice, inputClass } from "../components/ui";
-function template(value: unknown) { const row = record(value); return { id: string(row.id), name: string(row.name), version: integer(row.version), available: row.available === true }; }
-export default function CollectionTemplates({ workspaceId, collectionId, csrf, canEdit }: { workspaceId: string; collectionId: string; csrf: string; canEdit: boolean }) {
-  const path = `/workspaces/${workspaceId}/knowledge-templates`; const [templates, setTemplates] = useState<ReturnType<typeof template>[]>([]); const [name, setName] = useState("My collection template"); const [rows, setRows] = useState(false); const [selected, setSelected] = useState(""); const [review, setReview] = useState<Record<string, unknown> | null>(null); const [message, setMessage] = useState(""); const [busy, setBusy] = useState(false);
-  useEffect(() => { const controller = new AbortController(); api(path, items(template), { signal: controller.signal }).then(setTemplates).catch((error: unknown) => { if (!controller.signal.aborted) setMessage(error instanceof Error ? error.message : "Templates unavailable."); }); return () => controller.abort(); }, [path]);
-  async function run(action: () => Promise<void>) { setBusy(true); setMessage(""); try { await action(); } catch (error) { setMessage(error instanceof Error ? error.message : "Template action failed."); } finally { setBusy(false); } }
-  return <details className="rounded-lg border border-[#dedfeb] p-3 dark:border-[#303032]"><summary className="cursor-pointer text-xs font-medium">Reusable collection templates</summary><div className="mt-3 grid gap-3"><Notice>{message}</Notice>{canEdit && <><Field label="Template name"><input className={inputClass} maxLength={100} value={name} onChange={event => setName(event.target.value)} /></Field><label className="text-xs"><input type="checkbox" checked={rows} onChange={event => setRows(event.target.checked)} /> Include up to ten currently visible records and their supported values</label><Button disabled={busy || !name.trim()} onClick={() => void run(async () => { await api(path, acknowledgment, { method: "POST", csrf, body: { sourceId: collectionId, name, includeRows: rows, expectedVersion: templates.find(item => item.name === name)?.version ?? 0, operationId: crypto.randomUUID() } }); setTemplates(await api(path, items(template))); setMessage("Template saved. Later source changes require an explicit refresh with this same name."); })}>Save or refresh template</Button></>}<Field label="Use template"><select className={inputClass} value={selected} onChange={event => { setSelected(event.target.value); setReview(null); }}><option value="">Choose a private template</option>{templates.map(item => <option key={item.id} value={item.id} disabled={!item.available}>{item.name}{!item.available ? " · source unavailable" : ""}</option>)}</select></Field><Button disabled={busy || !selected} onClick={() => void run(async () => setReview(await api(path + `/${selected}/review`, record, { method: "POST", csrf })))}>Review new collection</Button>{review && <section className="grid gap-3 border-t border-white/10 pt-3"><p className="text-xs">{string(review.permissions)}</p><p className="text-xs">Properties: {list(review.properties, string).join(", ") || "None"}. New records: {list(review.records, value => string(record(value).title)).join(", ") || "None"}.</p><Field label="New collection title"><input className={inputClass} maxLength={200} value={name} onChange={event => setName(event.target.value)} /></Field><Button disabled={busy || !name.trim()} onClick={() => void run(async () => { const created = await api(path + `/${selected}/apply`, record, { method: "POST", csrf, body: { reviewId: string(review.id), title: name, operationId: crypto.randomUUID() } }); setReview(null); setMessage("Private collection created: " + string(created.id) + ". Refresh Collections to open it."); })}>Confirm private collection</Button></section>}</div></details>;
+function template(value: unknown) {
+  const row = record(value);
+  return {
+    id: string(row.id),
+    name: string(row.name),
+    version: integer(row.version),
+    available: row.available === true,
+  };
+}
+export default function CollectionTemplates({
+  workspaceId,
+  collectionId,
+  csrf,
+  canEdit,
+}: {
+  workspaceId: string;
+  collectionId: string;
+  csrf: string;
+  canEdit: boolean;
+}) {
+  const path = `/workspaces/${workspaceId}/knowledge-templates`;
+  const [templates, setTemplates] = useState<ReturnType<typeof template>[]>([]);
+  const [name, setName] = useState("My collection template");
+  const [rows, setRows] = useState(false);
+  const [selected, setSelected] = useState("");
+  const [review, setReview] = useState<Record<string, unknown> | null>(null);
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    api(path, items(template), { signal: controller.signal })
+      .then(setTemplates)
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted)
+          setMessage(
+            error instanceof Error ? error.message : "Templates unavailable.",
+          );
+      });
+    return () => controller.abort();
+  }, [path]);
+  async function run(action: () => Promise<void>) {
+    setBusy(true);
+    setMessage("");
+    try {
+      await action();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Template action failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <details className="rounded-lg border border-[#dedfeb] p-3 dark:border-[#303032]">
+      <summary className="cursor-pointer text-xs font-medium">
+        Reusable collection templates
+      </summary>
+      <div className="mt-3 grid gap-3">
+        <Notice>{message}</Notice>
+        {canEdit && (
+          <>
+            <Field label="Template name">
+              <input
+                className={inputClass}
+                maxLength={100}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </Field>
+            <label className="text-xs">
+              <input
+                type="checkbox"
+                checked={rows}
+                onChange={(event) => setRows(event.target.checked)}
+              />{" "}
+              Include up to ten currently visible records and their supported
+              values
+            </label>
+            <Button
+              disabled={busy || !name.trim()}
+              onClick={() =>
+                void run(async () => {
+                  await api(path, acknowledgment, {
+                    method: "POST",
+                    csrf,
+                    body: {
+                      sourceId: collectionId,
+                      name,
+                      includeRows: rows,
+                      expectedVersion:
+                        templates.find((item) => item.name === name)?.version ??
+                        0,
+                      operationId: crypto.randomUUID(),
+                    },
+                  });
+                  setTemplates(await api(path, items(template)));
+                  setMessage(
+                    "Template saved. Later source changes require an explicit refresh with this same name.",
+                  );
+                })
+              }
+            >
+              Save or refresh template
+            </Button>
+          </>
+        )}
+        <Field label="Use template">
+          <select
+            className={inputClass}
+            value={selected}
+            onChange={(event) => {
+              setSelected(event.target.value);
+              setReview(null);
+            }}
+          >
+            <option value="">Choose a private template</option>
+            {templates.map((item) => (
+              <option key={item.id} value={item.id} disabled={!item.available}>
+                {item.name}
+                {!item.available ? " · source unavailable" : ""}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Button
+          disabled={busy || !selected}
+          onClick={() =>
+            void run(async () =>
+              setReview(
+                await api(path + `/${selected}/review`, record, {
+                  method: "POST",
+                  csrf,
+                }),
+              ),
+            )
+          }
+        >
+          Review new collection
+        </Button>
+        {review && (
+          <section className="grid gap-3 border-t border-white/10 pt-3">
+            <p className="text-xs">{string(review.permissions)}</p>
+            <p className="text-xs">
+              Properties: {list(review.properties, string).join(", ") || "None"}
+              . New records:{" "}
+              {list(review.records, (value) =>
+                string(record(value).title),
+              ).join(", ") || "None"}
+              .
+            </p>
+            <Field label="New collection title">
+              <input
+                className={inputClass}
+                maxLength={200}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </Field>
+            <Button
+              disabled={busy || !name.trim()}
+              onClick={() =>
+                void run(async () => {
+                  const created = await api(
+                    path + `/${selected}/apply`,
+                    record,
+                    {
+                      method: "POST",
+                      csrf,
+                      body: {
+                        reviewId: string(review.id),
+                        title: name,
+                        operationId: crypto.randomUUID(),
+                      },
+                    },
+                  );
+                  setReview(null);
+                  setMessage(
+                    "Private collection created: " +
+                      string(created.id) +
+                      ". Refresh Collections to open it.",
+                  );
+                })
+              }
+            >
+              Confirm private collection
+            </Button>
+          </section>
+        )}
+      </div>
+    </details>
+  );
 }

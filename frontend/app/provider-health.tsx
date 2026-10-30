@@ -2,9 +2,107 @@
 import { useEffect, useState } from "react";
 import { api, list, record, string } from "../lib/api";
 import { Button, Notice, panelClass } from "../components/ui";
-function health(value: unknown) { const data = record(value); return { reconciliation: string(data.reconciliation), notifications: data.notificationsConfigured === true, account: data.account ? record(data.account) : null, coverage: list(data.coverage, value => { const row = record(value); return { kind: string(row.kind), coverage: string(row.coverage), updatedAt: string(row.updatedAt) }; }), subscriptions: list(data.subscriptions, value => { const row = record(value); return { kind: string(row.kind), expiresAt: string(row.expiresAt) }; }) }; }
-export default function ProviderHealth({ workspaceId, connectionId }: { workspaceId: string; connectionId: string }) {
-  const path = `/workspaces/${workspaceId}/providers/${connectionId}/health`; const [value, setValue] = useState<ReturnType<typeof health> | null>(null); const [error, setError] = useState("");
-  useEffect(() => { const controller = new AbortController(); api(path, health, { signal: controller.signal }).then(setValue).catch((error: unknown) => { if (!controller.signal.aborted) setError(error instanceof Error ? error.message : "Connection health unavailable."); }); return () => controller.abort(); }, [path]);
-  return <details className={`${panelClass} p-4 text-xs`}><summary className="cursor-pointer font-medium">Connection health and synchronization coverage</summary>{error && <Notice>{error}</Notice>}{value && <div className="mt-3 grid gap-2"><p>Status: {typeof value.account?.status === "string" ? value.account.status : "Unavailable"}. Last complete sync: {typeof value.account?.lastSyncedAt === "string" ? value.account.lastSyncedAt : "None"}. Retry after: {typeof value.account?.retryAt === "string" ? value.account.retryAt : "No provider delay"}.</p><p>{value.reconciliation}</p><p>Notification subscriptions: {value.notifications ? "configured" : "disabled; periodic reconciliation remains enabled"}.</p>{value.coverage.map(item => <p key={item.kind}>{item.kind}: {item.coverage}. Checkpoint {item.updatedAt}.</p>)}{value.subscriptions.map(item => <p key={item.kind}>{item.kind} hints expire {item.expiresAt}.</p>)}</div>}<Button className="mt-3" onClick={() => void api(path, health).then(setValue).catch((error: unknown) => setError(error instanceof Error ? error.message : "Health unavailable."))}>Refresh connection health</Button></details>;
+function health(value: unknown) {
+  const data = record(value);
+  return {
+    reconciliation: string(data.reconciliation),
+    notifications: data.notificationsConfigured === true,
+    account: data.account ? record(data.account) : null,
+    coverage: list(data.coverage, (value) => {
+      const row = record(value);
+      return {
+        kind: string(row.kind),
+        coverage: string(row.coverage),
+        updatedAt: string(row.updatedAt),
+      };
+    }),
+    subscriptions: list(data.subscriptions, (value) => {
+      const row = record(value);
+      return { kind: string(row.kind), expiresAt: string(row.expiresAt) };
+    }),
+  };
+}
+export default function ProviderHealth({
+  workspaceId,
+  connectionId,
+}: {
+  workspaceId: string;
+  connectionId: string;
+}) {
+  const path = `/workspaces/${workspaceId}/providers/${connectionId}/health`;
+  const [value, setValue] = useState<ReturnType<typeof health> | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    api(path, health, { signal: controller.signal })
+      .then(setValue)
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted)
+          setError(
+            error instanceof Error
+              ? error.message
+              : "Connection health unavailable.",
+          );
+      });
+    return () => controller.abort();
+  }, [path]);
+  return (
+    <details className={`${panelClass} p-4 text-xs`}>
+      <summary className="cursor-pointer font-medium">
+        Connection health and synchronization coverage
+      </summary>
+      {error && <Notice>{error}</Notice>}
+      {value && (
+        <div className="mt-3 grid gap-2">
+          <p>
+            Status:{" "}
+            {typeof value.account?.status === "string"
+              ? value.account.status
+              : "Unavailable"}
+            . Last complete sync:{" "}
+            {typeof value.account?.lastSyncedAt === "string"
+              ? value.account.lastSyncedAt
+              : "None"}
+            . Retry after:{" "}
+            {typeof value.account?.retryAt === "string"
+              ? value.account.retryAt
+              : "No provider delay"}
+            .
+          </p>
+          <p>{value.reconciliation}</p>
+          <p>
+            Notification subscriptions:{" "}
+            {value.notifications
+              ? "configured"
+              : "disabled; periodic reconciliation remains enabled"}
+            .
+          </p>
+          {value.coverage.map((item) => (
+            <p key={item.kind}>
+              {item.kind}: {item.coverage}. Checkpoint {item.updatedAt}.
+            </p>
+          ))}
+          {value.subscriptions.map((item) => (
+            <p key={item.kind}>
+              {item.kind} hints expire {item.expiresAt}.
+            </p>
+          ))}
+        </div>
+      )}
+      <Button
+        className="mt-3"
+        onClick={() =>
+          void api(path, health)
+            .then(setValue)
+            .catch((error: unknown) =>
+              setError(
+                error instanceof Error ? error.message : "Health unavailable.",
+              ),
+            )
+        }
+      >
+        Refresh connection health
+      </Button>
+    </details>
+  );
 }

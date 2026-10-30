@@ -17,7 +17,7 @@ const stages = [
   ["discovery-audit", "npm", "--prefix", "discovery", "audit", "--audit-level=low"],
   ["baseline", "node", "discovery/scripts/validate-baseline.mjs"],
 ];
-const report = { executedAt: new Date().toISOString(), revision: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), workingTreeDirty: execFileSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }).trim().length > 0, scope: connected ? "local L1B core qualification with synthetic accounts and provider HTTPS fixtures; full G2 remains open" : "local L1A application qualification with synthetic accounts", productionReady: false, realMalwareEngineVerified: false, stages: [], result: "running" };
+const report = { executedAt: new Date().toISOString(), revision: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), workingTreeDirty: execFileSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }).trim().length > 0, scope: connected ? "local L1B implementation qualification with synthetic accounts and provider HTTPS fixtures; real-provider and human G2 acceptance remain open" : "local L1A application qualification with synthetic accounts", productionReady: false, realMalwareEngineVerified: false, stages: [], result: "running" };
 for (const [name, executable, ...args] of stages) {
   const startedAt = Date.now();
   process.stdout.write(`Checking ${name}…\n`);

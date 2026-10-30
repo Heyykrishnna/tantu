@@ -102,6 +102,62 @@ export default function RecurrencePanel({
           </p>
         ) : data.id ? (
           <>
+            {canEdit && (
+              <form
+                key={data.version}
+                className="grid gap-3 rounded-lg border border-[#dedfeb] p-3 dark:border-[#303032]"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const form = new FormData(event.currentTarget);
+                  setBusy(true);
+                  api(path, acknowledgment, {
+                    method: "PATCH",
+                    csrf,
+                    body: {
+                      rule: String(form.get("rule")),
+                      timezone: String(form.get("timezone")),
+                      expectedVersion: data.version,
+                      operationId: crypto.randomUUID(),
+                    },
+                  })
+                    .then(load)
+                    .catch((error: unknown) =>
+                      setMessage(
+                        error instanceof Error
+                          ? error.message
+                          : "Recurrence edit failed.",
+                      ),
+                    )
+                    .finally(() => setBusy(false));
+                }}
+              >
+                <Field label="Recurrence definition">
+                  <textarea
+                    name="rule"
+                    defaultValue={data.rule}
+                    maxLength={1000}
+                    required
+                    rows={3}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Recurrence timezone">
+                  <input
+                    name="timezone"
+                    defaultValue={data.timezone}
+                    required
+                    className={inputClass}
+                  />
+                </Field>
+                <p className="text-[10px] text-[#8b8b90]">
+                  Changes future unresolved occurrences. Previously materialized
+                  or skipped occurrences remain in history.
+                </p>
+                <Button type="submit" disabled={busy}>
+                  Save recurrence definition
+                </Button>
+              </form>
+            )}
             <p className={`text-[10px] ${mutedClass}`}>
               {data.timezone} · Each occurrence becomes a separate private task.
               Your source task stays unchanged.
@@ -170,7 +226,11 @@ export default function RecurrencePanel({
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Repeat">
-                <select aria-label="Repeat" name="frequency" className={inputClass}>
+                <select
+                  aria-label="Repeat"
+                  name="frequency"
+                  className={inputClass}
+                >
                   {["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].map((frequency) => (
                     <option key={frequency}>{frequency}</option>
                   ))}

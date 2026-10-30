@@ -375,8 +375,12 @@ export default function MailPanel({
               )}
               {kind === "mail" && (
                 <>
-                  <ProviderHealth key={accountId + "-health"} workspaceId={workspaceId} connectionId={accountId} />
-                <MailboxActions
+                  <ProviderHealth
+                    key={accountId + "-health"}
+                    workspaceId={workspaceId}
+                    connectionId={accountId}
+                  />
+                  <MailboxActions
                     key={accountId + "-actions"}
                     workspaceId={workspaceId}
                     connectionId={accountId}

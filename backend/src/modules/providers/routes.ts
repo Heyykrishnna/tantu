@@ -44,6 +44,8 @@ export function providerRoutes(app: FastifyInstance, identity: Identity, provide
       await client.query("UPDATE tantu.send_intents SET state='cancelled' WHERE connection_id=$1 AND state='pending'", [request.params.connectionId]);
       await client.query("DELETE FROM tantu.provider_projections WHERE connection_id=$1", [request.params.connectionId]);
       await client.query("DELETE FROM tantu.provider_cursors WHERE connection_id=$1", [request.params.connectionId]);
+      await client.query("UPDATE tantu.provider_effects SET state='cancelled' WHERE connection_id=$1 AND state='pending'",[request.params.connectionId]);
+      for(const table of ["provider_folders","provider_folder_scans","provider_subscriptions","provider_notifications"]) await client.query(`DELETE FROM tantu.${table} WHERE connection_id=$1`,[request.params.connectionId]);
       return receipt(result);
     });
   });

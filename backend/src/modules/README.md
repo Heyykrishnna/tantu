@@ -6,6 +6,7 @@ This is the canonical module map. The foundation implements workspace access, ca
 | --- | --- | --- | --- |
 | `workspace-access` | Tenants, memberships, spaces, sessions, grants, and current authorization. | Resolve scope; authorize; grant/revoke access. | Tenant isolation, guests, inheritance, and revocation. |
 | `work-management` | Tasks, subtasks, dependencies, recurrence, projects, and milestones. | Mutate work; resolve dependencies; derive progress. | Canonical identity, stale edits, cycle rejection, recurrence, and rollups. |
+| `work-coordination` | Project membership, milestones, assignment/subtask metadata, reviewed bulk recovery and saved views. | Review/revalidate/apply; preserve canonical records and source permissions. | Cycle rejection, current-access rollups, stale reviews, archive/restore and private/shared view isolation. |
 | `knowledge` | Pages, document bodies, typed collections, linked views, comments, and history. | Edit documents/schemas; render authorized views. | Concurrent editing, schema repair, current access, and revision recovery. |
 | `scheduling` | Availability, work blocks, recurrence, timezones, conflicts, and calendar intent. | Preview; revalidate; apply reviewed changes. | DST/all-day/exception round trips, stale previews, and locked commitments. |
 | `mail` | Conversations, labels/folders, drafts, attachments, and durable send intents. | Read; draft; submit a reviewed send. | Provider-faithful behavior, recipient review, and unknown-send reconciliation. |

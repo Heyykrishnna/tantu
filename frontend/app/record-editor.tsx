@@ -504,7 +504,21 @@ export default function RecordEditor({
                 csrf={csrf}
               />
             )}
-            {entry.kind === "task" && entry.canEdit && <><TaskCoordination workspaceId={workspaceId} taskId={entry.id} csrf={csrf}/><WorkActions workspaceId={workspaceId} csrf={csrf} targets={[entry]} onApplied={onClose}/></>}
+            {entry.kind === "task" && entry.canEdit && (
+              <>
+                <TaskCoordination
+                  workspaceId={workspaceId}
+                  taskId={entry.id}
+                  csrf={csrf}
+                />
+                <WorkActions
+                  workspaceId={workspaceId}
+                  csrf={csrf}
+                  targets={[entry]}
+                  onApplied={onClose}
+                />
+              </>
+            )}
             <RecordContext
               entry={entry}
               workspaceId={workspaceId}

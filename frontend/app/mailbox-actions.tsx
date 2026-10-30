@@ -128,7 +128,9 @@ export default function MailboxActions({
             ))}
           </select>
         </Field>
-        <Button disabled={busy}>Review mailbox change</Button>
+        <Button type="submit" disabled={busy}>
+          Review mailbox change
+        </Button>
       </form>
       {review && (
         <section

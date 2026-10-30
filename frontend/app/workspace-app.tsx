@@ -672,7 +672,14 @@ export default function WorkspaceApp() {
                   </Button>
                 )}
               </header>
-              {view === "tasks" && <WorkActions workspaceId={workspaceId} csrf={csrf} targets={entries.filter(entry=>entry.canEdit)} onApplied={()=>setListVersion(value=>value+1)}/>}
+              {view === "tasks" && (
+                <WorkActions
+                  workspaceId={workspaceId}
+                  csrf={csrf}
+                  targets={entries.filter((entry) => entry.canEdit)}
+                  onApplied={() => setListVersion((value) => value + 1)}
+                />
+              )}
               <RecordOverview
                 entries={entries}
                 kind={view === "tasks" ? "task" : "page"}

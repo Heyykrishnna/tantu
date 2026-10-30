@@ -8,3 +8,10 @@ test("provider calendar commands preserve exclusive dates, civil recurrence and 
  assert.throws(()=>calendarEdit({...input,start:"2026-11-01T01:30",end:"2026-11-01T03:00"}),/unambiguous/);
  assert.throws(()=>calendarEdit({...input,scope:"occurrence"}),/occurrence/i);
 });
+
+test("calendar readback confirms only the reviewed boundaries, attendees and recurrence", async () => {
+  const { matchesCalendarEdit } = await import("../src/modules/providers/calendar-reconciliation.js");
+  const input = calendarEdit({ action: "update", externalId: "event", etag: "revision", scope: "single", title: "Reviewed", start: "2026-10-31T09:00", end: "2026-10-31T10:00", timezone: "Asia/Kolkata", allDay: false, attendees: ["attendee@example.test"], frequency: "none", count: 1, interval: 1 });
+  const result = { summary: "Reviewed", start: { dateTime: "2026-10-31T03:30:00Z" }, end: { dateTime: "2026-10-31T04:30:00Z" }, attendees: [{ email: "attendee@example.test" }], recurrence: [] };
+  assert.equal(matchesCalendarEdit("google", input, result), true); assert.equal(matchesCalendarEdit("google", input, { ...result, summary: "Unreviewed" }), false); assert.equal(matchesCalendarEdit("google", input, { ...result, attendees: [] }), false);
+});

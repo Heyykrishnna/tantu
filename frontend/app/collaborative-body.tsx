@@ -52,7 +52,7 @@ export default function CollaborativeBody({
 }) {
   const document = useRef<Y.Doc | null>(null);
   const [text, setText] = useState("");
-  const [richDocument,setRichDocument]=useState<Y.Doc|null>(null);
+  const [richDocument, setRichDocument] = useState<Y.Doc | null>(null);
   const [status, setStatus] = useState("Connecting…");
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
@@ -225,7 +225,9 @@ export default function CollaborativeBody({
   }
   return (
     <section className="grid gap-3">
-      {ready && richDocument && <RichBody document={richDocument} editable={editable} />}
+      {ready && richDocument && (
+        <RichBody document={richDocument} editable={editable} />
+      )}
       <Field label="Page text">
         <textarea
           name="collaborative-body"

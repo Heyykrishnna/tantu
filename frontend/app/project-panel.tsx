@@ -40,7 +40,13 @@ export default function ProjectPanel({
     null,
   );
   const [tasks, setTasks] = useState<CanonicalRecord[]>([]);
-  const [preferences,setPreferences]=useState<Omit<ViewSettings,"mode"|"status">>({sort:"title",group:"none",columns:["status","priority","deadline","estimate"]});
+  const [preferences, setPreferences] = useState<
+    Omit<ViewSettings, "mode" | "status">
+  >({
+    sort: "title",
+    group: "none",
+    columns: ["status", "priority", "deadline", "estimate"],
+  });
   const [mode, setMode] = useState<Mode>("list");
   const [filter, setFilter] = useState("all");
   const [message, setMessage] = useState("");
@@ -181,13 +187,21 @@ export default function ProjectPanel({
             />
           </Field>
           <Field label="Visibility">
-            <select aria-label="Visibility" name="visibility" className={inputClass}>
+            <select
+              aria-label="Visibility"
+              name="visibility"
+              className={inputClass}
+            >
               <option value="private">Private</option>
               <option value="workspace">Workspace</option>
             </select>
           </Field>
           <Field label="Project status">
-            <select aria-label="Project status" name="state" className={inputClass}>
+            <select
+              aria-label="Project status"
+              name="state"
+              className={inputClass}
+            >
               {["planning", "active", "at-risk", "completed", "archived"].map(
                 (state) => (
                   <option key={state}>{state}</option>
@@ -307,14 +321,56 @@ export default function ProjectPanel({
                 </select>
               </label>
             </div>
-            <SavedViews workspaceId={workspaceId} kind="project" resourceId={detail.project.id} csrf={csrf} current={{...preferences,mode,status:filter === "open" ? "open" : filter === "done" ? "done" : "all"}} onApply={value=>{setMode(value.mode);setFilter(value.status);setPreferences({sort:value.sort,group:value.group,columns:value.columns});}}/>
-            <ProjectTaskViews tasks={visible} settings={{...preferences,mode,status:filter === "open" ? "open" : filter === "done" ? "done" : "all"}} onOpen={onOpenTask}/>
+            <SavedViews
+              workspaceId={workspaceId}
+              kind="project"
+              resourceId={detail.project.id}
+              csrf={csrf}
+              current={{
+                ...preferences,
+                mode,
+                status:
+                  filter === "open"
+                    ? "open"
+                    : filter === "done"
+                      ? "done"
+                      : "all",
+              }}
+              onApply={(value) => {
+                setMode(value.mode);
+                setFilter(value.status);
+                setPreferences({
+                  sort: value.sort,
+                  group: value.group,
+                  columns: value.columns,
+                });
+              }}
+            />
+            <ProjectTaskViews
+              tasks={visible}
+              settings={{
+                ...preferences,
+                mode,
+                status:
+                  filter === "open"
+                    ? "open"
+                    : filter === "done"
+                      ? "done"
+                      : "all",
+              }}
+              onOpen={onOpenTask}
+            />
             {detail.project.canEdit && (
               <details className={`${panelClass} p-4`}>
                 <summary className="cursor-pointer text-[12px] font-medium">
                   Manage project and task links
                 </summary>
-                <ProjectCoordination workspaceId={workspaceId} projectId={detail.project.id} csrf={csrf} owner={detail.project.ownerId===userId} />
+                <ProjectCoordination
+                  workspaceId={workspaceId}
+                  projectId={detail.project.id}
+                  csrf={csrf}
+                  owner={detail.project.ownerId === userId}
+                />
                 <form
                   onSubmit={(event) => void submit(event, "update")}
                   key={detail.project.version}
@@ -330,7 +386,8 @@ export default function ProjectPanel({
                     />
                   </Field>
                   <Field label="Status">
-                    <select aria-label="Status"
+                    <select
+                      aria-label="Status"
                       name="state"
                       defaultValue={detail.project.state}
                       className={inputClass}
@@ -347,7 +404,8 @@ export default function ProjectPanel({
                     </select>
                   </Field>
                   <Field label="Visibility">
-                    <select aria-label="Visibility"
+                    <select
+                      aria-label="Visibility"
                       name="visibility"
                       defaultValue={detail.project.visibility}
                       className={inputClass}
@@ -373,7 +431,12 @@ export default function ProjectPanel({
                   className="mt-5 flex flex-wrap items-end gap-3"
                 >
                   <Field label="Existing task (first 50)">
-                    <select aria-label="Existing task (first 50)" name="taskId" required className={inputClass}>
+                    <select
+                      aria-label="Existing task (first 50)"
+                      name="taskId"
+                      required
+                      className={inputClass}
+                    >
                       <option value="">Select task</option>
                       {tasks
                         .filter((task) => task.canEdit)
@@ -393,7 +456,8 @@ export default function ProjectPanel({
                   className="mt-5 flex flex-wrap items-end gap-3"
                 >
                   <Field label="Prerequisite">
-                    <select aria-label="Prerequisite"
+                    <select
+                      aria-label="Prerequisite"
                       name="prerequisiteId"
                       required
                       className={inputClass}
@@ -409,7 +473,12 @@ export default function ProjectPanel({
                     </select>
                   </Field>
                   <Field label="Dependent task">
-                    <select aria-label="Dependent task" name="dependentId" required className={inputClass}>
+                    <select
+                      aria-label="Dependent task"
+                      name="dependentId"
+                      required
+                      className={inputClass}
+                    >
                       <option value="">Select task</option>
                       {detail.items
                         .filter((task) => task.canEdit)
