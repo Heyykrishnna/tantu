@@ -27,6 +27,7 @@ import RulesPanel from "./rules-panel";
 import DecisionPanel from "./decision-panel";
 import ContextGraphPanel from "./context-graph-panel";
 import PlanningPanel from "./planning-panel";
+import KitsPanel from "./kits-panel";
 import SearchModal from "./search-modal";
 import SignIn from "./sign-in";
 import RecordEditor from "./record-editor";
@@ -680,6 +681,12 @@ export default function WorkspaceApp() {
             />
           ) : view === "planning" ? (
             <PlanningPanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
+            />
+          ) : view === "kits" ? (
+            <KitsPanel
               key={workspaceId}
               workspaceId={workspaceId}
               csrf={csrf}
