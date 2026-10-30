@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, file, items, record, string } from "../lib/api";
 import type { FileItem } from "../lib/api";
+import { Icon } from "../components/icon";
+import { Badge, Button, Field, inputClass, mutedClass } from "../components/ui";
 
 export default function FilePanel({ workspaceId, recordId, csrf, canEdit }: { workspaceId: string; recordId: string; csrf: string; canEdit: boolean }) {
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -50,8 +52,10 @@ export default function FilePanel({ workspaceId, recordId, csrf, canEdit }: { wo
     } catch (error) { setMessage(error instanceof Error ? error.message : "File operation failed."); }
     finally { setBusy(false); }
   }
-  return <section className="attachments" aria-label="Attachments"><h3>Files</h3><p className="small muted">Private attachments · 5 MiB each · quarantined until scanned</p>
-    {files.length ? <ul className="file-list">{files.map((item) => <li key={item.id}><div><strong>{item.name}</strong><span className="small muted">{Math.ceil(item.bytes / 1024)} KiB · {item.state}</span></div><div className="actions">{item.state === "clean" && <button disabled={busy} onClick={() => void action(item, "download")}>Download</button>}{canEdit && item.state === "unavailable" && <button disabled={busy} onClick={() => void action(item, "rescan")}>Retry scan</button>}{canEdit && <button disabled={busy} onClick={() => void action(item, "delete")}>Remove</button>}</div></li>)}</ul> : <p className="small muted">No files attached.</p>}
-    {canEdit && <form onSubmit={upload}><label>Add a file<input name="file" type="file" required /></label><button disabled={busy}>{busy ? "Please wait…" : "Upload file"}</button></form>}<p className="small" role="status">{message}</p>
+  return <section aria-label="Attachments" className="border-t border-[#e6e8ef] pt-5 dark:border-[#303034]">
+    <div className="mb-1 flex items-center gap-2"><Icon name="file" className="size-3.5 text-[#9690d2]" /><h3 className="text-[12px] font-medium">Attachments</h3><span className={`ml-auto text-[10px] ${mutedClass}`}>{files.length} files</span></div><p className={`mb-4 text-[10px] leading-relaxed ${mutedClass}`}>Private attachments · 5 MiB each · quarantined until scanned</p>
+    {files.length ? <ul className="mb-4 divide-y divide-[#e3e6ef] rounded-lg border border-[#e3e6ef] px-3 dark:divide-[#323237] dark:border-[#323237]">{files.map((item) => <li key={item.id} className="grid gap-2 py-3"><div className="flex min-w-0 items-start gap-2"><Icon name="pages" className="mt-0.5 size-4 text-[#8c86c6]" /><div className="min-w-0 flex-1"><strong className="block truncate text-[11px] font-medium">{item.name}</strong><span className={`text-[10px] ${mutedClass}`}>{Math.ceil(item.bytes / 1024)} KiB</span></div><Badge tone={item.state === "clean" ? "green" : item.state === "pending" ? "violet" : "amber"}>{item.state}</Badge></div><div className="flex flex-wrap gap-1">{item.state === "clean" && <Button size="sm" variant="ghost" disabled={busy} onClick={() => void action(item, "download")}><Icon name="download" className="size-3.5" />Download</Button>}{canEdit && item.state === "unavailable" && <Button size="sm" variant="ghost" disabled={busy} onClick={() => void action(item, "rescan")}>Retry scan</Button>}{canEdit && <Button size="sm" variant="ghost" disabled={busy} onClick={() => void action(item, "delete")}>Remove</Button>}</div></li>)}</ul> : <div className={`mb-4 rounded-lg border border-dashed border-[#dfe2ec] px-3 py-5 text-center text-[11px] dark:border-[#39393e] ${mutedClass}`}>No files attached to this record.</div>}
+    {canEdit && <form onSubmit={upload} className="grid gap-3"><Field label="Add a file"><input name="file" type="file" required className={`${inputClass} py-2 text-[10px] file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-[#ecebf7] file:px-2 file:py-1 file:text-[10px] file:text-[#7366a8] dark:file:bg-[#343044] dark:file:text-[#c2b7ee]`} /></Field><Button type="submit" size="sm" className="justify-self-start" disabled={busy}><Icon name="plus" className="size-3.5" />{busy ? "Please wait…" : "Upload file"}</Button></form>}
+    <p role="status" className={`mt-3 text-[10px] leading-relaxed empty:hidden ${mutedClass}`}>{message}</p>
   </section>;
 }

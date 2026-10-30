@@ -95,13 +95,19 @@ test("real task/page persistence, conflict recovery, keyboard and responsive she
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await mkdir(new URL("../.artifacts/l1a-browser/", import.meta.url), { recursive: true });
   await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo(0, 0); });
-  await page.screenshot({ path: fileURLToPath(new URL("../.artifacts/l1a-browser/desktop.png", import.meta.url)), fullPage: true });
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/desktop.png", import.meta.url)), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await page.screenshot({ path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile.png", import.meta.url)), fullPage: true });
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile.png", import.meta.url)), fullPage: true });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.getByRole("button", { name: "Toggle light and dark theme" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.getByLabel("Title", { exact: true })).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile-light.png", import.meta.url)), fullPage: true });
   await page.getByRole("button", { name: "Toggle light and dark theme" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.screenshot({ path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile-dark.png", import.meta.url)), fullPage: true });
+  await expect(page.getByLabel("Title", { exact: true })).toHaveCSS("background-color", "rgb(32, 32, 33)");
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile-dark.png", import.meta.url)), fullPage: true });
   expect(errors).toEqual([]);
 });
 
@@ -142,4 +148,65 @@ test("guest access is read-only and revoked membership stops subsequent requests
   await page.reload();
   await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
   await writeFile(new URL("../.artifacts/l1a-browser/scope.json", import.meta.url), JSON.stringify({ scope: "real local HTTP and PostgreSQL; synthetic accounts only", providerAccounts: false, realMalwareEngine: false }, null, 2) + "\n");
+});
+
+
+test("reference UI uses local fonts, aligned surfaces and working mobile navigation in both themes", async ({ page }) => {
+  const titles = ["Refine workspace navigation", "Review the next release", "Organize page structure", "Prepare accessibility review", "Document sharing decisions", "Review upload recovery"];
+  for (const [index, title] of titles.entries()) {
+    const response = await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${owner.workspaceId}/tasks`, headers: owner.headers, payload: { title, operationId: randomUUID(), status: index === 1 ? "done" : "open", priority: index === 0 ? "high" : "normal", visibility: index === 2 ? "workspace" : "private", deadline: index % 2 ? null : "2026-11-20" } });
+    expect(response.statusCode).toBe(201);
+  }
+  const remoteRequests: string[] = [];
+  page.on("request", (request) => { if (!request.url().startsWith("http://localhost:3100") && !request.url().startsWith("data:")) remoteRequests.push(request.url()); });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await login(page);
+  await expect(page.getByRole("button", { name: /Refine workspace navigation/ })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  const typography = await page.evaluate(() => ({ body: getComputedStyle(document.body).fontFamily, heading: getComputedStyle(document.querySelector("h1") ?? document.body).fontFamily, inter: getComputedStyle(document.documentElement).getPropertyValue("--font-inter"), poppins: getComputedStyle(document.documentElement).getPropertyValue("--font-poppins"), background: getComputedStyle(document.body).backgroundColor }));
+  expect(typography.inter.trim()).not.toBe("");
+  expect(typography.poppins.trim()).not.toBe("");
+  expect(typography.heading).not.toBe(typography.body);
+  expect(typography.background).toBe("rgb(27, 27, 27)");
+  const heading = await page.getByRole("heading", { name: "My tasks", exact: true }).boundingBox();
+  const table = await page.getByRole("region", { name: "Task list", exact: true }).boundingBox();
+  expect(heading && table && Math.abs(heading.x - table.x) < 1).toBe(true);
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-tasks-dark.png", import.meta.url)), fullPage: true });
+  await page.getByRole("button", { name: "Toggle light and dark theme" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.getByRole("button", { name: /Refine workspace navigation/ })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-tasks-light.png", import.meta.url)), fullPage: true });
+  await page.getByRole("button", { name: "Workspace settings", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Invite someone", exact: true })).toBeVisible();
+  await expect(page.locator("button[aria-current=page]:visible")).toHaveCount(1);
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-settings-light.png", import.meta.url)), fullPage: true });
+  await page.getByRole("button", { name: "Activity", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Recent activity", exact: true })).toBeVisible();
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-activity-light.png", import.meta.url)), fullPage: true });
+  await page.getByRole("button", { name: "Operations", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Processing history", exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Open navigation", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Workspace navigation drawer" })).toBeVisible();
+  await page.getByRole("button", { name: "Tasks", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Workspace navigation drawer" })).not.toBeVisible();
+  await expect(page.getByRole("heading", { name: "My tasks", exact: true })).toBeVisible();
+  const mobileSearch = await page.getByRole("searchbox", { name: "Search tasks", exact: true }).boundingBox();
+  expect(mobileSearch && mobileSearch.width > 150).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.getByRole("button", { name: "Open navigation", exact: true }).click();
+  await page.getByRole("button", { name: /Search or jump to/ }).click();
+  await expect(page.getByRole("dialog", { name: "Command palette" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Command palette" })).not.toBeVisible();
+  expect(remoteRequests).toEqual([]);
+  await page.getByRole("button", { name: "Open navigation", exact: true }).click();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-sign-in-mobile.png", import.meta.url)), fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-sign-in.png", import.meta.url)), fullPage: true });
 });

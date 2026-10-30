@@ -18,7 +18,7 @@ Run from the root:
 npm run check:l1a
 ```
 
-The aggregate stores exact revision, dirty-tree state, commands, exit results and logs under ignored artifacts. It runs source checks, unit tests, builds, real database integration, three browser journeys, contract sync, all npm audits and tracked-document/ignore validation. `npm run check:l0` preserves the earlier archive/search/collaboration/recurrence experiments; CI runs the L0 suite plus L1A integration/browser/contracts. No remote CI result is implied until observed on GitHub.
+The aggregate stores exact revision, dirty-tree state, commands, exit results and logs under ignored artifacts. It runs source checks, unit tests, builds, real database integration, four browser journeys, contract sync, all npm audits and tracked-document/ignore validation. `npm run check:l0` preserves the earlier archive/search/collaboration/recurrence experiments; CI runs the L0 suite plus L1A integration/browser/contracts. No remote CI result is implied until observed on GitHub.
 
 The database test performs actual `pg_dump` and `pg_restore` into a separate database and checks accepted records, revisions, events and pending queue work. Abrupt restart tests intentionally log a content-free connection-loss event before verifying persisted data with a new pool. This is expected fault injection, not a hidden production error.
 

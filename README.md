@@ -34,7 +34,7 @@ npm run dev:worker
 npm run dev:frontend
 ```
 
-Open [localhost:3000](http://localhost:3000). The frontend proxies `/api/v1` to Fastify on loopback port 4000. Backend configuration is listed in [backend/.env.example](backend/.env.example); local environment files are ignored. System fonts keep frontend builds independent of external font services.
+Open [localhost:3000](http://localhost:3000). The frontend proxies `/api/v1` to Fastify on loopback port 4000. Backend configuration is listed in [backend/.env.example](backend/.env.example); local environment files are ignored. Self-hosted Inter and Poppins keep frontend builds independent of external font services.
 
 A working ClamAV daemon is required to release quarantined files. A scanner outage keeps files unavailable; it never silently approves them. The local filesystem adapter is intended for a single private installation. Managed object storage, key management and deployment policy require separate qualification.
 

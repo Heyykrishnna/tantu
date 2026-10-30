@@ -1,0 +1,28 @@
+{
+  "source": "https://github.com/google/fonts",
+  "distribution": "Official Google Fonts ofl/inter and ofl/poppins",
+  "license": "SIL Open Font License 1.1; accompanying unmodified license files",
+  "fonts": [
+    {
+      "sourceFile": "Inter-Variable.ttf",
+      "sourceSha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+      "woff2File": "Inter-Variable.woff2",
+      "woff2Sha256": "e83162c1ca7680d1c001c3547c32b57dbf0f6b972300ead19eac3a0c1155f3f6",
+      "conversion": "FontTools 4.55.3 WOFF2 compression; no glyph subsetting"
+    },
+    {
+      "sourceFile": "Poppins-Medium.ttf",
+      "sourceSha256": "90373e7d838d32468438fc3e152dca0bdb12edcab99ea639f158790b1ba1fd05",
+      "woff2File": "Poppins-Medium.woff2",
+      "woff2Sha256": "f83d590a869a0084f96634c06164e844679eecfc7b12130531762555fa754c1b",
+      "conversion": "FontTools 4.55.3 WOFF2 compression; no glyph subsetting"
+    },
+    {
+      "sourceFile": "Poppins-SemiBold.ttf",
+      "sourceSha256": "d3bf1bdaf0550e83da9ac0b1d1d9fe6db086835a83aa28578e609a394b9a0286",
+      "woff2File": "Poppins-SemiBold.woff2",
+      "woff2Sha256": "3c96308da6f495d459bd5bf7c2976040ad757c5d923d8a7f2c48b5f4c93b1f92",
+      "conversion": "FontTools 4.55.3 WOFF2 compression; no glyph subsetting"
+    }
+  ]
+}
