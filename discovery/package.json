@@ -1,0 +1,38 @@
+{
+  "name": "@tantu/discovery",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Isolated L0 engineering experiments; not a production service.",
+  "engines": {
+    "node": ">=24.0.0 <25",
+    "npm": ">=11.0.0 <12"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.unit.test.ts",
+    "test:browser": "playwright test",
+    "test:postgres": "node --import tsx --test test/postgres.integration.test.ts",
+    "check": "npm run lint && npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "pg": "8.23.1",
+    "rrule": "2.8.1",
+    "yjs": "13.6.33",
+    "pg-boss": "12.38.0",
+    "@js-temporal/polyfill": "0.5.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "^24.0.0",
+    "eslint": "10.13.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1",
+    "@types/pg": "8.20.0",
+    "@playwright/test": "1.64.1"
+  }
+}
