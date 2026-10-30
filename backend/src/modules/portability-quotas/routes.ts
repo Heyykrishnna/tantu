@@ -209,34 +209,4 @@ export function portabilityQuotaRoutes(app: FastifyInstance, identity: Identity)
     }
   );
 
-  app.post<{
-    Params: { workspaceId: string; provider: string };
-  }>(
-    root + "/providers/:provider/disconnect",
-    {
-      schema: {
-        params: object({ workspaceId: uuid, provider: { enum: ["google", "microsoft"] } }),
-      },
-    },
-    async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId, true);
-      return db.transaction(scope, async (client) => {
-        await client.query(
-          `DELETE FROM tantu.provider_connections
-           WHERE workspace_id = $1 AND user_id = $2 AND provider = $3`,
-          [scope.workspaceId, scope.userId, request.params.provider]
-        );
-        await client.query(
-          `DELETE FROM tantu.provider_subscriptions
-           WHERE workspace_id = $1 AND user_id = $2 AND provider = $3`,
-          [scope.workspaceId, scope.userId, request.params.provider]
-        );
-        return {
-          disconnected: true,
-          provider: request.params.provider,
-          notice: "Remote provider connection severed. App-owned records and snapshots are preserved.",
-        };
-      });
-    }
-  );
 }
