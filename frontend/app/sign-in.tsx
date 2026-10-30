@@ -51,7 +51,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   }
   return (
     <main className="grid min-h-dvh bg-[#f5f6fb] p-4 lg:grid-cols-[1.05fr_1fr] lg:gap-4 lg:p-6 dark:bg-[#131314]">
-      <section className="relative hidden min-h-[700px] overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(ellipse_at_top_right,#6969c1_0%,#3d4d80_46%,#252d47_100%)] p-10 text-white lg:flex lg:flex-col xl:p-14">
+      <section className="relative hidden min-h-175 overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(ellipse_at_top_right,#6969c1_0%,#3d4d80_46%,#252d47_100%)] p-10 text-white lg:flex lg:flex-col xl:p-14">
         <Link
           className="relative z-10 inline-flex w-fit items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
           href="/"
@@ -64,14 +64,14 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         </Link>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-64 top-1/4 size-[650px] rounded-full border border-white/8 bg-white/[0.025]"
+          className="pointer-events-none absolute -right-64 top-1/4 size-162.5 rounded-full border border-white/8 bg-white/2.5"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-32 top-[38%] size-[390px] rounded-full border border-white/8 bg-white/[0.025]"
+          className="pointer-events-none absolute -right-32 top-[38%] size-97.5 rounded-full border border-white/8 bg-white/2.5"
         />
-        <div className="relative z-10 my-auto max-w-[440px] py-20">
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-[10px] tracking-[0.1em] text-[#d0d6f7]">
+        <div className="relative z-10 my-auto max-w-110 py-20">
+          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-[10px] tracking-widest text-[#d0d6f7]">
             <span className="size-1.5 rounded-full bg-[#b7b1ff]" />A LITTLE
             CLARITY, EVERY DAY
           </div>
@@ -79,7 +79,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             Your work.
             <br />A place to think.
           </h1>
-          <p className="max-w-[350px] text-[13px] leading-7 text-[#c2cbe8]">
+          <p className="max-w-87.5 text-[13px] leading-7 text-[#c2cbe8]">
             Keep the things you need to do beside the ideas that move them
             forward.
           </p>
@@ -122,7 +122,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         </div>
       </section>
       <section className="flex min-h-[calc(100dvh-32px)] items-center justify-center rounded-[22px] border border-[#e3e6f0] bg-white px-6 py-12 sm:px-12 lg:min-h-0 dark:border-[#29292d] dark:bg-[#1b1b1d]">
-        <div className="w-full max-w-[360px]">
+        <div className="w-full max-w-90">
           <Link
             href="/"
             className="mb-12 flex w-fit items-center gap-2.5 lg:hidden"

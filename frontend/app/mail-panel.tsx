@@ -331,7 +331,7 @@ export default function MailPanel({
                       </button>
                       {selected === entry.id && (
                         <div className="mt-4 grid gap-2">
-                          <p className="whitespace-pre-wrap break-words text-[12px] leading-relaxed">
+                          <p className="whitespace-pre-wrap wrap-break-word text-[12px] leading-relaxed">
                             {entry.body ||
                               (kind === "mail"
                                 ? "This message has no plain-text body. Active HTML and remote images are not rendered."
@@ -490,7 +490,7 @@ export default function MailPanel({
                     <dt className={mutedClass}>Subject</dt>
                     <dd>{review.subject}</dd>
                   </dl>
-                  <p className="whitespace-pre-wrap break-words text-[12px]">
+                  <p className="whitespace-pre-wrap wrap-break-word text-[12px]">
                     {review.body}
                   </p>
                   <p className={`text-[11px] ${mutedClass}`}>

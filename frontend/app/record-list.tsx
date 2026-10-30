@@ -135,7 +135,7 @@ export default function RecordList({
       aria-busy={loading}
       className={`${panelClass} overflow-hidden`}
     >
-      <div className="flex min-h-[54px] items-center justify-between gap-3 border-b border-[#e6e8f0] px-4 dark:border-[#2d2d30]">
+      <div className="flex min-h-13.5 items-center justify-between gap-3 border-b border-[#e6e8f0] px-4 dark:border-[#2d2d30]">
         <h2 className="text-[12px] font-medium">
           {kind === "task" ? "All tasks" : "All pages"}
         </h2>
@@ -160,7 +160,7 @@ export default function RecordList({
             aria-hidden="true"
             className="grid grid-cols-[minmax(0,1fr)_80px] gap-3 border-b border-[#e6e8f0] bg-[#fafbfe] px-4 py-2.5 text-[10px] text-[#70798b] lg:grid-cols-[minmax(0,1fr)_80px_88px_70px] dark:border-[#2d2d30] dark:bg-[#202021] dark:text-[#90909a]"
           >
-            <span className={kind === "task" ? "pl-[30px]" : "pl-10"}>
+            <span className={kind === "task" ? "pl-7.5" : "pl-10"}>
               {kind === "task" ? "Task name" : "Page name"}
             </span>
             <span className="hidden lg:block">
@@ -177,7 +177,7 @@ export default function RecordList({
                 <button
                   onClick={() => onOpen(entry.id)}
                   aria-pressed={selectedId === entry.id}
-                  className={`grid min-h-[64px] w-full grid-cols-[minmax(0,1fr)_80px] items-center gap-3 px-4 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-400 lg:grid-cols-[minmax(0,1fr)_80px_88px_70px] motion-reduce:transition-none ${selectedId === entry.id ? "bg-[#f0effb] dark:bg-[#2a2938]" : "hover:bg-[#f8f9fd] dark:hover:bg-[#242426]"}`}
+                  className={`grid min-h-16 w-full grid-cols-[minmax(0,1fr)_80px] items-center gap-3 px-4 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-400 lg:grid-cols-[minmax(0,1fr)_80px_88px_70px] motion-reduce:transition-none ${selectedId === entry.id ? "bg-[#f0effb] dark:bg-[#2a2938]" : "hover:bg-[#f8f9fd] dark:hover:bg-[#242426]"}`}
                 >
                   <span className="flex min-w-0 items-center gap-3">
                     <span
@@ -198,7 +198,7 @@ export default function RecordList({
                               : "circle"
                         }
                         className={
-                          entry.kind === "page" ? "size-4" : "size-[18px]"
+                          entry.kind === "page" ? "size-4" : "size-4.5"
                         }
                       />
                     </span>
@@ -286,7 +286,7 @@ export default function RecordList({
                 : "A home for your next idea"}
           </h2>
           <p
-            className={`mx-auto max-w-[290px] text-[12px] leading-relaxed ${mutedClass}`}
+            className={`mx-auto max-w-72.5 text-[12px] leading-relaxed ${mutedClass}`}
           >
             {query
               ? "Try a different title or refresh this view."

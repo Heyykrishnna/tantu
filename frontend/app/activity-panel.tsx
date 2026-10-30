@@ -93,7 +93,7 @@ export default function ActivityPanel({
         {message}
       </Notice>
       <div className={panelClass}>
-        <div className="flex min-h-[54px] items-center justify-between gap-4 border-b border-[#e3e6ef] px-5 dark:border-[#303034]">
+        <div className="flex min-h-13.5 items-center justify-between gap-4 border-b border-[#e3e6ef] px-5 dark:border-[#303034]">
           <h2 className="flex items-center gap-2 text-[12px] font-medium">
             <Icon
               name={operations ? "operations" : "activity"}

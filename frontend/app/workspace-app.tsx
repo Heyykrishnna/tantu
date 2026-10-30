@@ -450,7 +450,7 @@ export default function WorkspaceApp() {
       <dialog
         ref={drawer}
         aria-label="Workspace navigation drawer"
-        className="fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-[270px] max-w-[88vw] overflow-hidden border-0 bg-[#edf0f8] p-0 text-inherit backdrop:bg-black/55 backdrop:backdrop-blur-sm dark:bg-[#151516]"
+        className="fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-67.5 max-w-[88vw] overflow-hidden border-0 bg-[#edf0f8] p-0 text-inherit backdrop:bg-black/55 backdrop:backdrop-blur-sm dark:bg-[#151516]"
       >
         <WorkspaceNavigation
           user={user}
@@ -470,7 +470,7 @@ export default function WorkspaceApp() {
         />
       </dialog>
       <main id="main-content" className="min-w-0">
-        <header className="sticky top-0 z-20 flex h-[65px] items-center justify-between gap-3 border-b border-[#e1e4ed] bg-white/95 px-5 backdrop-blur-md lg:px-7 dark:border-[#2c2c2f] dark:bg-[#1c1c1d]/95">
+        <header className="sticky top-0 z-20 flex h-16.25 items-center justify-between gap-3 border-b border-[#e1e4ed] bg-white/95 px-5 backdrop-blur-md lg:px-7 dark:border-[#2c2c2f] dark:bg-[#1c1c1d]/95">
           <div className="flex min-w-0 items-center gap-3">
             <Button
               variant="ghost"
@@ -503,7 +503,7 @@ export default function WorkspaceApp() {
             <button
               onClick={() => dialog.current?.showModal()}
               aria-label="Open command palette"
-              className="mr-1 hidden h-8 w-[220px] items-center gap-2 rounded-lg border border-[#e1e4ed] bg-[#f8f9fc] px-2.5 text-left text-[11px] text-[#70798b] outline-none focus-visible:ring-2 focus-visible:ring-violet-400 xl:flex dark:border-[#343438] dark:bg-[#19191b] dark:text-[#94949e]"
+              className="mr-1 hidden h-8 w-55 items-center gap-2 rounded-lg border border-[#e1e4ed] bg-[#f8f9fc] px-2.5 text-left text-[11px] text-[#70798b] outline-none focus-visible:ring-2 focus-visible:ring-violet-400 xl:flex dark:border-[#343438] dark:bg-[#19191b] dark:text-[#94949e]"
             >
               <Icon name="search" className="size-3.5" />
               <span className="flex-1">Search or jump to…</span>
@@ -710,7 +710,7 @@ export default function WorkspaceApp() {
                   <label htmlFor="record-search" className="sr-only">
                     Search {view}
                   </label>
-                  <div className="relative min-w-0 flex-1 sm:w-[220px]">
+                  <div className="relative min-w-0 flex-1 sm:w-55">
                     <span className="pointer-events-none absolute top-2.5 left-2.5 text-[#70798b] dark:text-[#94949e]">
                       <Icon name="search" className="size-3.5" />
                     </span>
@@ -819,7 +819,7 @@ export default function WorkspaceApp() {
       <dialog
         ref={dialog}
         aria-label="Command palette"
-        className={`${panelClass} m-auto w-[460px] max-w-[calc(100vw-32px)] p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm`}
+        className={`${panelClass} m-auto w-115 max-w-[calc(100vw-32px)] p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm`}
       >
         <header className="flex items-center justify-between border-b border-[#e3e6ef] px-5 py-4 dark:border-[#303034]">
           <h2 className="flex items-center gap-2.5 text-[13px] font-medium">

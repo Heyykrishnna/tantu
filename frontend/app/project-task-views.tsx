@@ -68,7 +68,7 @@ export default function ProjectTaskViews({
           )
           .map((task) => (
             <div
-              className="grid min-w-[500px] grid-cols-[210px_1fr_95px] items-center gap-4 border-t border-[#dedfeb] py-3 dark:border-[#303032]"
+              className="grid min-w-125 grid-cols-[210px_1fr_95px] items-center gap-4 border-t border-[#dedfeb] py-3 dark:border-[#303032]"
               key={task.id}
             >
               {title(task)}

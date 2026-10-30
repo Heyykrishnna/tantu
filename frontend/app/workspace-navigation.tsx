@@ -44,7 +44,7 @@ export default function WorkspaceNavigation({
 }: NavigationProps) {
   return (
     <div className="flex h-full flex-col bg-[#edf0f8] text-[#677287] dark:bg-[#151516] dark:text-[#a4a4ad]">
-      <div className="flex h-[65px] shrink-0 items-center justify-between px-5">
+      <div className="flex h-16.25 shrink-0 items-center justify-between px-5">
         <Link
           href="/"
           aria-label="tantu home"

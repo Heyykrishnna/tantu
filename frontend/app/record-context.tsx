@@ -205,7 +205,7 @@ export default function RecordContext({
             <p className={`mb-2 text-[10px] ${mutedClass}`}>
               {comment.author} · {new Date(comment.createdAt).toLocaleString()}
             </p>
-            <p className="whitespace-pre-wrap break-words text-[11px]">
+            <p className="whitespace-pre-wrap wrap-break-word text-[11px]">
               {comment.body}
             </p>
           </article>

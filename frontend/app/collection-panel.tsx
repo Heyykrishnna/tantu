@@ -656,7 +656,7 @@ export default function CollectionPanel({
                             );
                             setReview(null);
                           }}
-                          className={`${inputClass} sm:max-w-[220px]`}
+                          className={`${inputClass} sm:max-w-55`}
                         />
                         <Badge>{property.type}</Badge>
                         <Button

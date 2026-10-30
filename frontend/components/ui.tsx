@@ -79,7 +79,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
         aria-hidden="true"
         className="grid size-8 shrink-0 place-items-center rounded-[10px] border border-violet-400/20 bg-[#e8e7fb] text-[#6760ca] dark:bg-[#303047] dark:text-[#b2abff]"
       >
-        <svg viewBox="0 0 24 24" fill="none" className="size-[22px]">
+        <svg viewBox="0 0 24 24" fill="none" className="size-5.5">
           <path
             d="M6 7.5h12M10 4.5v11a4 4 0 0 0 4 4h3M14 4.5V15"
             stroke="currentColor"

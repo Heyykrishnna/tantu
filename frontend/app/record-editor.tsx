@@ -237,9 +237,9 @@ export default function RecordEditor({
   return (
     <section
       aria-label={entry ? "Record details" : `New ${kind}`}
-      className={`${panelClass} order-1 overflow-hidden xl:sticky xl:top-[85px] xl:order-2 xl:max-h-[calc(100dvh-110px)] xl:overflow-y-auto`}
+      className={`${panelClass} order-1 overflow-hidden xl:sticky xl:top-21.25 xl:order-2 xl:max-h-[calc(100dvh-110px)] xl:overflow-y-auto`}
     >
-      <header className="flex min-h-[56px] items-center justify-between gap-3 border-b border-[#e3e6ee] px-5 dark:border-[#303034]">
+      <header className="flex min-h-14 items-center justify-between gap-3 border-b border-[#e3e6ee] px-5 dark:border-[#303034]">
         <div className="flex items-center gap-2.5">
           <Icon
             name={kind === "task" ? "tasks" : "pages"}
@@ -391,7 +391,7 @@ export default function RecordEditor({
                       maxLength={100000}
                       defaultValue=""
                       placeholder="Start writing. Use # for a heading."
-                      className={`${inputClass} min-h-[200px] resize-y leading-7`}
+                      className={`${inputClass} min-h-50 resize-y leading-7`}
                     />
                   </Field>
                 )}

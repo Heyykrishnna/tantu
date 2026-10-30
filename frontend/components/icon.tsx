@@ -142,7 +142,7 @@ export type IconName = keyof typeof shapes;
 
 export function Icon({
   name,
-  className = "size-[18px]",
+  className = "size-4.5",
 }: {
   name: IconName;
   className?: string;
