@@ -14,7 +14,7 @@ test("ordered migrations, least-privilege runtime and transactional rollback", {
   try {
     await migrate(pool);
     await migrate(pool);
-    assert.equal((await pool.query("SELECT * FROM public.tantu_migrations")).rowCount, 7);
+    assert.equal((await pool.query("SELECT * FROM public.tantu_migrations")).rowCount, 8);
     await initializeJobs(pool);
     await pool.query("CREATE ROLE tantu_runtime LOGIN NOSUPERUSER NOBYPASSRLS");
     await pool.query(await readFile(new URL("../../migrations/runtime-grants.sql", import.meta.url), "utf8"));

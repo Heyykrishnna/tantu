@@ -14,7 +14,7 @@ export function recordRoutes(app: FastifyInstance, identity: Identity, records: 
       const scope = await identity.scope(request, request.params.workspaceId);
       const limit = Number(request.query.limit ?? "25");
       return db.transaction(scope, async (client) => {
-        const result = await client.query<CanonicalRecord>(`SELECT ${recordColumns} FROM tantu.records WHERE kind=$1 AND ($2::uuid IS NULL OR id>$2) AND ($3::text IS NULL OR strpos(lower(title),lower($3))>0) ORDER BY id LIMIT $4`, [kind, request.query.cursor ?? null, request.query.q ?? null, limit + 1]);
+        const result = await client.query<CanonicalRecord>(`SELECT ${recordColumns} FROM tantu.records WHERE kind=$1 AND NOT EXISTS(SELECT 1 FROM tantu.task_coordination c WHERE c.task_id=records.id AND c.archived) AND ($2::uuid IS NULL OR id>$2) AND ($3::text IS NULL OR strpos(lower(title),lower($3))>0) ORDER BY id LIMIT $4`, [kind, request.query.cursor ?? null, request.query.q ?? null, limit + 1]);
         const items = result.rows.slice(0, limit);
         return { items, nextCursor: result.rows.length > limit ? items.at(-1)?.id ?? null : null };
       });

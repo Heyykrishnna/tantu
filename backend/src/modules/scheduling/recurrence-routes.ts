@@ -18,7 +18,7 @@ export function recurrenceRoutes(app: FastifyInstance, identity: Identity, recor
     const scope = await identity.scope(request, request.params.workspaceId);
     return db.transaction(scope, async (client) => {
       if (!(await client.query("SELECT id FROM tantu.records WHERE id=$1 AND kind='task'", [request.params.recordId])).rowCount) throw new Failure(404, "NOT_FOUND", "Task is unavailable.");
-      const definition = (await client.query("SELECT id,rule,timezone,instants FROM tantu.recurrences WHERE source_id=$1", [request.params.recordId])).rows[0] ?? null;
+      const definition = (await client.query("SELECT id,rule,timezone,instants,version FROM tantu.recurrences WHERE source_id=$1", [request.params.recordId])).rows[0] ?? null;
       return { definition, items: (await client.query('SELECT instant,state,task_id AS "taskId" FROM tantu.recurrence_occurrences WHERE recurrence_id IN (SELECT id FROM tantu.recurrences WHERE source_id=$1) ORDER BY instant LIMIT 1000', [request.params.recordId])).rows };
     });
   });
@@ -30,6 +30,13 @@ export function recurrenceRoutes(app: FastifyInstance, identity: Identity, recor
       const created = (await client.query<{ id: string }>("INSERT INTO tantu.recurrences(workspace_id,source_id,rule,timezone,instants) VALUES($1,$2,$3,$4,$5) RETURNING id", [scope.workspaceId, request.params.recordId, request.body.rule, request.body.timezone, JSON.stringify(instants)])).rows[0];
       if (!created) throw new Error("Recurrence was not created.");
       return { id: created.id, version: 1 };
+    });
+  });
+  app.patch<{ Params: { workspaceId: string; recordId: string }; Body: { rule: string; timezone: string; expectedVersion: number; operationId: string } }>(base, { schema: { params: taskParams, body: object({ rule: text(1000), timezone: text(100), expectedVersion: { type: "integer", minimum: 1 }, operationId: uuid }) } }, async request => {
+    const scope=await identity.scope(request,request.params.workspaceId,true);const instants=expandCivilRecurrence(request.body.rule,request.body.timezone);
+    return change(db,scope,request.body.operationId,{command:"recurrence.edit",...request.params,...request.body},client=>editableTask(client,request.params.recordId),async client=>{
+      const row=(await client.query("UPDATE tantu.recurrences SET rule=$2,timezone=$3,instants=$4,version=version+1 WHERE source_id=$1 AND version=$5 RETURNING id,version",[request.params.recordId,request.body.rule,request.body.timezone,JSON.stringify(instants),request.body.expectedVersion])).rows[0];
+      if(!row)throw new Failure(409,"VERSION_CONFLICT","The recurrence changed. Reload before editing. Previously resolved occurrences remain in history.");return receipt(row);
     });
   });
   app.post<{ Params: { workspaceId: string; recordId: string }; Body: { instant: string; action: "materialize" | "skip"; operationId: string } }>(base + "/occurrences", { schema: { params: taskParams, body: object({ instant: { type: "string", format: "date-time" }, action: { enum: ["materialize", "skip"] }, operationId: uuid }) } }, async (request) => {

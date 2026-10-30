@@ -6,7 +6,7 @@ export function integer(value: unknown): number {
 }
 export function project(value: unknown) {
   const data = record(value);
-  return { id: string(data.id), title: string(data.title), ownerId: string(data.ownerId), visibility: choice(data.visibility, ["private", "workspace"]), state: choice(data.state, ["planning", "active", "at-risk", "completed", "archived"]), deadline: data.deadline === null ? null : string(data.deadline), version: integer(data.version) };
+  return { id: string(data.id), title: string(data.title), ownerId: string(data.ownerId), visibility: choice(data.visibility, ["private", "workspace"]), state: choice(data.state, ["planning", "active", "at-risk", "completed", "archived"]), deadline: data.deadline === null ? null : string(data.deadline), version: integer(data.version), canEdit: data.canEdit === true };
 }
 export function projects(value: unknown) { const data = record(value); return { items: list(data.items, project), nextCursor: data.nextCursor === null ? null : string(data.nextCursor) }; }
 export function projectDetail(value: unknown) {

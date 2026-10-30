@@ -1,0 +1,18 @@
+import type { FastifyInstance } from "fastify";
+import { object, text, uuid } from "../../http/schema.js";
+import type { Identity } from "../workspace-access/service.js";
+import { change, receipt, versionConflict } from "../connected-work/change.js";
+import { Failure } from "../../platform/failure.js";
+const params = object({ workspaceId: uuid, kind: { enum: ["project", "collection", "calendar"] }, resourceId: uuid });
+export function viewRoutes(app: FastifyInstance, identity: Identity): void {
+    const base = "/api/v1/workspaces/:workspaceId/views/:kind/:resourceId";
+    app.get<{ Params: { workspaceId: string; kind: string; resourceId: string } }>(base, { schema: { params } }, async request => { const scope = await identity.scope(request, request.params.workspaceId); return identity.database.transaction(scope, async client => ({ items: (await client.query('SELECT id,name,owner_id AS "ownerId",settings,version FROM tantu.saved_views WHERE kind=$1 AND resource_id=$2 ORDER BY owner_id NULLS FIRST,name LIMIT 100', [request.params.kind, request.params.resourceId])).rows })); });
+    app.post<{ Params: { workspaceId: string; kind: string; resourceId: string }; Body: { name: string; shared: boolean; settings: object; expectedVersion: number; operationId: string } }>(base, { schema: { params, body: object({ name: text(100), shared: { type: "boolean" }, expectedVersion: { type: "integer", minimum: 0 }, operationId: uuid, settings: object({ mode: { enum: ["list", "board", "table", "timeline", "day", "week", "month", "agenda"] }, sort: { enum: ["title", "deadline", "priority"] }, group: { enum: ["none", "status", "priority"] }, status: { enum: ["all", "open", "done"] }, columns: { type: "array", maxItems: 35, uniqueItems: true, items: text(100) } }, ["mode", "sort", "group", "status", "columns"]) }) } }, async request => {
+        const scope = await identity.scope(request, request.params.workspaceId, true); const input = request.body;
+        return change(identity.database, scope, input.operationId, { command: "view.save", ...request.params, ...input }, async client => { if (!(await client.query("SELECT 1 WHERE tantu.view_access($1,$2,$3)", [request.params.kind, request.params.resourceId, input.shared])).rowCount) throw new Failure(404, "NOT_FOUND", "This view's source is unavailable."); await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,94))", [scope.workspaceId + request.params.kind + request.params.resourceId + (input.shared ? "shared" : scope.userId) + input.name]); }, async client => {
+            const owner = input.shared ? null : scope.userId; const existing = (await client.query<{ id: string; version: number }>("SELECT id,version FROM tantu.saved_views WHERE kind=$1 AND resource_id=$2 AND owner_id IS NOT DISTINCT FROM $3::uuid AND name=$4 FOR UPDATE", [request.params.kind, request.params.resourceId, owner, input.name])).rows[0]; if ((existing?.version ?? 0) !== input.expectedVersion) versionConflict();
+            if (!existing && Number((await client.query<{ count: string }>("SELECT count(*) FROM tantu.saved_views WHERE kind=$1 AND resource_id=$2", [request.params.kind, request.params.resourceId])).rows[0]?.count) >= 100) throw new Failure(409, "QUOTA_EXCEEDED", "View limit reached.");
+            return receipt((await client.query("INSERT INTO tantu.saved_views(workspace_id,kind,resource_id,owner_id,name,settings) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(workspace_id,kind,resource_id,owner_id,name) DO UPDATE SET settings=excluded.settings,version=tantu.saved_views.version+1 RETURNING id,version", [scope.workspaceId, request.params.kind, request.params.resourceId, owner, input.name, JSON.stringify(input.settings)])).rows[0]);
+        });
+    });
+}

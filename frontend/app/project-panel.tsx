@@ -1,4 +1,8 @@
 "use client";
+import ProjectTaskViews from "./project-task-views";
+import SavedViews from "./saved-views";
+import type { ViewSettings } from "./saved-views";
+import ProjectCoordination from "./coordination-panel";
 
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -36,6 +40,7 @@ export default function ProjectPanel({
     null,
   );
   const [tasks, setTasks] = useState<CanonicalRecord[]>([]);
+  const [preferences,setPreferences]=useState<Omit<ViewSettings,"mode"|"status">>({sort:"title",group:"none",columns:["status","priority","deadline","estimate"]});
   const [mode, setMode] = useState<Mode>("list");
   const [filter, setFilter] = useState("all");
   const [message, setMessage] = useState("");
@@ -148,14 +153,6 @@ export default function ProjectPanel({
     detail?.items.filter(
       (task) => filter === "all" || task.status === filter,
     ) ?? [];
-  const taskButton = (task: CanonicalRecord) => (
-    <button
-      onClick={() => onOpenTask(task.id)}
-      className="min-w-0 truncate rounded text-left text-[12px] font-medium outline-none hover:text-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400"
-    >
-      {task.title}
-    </button>
-  );
   return (
     <section className="grid gap-5">
       <header>
@@ -310,113 +307,14 @@ export default function ProjectPanel({
                 </select>
               </label>
             </div>
-            {!visible.length ? (
-              <p className={`${panelClass} p-6 text-[12px]`}>
-                No tasks in this view. Link an existing task below.
-              </p>
-            ) : mode === "board" ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {["open", "done"].map((state) => (
-                  <section key={state} className={`${panelClass} p-4`}>
-                    <h3 className="mb-4 text-[12px] font-medium capitalize">
-                      {state}
-                    </h3>
-                    <div className="grid gap-3">
-                      {visible
-                        .filter((task) => task.status === state)
-                        .map((task) => (
-                          <div
-                            className={`${panelClass} grid gap-2 p-3`}
-                            key={task.id}
-                          >
-                            {taskButton(task)}
-                            <Badge>{task.priority}</Badge>
-                          </div>
-                        ))}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            ) : mode === "table" ? (
-              <div className={`${panelClass} overflow-auto`}>
-                <table className="w-full text-left text-[11px]">
-                  <caption className="sr-only">Project tasks</caption>
-                  <thead>
-                    <tr>
-                      {[
-                        "Task",
-                        "Status",
-                        "Priority",
-                        "Deadline",
-                        "Estimate",
-                      ].map((label) => (
-                        <th key={label} className="px-4 py-3">
-                          {label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visible.map((task) => (
-                      <tr
-                        key={task.id}
-                        className="border-t border-[#dfe3ed] dark:border-[#303032]"
-                      >
-                        <td className="max-w-xs px-4 py-3">
-                          {taskButton(task)}
-                        </td>
-                        <td className="px-4 py-3">{task.status}</td>
-                        <td className="px-4 py-3">{task.priority}</td>
-                        <td className="px-4 py-3">
-                          {task.deadline ?? "No deadline"}
-                        </td>
-                        <td className="px-4 py-3">
-                          {task.estimateMinutes ?? "Unknown"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div
-                className={`${panelClass} divide-y divide-[#dfe3ed] dark:divide-[#303032]`}
-              >
-                {[...visible]
-                  .sort((a, b) =>
-                    mode === "timeline"
-                      ? (a.deadline ?? "9999").localeCompare(
-                          b.deadline ?? "9999",
-                        )
-                      : a.title.localeCompare(b.title),
-                  )
-                  .map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex flex-wrap items-center gap-3 px-4 py-3"
-                    >
-                      {mode === "timeline" && (
-                        <span className={`w-24 text-[11px] ${mutedClass}`}>
-                          {task.deadline ?? "Unscheduled"}
-                        </span>
-                      )}
-                      {taskButton(task)}
-                      <span className="ml-auto">
-                        <Badge
-                          tone={task.status === "done" ? "green" : "neutral"}
-                        >
-                          {task.status}
-                        </Badge>
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            )}
-            {detail.project.ownerId === userId && (
+            <SavedViews workspaceId={workspaceId} kind="project" resourceId={detail.project.id} csrf={csrf} current={{...preferences,mode,status:filter === "open" ? "open" : filter === "done" ? "done" : "all"}} onApply={value=>{setMode(value.mode);setFilter(value.status);setPreferences({sort:value.sort,group:value.group,columns:value.columns});}}/>
+            <ProjectTaskViews tasks={visible} settings={{...preferences,mode,status:filter === "open" ? "open" : filter === "done" ? "done" : "all"}} onOpen={onOpenTask}/>
+            {detail.project.canEdit && (
               <details className={`${panelClass} p-4`}>
                 <summary className="cursor-pointer text-[12px] font-medium">
                   Manage project and task links
                 </summary>
+                <ProjectCoordination workspaceId={workspaceId} projectId={detail.project.id} csrf={csrf} owner={detail.project.ownerId===userId} />
                 <form
                   onSubmit={(event) => void submit(event, "update")}
                   key={detail.project.version}

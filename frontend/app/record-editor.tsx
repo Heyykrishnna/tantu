@@ -12,6 +12,8 @@ import {
   record,
   string,
 } from "../lib/api";
+import { TaskCoordination } from "./coordination-panel";
+import WorkActions from "./work-actions";
 import RecordContext from "./record-context";
 import CollaborativeBody from "./collaborative-body";
 import RecurrencePanel from "./recurrence-panel";
@@ -502,6 +504,7 @@ export default function RecordEditor({
                 csrf={csrf}
               />
             )}
+            {entry.kind === "task" && entry.canEdit && <><TaskCoordination workspaceId={workspaceId} taskId={entry.id} csrf={csrf}/><WorkActions workspaceId={workspaceId} csrf={csrf} targets={[entry]} onApplied={onClose}/></>}
             <RecordContext
               entry={entry}
               workspaceId={workspaceId}

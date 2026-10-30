@@ -6,6 +6,8 @@ import { providerRoutes } from "./modules/providers/routes.js";
 import { schedulingRoutes } from "./modules/scheduling/routes.js";
 import { recurrenceRoutes } from "./modules/scheduling/recurrence-routes.js";
 import { projectRoutes } from "./modules/projects/routes.js";
+import { coordinationRoutes } from "./modules/work-coordination/routes.js";
+import { viewRoutes } from "./modules/work-coordination/views.js";
 import { randomUUID } from "node:crypto";
 import helmet from "@fastify/helmet";
 import Fastify, { LogController } from "fastify";
@@ -32,9 +34,9 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
       config.nodeEnvironment === "test"
         ? false
         : {
-            level: config.logLevel,
-            redact: ["req.headers.authorization", "req.headers.cookie", "res.headers['set-cookie']"],
-          },
+          level: config.logLevel,
+          redact: ["req.headers.authorization", "req.headers.cookie", "res.headers['set-cookie']"],
+        },
     logController: new LogController({ disableRequestLogging: true }),
     requestIdHeader: false,
     genReqId: () => randomUUID(),
@@ -67,6 +69,8 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
     fileRoutes(app, identity, files);
     operationalRoutes(app, identity, queue);
     projectRoutes(app, identity);
+    coordinationRoutes(app, identity, new Records(dependencies.database, queue));
+    viewRoutes(app, identity);
     schedulingRoutes(app, identity);
     providerRoutes(app, identity, dependencies.providers ?? new Providers(dependencies.database, dependencies.settings), queue);
     recurrenceRoutes(app, identity, new Records(dependencies.database, queue));

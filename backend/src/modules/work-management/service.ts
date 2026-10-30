@@ -21,7 +21,7 @@ export class Records {
     return this.database.transaction(scope, (client) => this.mutateIn(client, scope, kind, operationId, input, recordId, expectedVersion));
   }
 
-  async mutateIn(client: PoolClient, scope: Scope, kind: "task" | "page", operationId: string, input: RecordInput | undefined, recordId?: string, expectedVersion?: number, collaborativeBody = false): Promise<CanonicalRecord | { deleted: true; id: string }> {
+  async mutateIn(client: PoolClient, scope: Scope, kind: "task" | "page", operationId: string, input: RecordInput | undefined, recordId?: string, expectedVersion?: number, collaborativeBody = false, reviewedWork = false): Promise<CanonicalRecord | { deleted: true; id: string }> {
     const fingerprint = digest(canonical({ kind, input: input ?? null, recordId: recordId ?? null, expectedVersion: expectedVersion ?? null }));
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [scope.workspaceId + scope.userId + operationId]);
       const member = await client.query("SELECT 1 FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active FOR SHARE", [scope.workspaceId, scope.userId]);
@@ -52,6 +52,7 @@ export class Records {
         const current = existing.rows[0];
         if (!current) throw new Failure(404, "NOT_FOUND", "Record is unavailable.");
         if (current.version !== expectedVersion) throw new Failure(409, "VERSION_CONFLICT", "This record changed. Reload before applying your edit.");
+        if (kind === "task" && !reviewedWork && (!input || input.status === "done" && current.status !== "done") && (await client.query("SELECT id FROM tantu.work_blocks WHERE task_id=$1 AND NOT cancelled AND ends_at>now() LIMIT 1",[recordId])).rowCount) throw new Failure(409,"WORK_REVIEW_REQUIRED","Review future work-block impacts before completing or deleting this task.");
         if (kind === "page" && input?.body && !collaborativeBody && (await client.query("SELECT record_id FROM tantu.page_collaboration WHERE record_id=$1", [recordId])).rowCount) throw new Failure(409, "COLLABORATION_ACTIVE", "Use the collaborative page editor to change this page body.");
         if (input && input.parentId !== undefined && input.parentId !== current.parentId) throw new Failure(400, "PARENT_IMMUTABLE", "Create a page under its intended parent; moving subtrees requires a separate reviewed operation.");
         if (input?.visibility !== undefined && input.visibility !== current.visibility && current.ownerId !== scope.userId) throw new Failure(403, "FORBIDDEN", "Only the record owner can change visibility.");

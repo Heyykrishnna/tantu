@@ -27,6 +27,7 @@ import WorkspaceSettings from "./workspace-settings";
 import ActivityPanel from "./activity-panel";
 import WorkspaceNavigation from "./workspace-navigation";
 import type { WorkspaceView } from "./workspace-navigation";
+import WorkActions from "./work-actions";
 import RecordList, { RecordOverview } from "./record-list";
 import { Icon } from "../components/icon";
 import {
@@ -671,6 +672,7 @@ export default function WorkspaceApp() {
                   </Button>
                 )}
               </header>
+              {view === "tasks" && <WorkActions workspaceId={workspaceId} csrf={csrf} targets={entries.filter(entry=>entry.canEdit)} onApplied={()=>setListVersion(value=>value+1)}/>}
               <RecordOverview
                 entries={entries}
                 kind={view === "tasks" ? "task" : "page"}

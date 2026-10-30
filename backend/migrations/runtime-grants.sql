@@ -22,3 +22,8 @@ GRANT SELECT,INSERT,UPDATE ON tantu.page_collaboration,tantu.page_presence,tantu
 GRANT DELETE ON tantu.schema_reviews TO tantu_runtime;
 GRANT SELECT,INSERT,DELETE ON tantu.record_relations TO tantu_runtime;
 GRANT SELECT,INSERT ON tantu.record_comments TO tantu_runtime;
+GRANT EXECUTE ON FUNCTION tantu.can_project(uuid,boolean),tantu.project_owned(uuid),tantu.view_access(text,uuid,boolean),tantu.restorable(uuid) TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.project_members TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE ON tantu.milestones,tantu.task_coordination,tantu.saved_views,tantu.work_reviews TO tantu_runtime;
+GRANT DELETE ON tantu.work_reviews TO tantu_runtime;
+GRANT SELECT,INSERT,DELETE ON tantu.project_references TO tantu_runtime;

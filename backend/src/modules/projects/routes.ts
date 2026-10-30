@@ -7,7 +7,7 @@ import { recordColumns } from "../work-management/contracts.js";
 import type { CanonicalRecord } from "../work-management/contracts.js";
 
 interface Project { id: string; title: string; ownerId: string; visibility: "private" | "workspace"; state: string; deadline: string | null; version: number }
-const columns = 'id,title,owner_id AS "ownerId",visibility,state,deadline::text,version';
+const columns = 'id,title,owner_id AS "ownerId",visibility,state,deadline::text,version,tantu.can_project(id,true) AS "canEdit"';
 const projectParams = object({ workspaceId: uuid, projectId: uuid });
 const version = { type: "integer", minimum: 1 };
 const fields = { title: { ...text(200), pattern: "\\S" }, visibility: { enum: ["private", "workspace"] }, state: { enum: ["planning", "active", "at-risk", "completed", "archived"] }, deadline: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] }, operationId: uuid };
@@ -31,8 +31,9 @@ export function projectRoutes(app: FastifyInstance, identity: Identity): void {
           if (creating) {
             if (!(await client.query("SELECT 1 FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active AND role<>'guest'", [scope.workspaceId, scope.userId])).rowCount) throw new Failure(403, "FORBIDDEN", "Project creation requires membership.");
             if (Number((await client.query<{ count: string }>("SELECT count(*) FROM tantu.projects")).rows[0]?.count) >= 1000) throw new Failure(409, "QUOTA_EXCEEDED", "Project limit reached.");
-          } else if (!(await client.query("SELECT id FROM tantu.projects WHERE id=$1 AND owner_id=$2 FOR UPDATE", [request.params.projectId, scope.userId])).rowCount) throw new Failure(404, "NOT_FOUND", "Project is unavailable.");
+          } else if (!(await client.query("SELECT id FROM tantu.projects WHERE id=$1 AND tantu.can_project(id,true) FOR UPDATE", [request.params.projectId])).rowCount) throw new Failure(404, "NOT_FOUND", "Project is unavailable.");
         }, async (client) => {
+          if (!creating && (await client.query("SELECT id FROM tantu.projects WHERE id=$1 AND owner_id<>$2 AND visibility<>$3", [request.params.projectId,scope.userId,input.visibility])).rowCount) throw new Failure(403,"FORBIDDEN","Only the project owner can change visibility.");
           const result = creating
             ? await client.query("INSERT INTO tantu.projects(workspace_id,owner_id,title,visibility,state,deadline) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,version", [scope.workspaceId, scope.userId, input.title.trim(), input.visibility, input.state, input.deadline])
             : await client.query("UPDATE tantu.projects SET title=$2,visibility=$3,state=$4,deadline=$5,version=version+1 WHERE id=$1 AND version=$6 RETURNING id,version", [request.params.projectId, input.title.trim(), input.visibility, input.state, input.deadline, input.expectedVersion]);
@@ -56,7 +57,7 @@ export function projectRoutes(app: FastifyInstance, identity: Identity): void {
   app.post<{ Params: { workspaceId: string; projectId: string }; Body: { taskId: string; linked: boolean; operationId: string; expectedVersion: number } }>(base + "/:projectId/tasks", { schema: { params: projectParams, body: object({ taskId: uuid, linked: { type: "boolean" }, operationId: uuid, expectedVersion: version }) } }, async (request) => {
     const scope = await identity.scope(request, request.params.workspaceId, true);
     return change(db, scope, request.body.operationId, { action: "project.link", ...request.params, ...request.body }, async (client) => {
-      if (!(await client.query("SELECT id FROM tantu.projects WHERE id=$1 AND owner_id=$2 FOR UPDATE", [request.params.projectId, scope.userId])).rowCount) throw new Failure(404, "NOT_FOUND", "Project is unavailable.");
+      if (!(await client.query("SELECT id FROM tantu.projects WHERE id=$1 AND tantu.can_project(id,true) FOR UPDATE", [request.params.projectId])).rowCount) throw new Failure(404, "NOT_FOUND", "Project is unavailable.");
       await editableTask(client, request.body.taskId);
     }, async (client) => {
       const updated = (await client.query("UPDATE tantu.projects SET version=version+1 WHERE id=$1 AND version=$2 RETURNING id,version", [request.params.projectId, request.body.expectedVersion])).rows[0];
