@@ -1,3 +1,5 @@
+import { schedulingRoutes } from "./modules/scheduling/routes.js";
+import { recurrenceRoutes } from "./modules/scheduling/recurrence-routes.js";
 import { projectRoutes } from "./modules/projects/routes.js";
 import { randomUUID } from "node:crypto";
 import helmet from "@fastify/helmet";
@@ -60,6 +62,8 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
     fileRoutes(app, identity, files);
     operationalRoutes(app, identity, queue);
     projectRoutes(app, identity);
+    schedulingRoutes(app, identity);
+    recurrenceRoutes(app, identity, new Records(dependencies.database, queue));
     app.get("/health/ready", async (_request, reply) => {
       try {
         await dependencies.database.pool.query("SELECT 1");

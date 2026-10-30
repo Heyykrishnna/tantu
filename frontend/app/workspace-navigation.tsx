@@ -4,7 +4,7 @@ import type { User, Workspace } from "../lib/api";
 import { Icon } from "../components/icon";
 import { Brand, Button, Field, inputClass } from "../components/ui";
 
-export type WorkspaceView = "tasks" | "pages" | "projects" | "activity" | "settings" | "operations";
+export type WorkspaceView = "tasks" | "pages" | "projects" | "calendar" | "activity" | "settings" | "operations";
 
 interface NavigationProps {
   user: User;
@@ -42,7 +42,7 @@ export default function WorkspaceNavigation({ user, workspaces, workspaceId, vie
     <div className="flex-1 overflow-y-auto px-2.5">
       <p className="mb-2 px-3 text-[10px] font-medium tracking-[0.08em] text-[#69758b] dark:text-[#8b8b96]">WORKSPACE</p>
       <nav aria-label="Workspace navigation" className="grid gap-1">
-        {([['tasks', 'Tasks'], ['pages', 'Pages'], ['projects', 'Projects'], ['activity', 'Activity']] as const).map(([target, label]) => <button key={target} onClick={() => onNavigate(target)} aria-current={view === target ? "page" : undefined} className={`flex h-9 items-center gap-2.5 rounded-lg px-3 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-violet-400 motion-reduce:transition-none ${view === target ? "bg-white font-medium text-[#424b73] shadow-xs dark:bg-[#2c2c30] dark:text-[#eeeef4] dark:shadow-none" : "hover:bg-white/60 hover:text-[#35405b] dark:hover:bg-[#222225] dark:hover:text-[#dddde5]"}`}><Icon name={target === "projects" ? "folder" : target} />{label}{view === target && <span aria-hidden="true" className="ml-auto size-1.5 rounded-full bg-[#9490e8]" />}</button>)}
+        {([['tasks', 'Tasks'], ['pages', 'Pages'], ['projects', 'Projects'], ['calendar', 'Calendar'], ['activity', 'Activity']] as const).map(([target, label]) => <button key={target} onClick={() => onNavigate(target)} aria-current={view === target ? "page" : undefined} className={`flex h-9 items-center gap-2.5 rounded-lg px-3 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-violet-400 motion-reduce:transition-none ${view === target ? "bg-white font-medium text-[#424b73] shadow-xs dark:bg-[#2c2c30] dark:text-[#eeeef4] dark:shadow-none" : "hover:bg-white/60 hover:text-[#35405b] dark:hover:bg-[#222225] dark:hover:text-[#dddde5]"}`}><Icon name={target === "projects" ? "folder" : target} />{label}{view === target && <span aria-hidden="true" className="ml-auto size-1.5 rounded-full bg-[#9490e8]" />}</button>)}
       </nav>
       <p className="mb-2 mt-7 px-3 text-[10px] font-medium tracking-[0.08em] text-[#69758b] dark:text-[#8b8b96]">MANAGE</p>
       <nav aria-label="Workspace management" className="grid gap-1">

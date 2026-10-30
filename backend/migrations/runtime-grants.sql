@@ -12,3 +12,6 @@ GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA tantu_jobs TO tantu_runtime;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA tantu_jobs TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE ON tantu.projects,tantu.connected_operations TO tantu_runtime;
 GRANT SELECT,INSERT,DELETE ON tantu.project_tasks,tantu.task_dependencies TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE ON tantu.calendar_states,tantu.work_blocks TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.schedule_reviews TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE ON tantu.recurrences,tantu.recurrence_occurrences TO tantu_runtime;

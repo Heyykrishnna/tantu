@@ -1,3 +1,4 @@
+import type { PoolClient } from "pg";
 import { randomUUID } from "node:crypto";
 import type { Database, Scope } from "../../platform/database/database.js";
 import type { Queue } from "../../workers/queue.js";
@@ -17,8 +18,11 @@ export class Records {
   constructor(readonly database: Database, readonly queue: Queue) {}
 
   async mutate(scope: Scope, kind: "task" | "page", operationId: string, input: RecordInput | undefined, recordId?: string, expectedVersion?: number): Promise<CanonicalRecord | { deleted: true; id: string }> {
+    return this.database.transaction(scope, (client) => this.mutateIn(client, scope, kind, operationId, input, recordId, expectedVersion));
+  }
+
+  async mutateIn(client: PoolClient, scope: Scope, kind: "task" | "page", operationId: string, input: RecordInput | undefined, recordId?: string, expectedVersion?: number): Promise<CanonicalRecord | { deleted: true; id: string }> {
     const fingerprint = digest(canonical({ kind, input: input ?? null, recordId: recordId ?? null, expectedVersion: expectedVersion ?? null }));
-    return this.database.transaction(scope, async (client) => {
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [scope.workspaceId + scope.userId + operationId]);
       const member = await client.query("SELECT 1 FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active FOR SHARE", [scope.workspaceId, scope.userId]);
       if (!member.rowCount) throw new Failure(404, "NOT_FOUND", "Workspace is unavailable.");
@@ -68,6 +72,5 @@ export class Records {
       if (input) await client.query("INSERT INTO tantu.revisions(record_id,version,workspace_id,snapshot) VALUES($1,$2,$3,$4)", [id, version, scope.workspaceId, JSON.stringify(result)]);
       await this.queue.enqueue(client, eventQueue, eventId, { ...scope, recordId: id });
       return result;
-    });
   }
 }
