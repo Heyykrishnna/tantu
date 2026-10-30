@@ -9,6 +9,9 @@ import { healthRoutes } from "./http/routes/health.js";
 import { identityRoutes } from "./modules/identity/routes.js";
 import { Identity } from "./modules/identity/service.js";
 import type { Database } from "./platform/database/database.js";
+import { Queue } from "./workers/queue.js";
+import { Records } from "./modules/work/service.js";
+import { recordRoutes } from "./modules/work/routes.js";
 
 export interface AppDependencies { database: Database; settings: RuntimeSettings }
 
@@ -42,7 +45,11 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies):
   app.register(healthRoutes);
   if (dependencies) {
     const identity = new Identity(dependencies.database, dependencies.settings);
+    const queue = new Queue(dependencies.database);
+    app.addHook("onReady", () => queue.start());
+    app.addHook("onClose", () => queue.stop());
     identityRoutes(app, identity);
+    recordRoutes(app, identity, new Records(dependencies.database, queue));
     app.get("/health/ready", async (_request, reply) => {
       try {
         await dependencies.database.pool.query("SELECT 1");

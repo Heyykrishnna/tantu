@@ -5,6 +5,7 @@ import { Pool } from "pg";
 import { startPostgresFixture } from "../../../discovery/src/postgres-fixture.js";
 import { Database } from "../../src/platform/database/database.js";
 import { migrate } from "../../src/platform/database/migrate.js";
+import { initializeJobs } from "../../src/workers/queue.js";
 
 test("ordered migrations, least-privilege runtime and transactional rollback", { timeout: 30_000 }, async () => {
   const fixture = await startPostgresFixture();
@@ -13,7 +14,8 @@ test("ordered migrations, least-privilege runtime and transactional rollback", {
   try {
     await migrate(pool);
     await migrate(pool);
-    assert.equal((await pool.query("SELECT * FROM public.tantu_migrations")).rowCount, 1);
+    assert.equal((await pool.query("SELECT * FROM public.tantu_migrations")).rowCount, 2);
+    await initializeJobs(pool);
     await pool.query("CREATE ROLE tantu_runtime LOGIN NOSUPERUSER NOBYPASSRLS");
     await pool.query(await readFile(new URL("../../migrations/runtime-grants.sql", import.meta.url), "utf8"));
     await db.verifyRole();

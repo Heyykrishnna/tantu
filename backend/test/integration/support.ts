@@ -6,6 +6,7 @@ import { migrate } from "../../src/platform/database/migrate.js";
 import { createAccount } from "../../src/modules/identity/service.js";
 import { createApp } from "../../src/app.js";
 import { readEnvironment } from "../../src/config/environment.js";
+import { initializeJobs } from "../../src/workers/queue.js";
 
 export const settings = { origin: "http://localhost:3000", secureCookies: false, storagePath: "/private/tmp/tantu-l1a-test", signingSecret: "local-synthetic-qualification-secret-32", scannerHost: "127.0.0.1", scannerPort: 3310 };
 export const testPassword = "synthetic test password only";
@@ -14,6 +15,7 @@ export async function fixture() {
   const cluster = await startPostgresFixture();
   const owner = new Pool(cluster.configuration);
   await migrate(owner);
+  await initializeJobs(owner);
   await owner.query("CREATE ROLE tantu_runtime LOGIN NOSUPERUSER NOBYPASSRLS");
   await owner.query(await readFile(new URL("../../migrations/runtime-grants.sql", import.meta.url), "utf8"));
   const database = new Database({ ...cluster.configuration, user: "tantu_runtime" });
