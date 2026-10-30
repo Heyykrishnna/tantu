@@ -31,6 +31,7 @@ import KitsPanel from "./kits-panel";
 import MeetingBriefsPanel from "./meeting-briefs-panel";
 import IntegrationsPanel from "./integrations-panel";
 import EnterprisePanel from "./enterprise-panel";
+import FutureDiscoveryPanel from "./future-discovery-panel";
 import SearchModal from "./search-modal";
 import SignIn from "./sign-in";
 import RecordEditor from "./record-editor";
@@ -404,6 +405,7 @@ export default function WorkspaceApp() {
     meetings: "Meeting Briefs",
     integrations: "Integrations & APIs",
     enterprise: "Enterprise & Governance",
+    discovery: "Future Discovery",
     rules: "Automation Rules",
     activity: "Activity",
     settings: "Workspace settings",
@@ -710,6 +712,12 @@ export default function WorkspaceApp() {
             />
           ) : view === "enterprise" ? (
             <EnterprisePanel
+              key={workspaceId}
+              workspaceId={workspaceId}
+              csrf={csrf}
+            />
+          ) : view === "discovery" ? (
+            <FutureDiscoveryPanel
               key={workspaceId}
               workspaceId={workspaceId}
               csrf={csrf}

@@ -16,6 +16,7 @@ export type WorkspaceView =
   | "meetings"
   | "integrations"
   | "enterprise"
+  | "discovery"
   | "projects"
   | "calendar"
   | "mail"
@@ -182,6 +183,7 @@ export default function WorkspaceNavigation({
             [
               ["integrations", "Integrations & APIs"],
               ["enterprise", "Enterprise & Governance"],
+              ["discovery", "Future Discovery"],
               ["rules", "Automation Rules"],
               ["settings", "Workspace settings"],
               ...(manager ? [["operations", "Operations"] as const] : []),
@@ -201,7 +203,9 @@ export default function WorkspaceNavigation({
                       ? "external"
                       : target === "enterprise"
                         ? "shield"
-                        : target
+                        : target === "discovery"
+                          ? "search"
+                          : target
                 }
               />
               {label}
