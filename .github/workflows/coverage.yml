@@ -1,0 +1,39 @@
+name: Code Quality & Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coverage-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            discovery/package-lock.json
+      - name: Install dependencies
+        run: |
+          npm --prefix backend ci
+          npm --prefix discovery ci
+      - name: Run backend test coverage
+        working-directory: backend
+        run: node --import tsx --test --experimental-test-coverage test/*.test.ts
+      - name: Run discovery test coverage
+        working-directory: discovery
+        run: node --import tsx --test --experimental-test-coverage test/*.unit.test.ts

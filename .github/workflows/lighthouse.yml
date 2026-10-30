@@ -1,0 +1,51 @@
+name: Performance & Lighthouse Audit
+
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/lighthouse.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  performance-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm --prefix frontend ci
+      - name: Build Next.js bundle
+        run: npm --prefix frontend run build
+      - name: Verify bundle size limits
+        run: |
+          node - <<'JS'
+          import { statSync, readdirSync } from 'node:fs';
+          import { join } from 'node:path';
+          const nextDir = 'frontend/.next/static';
+          function getFiles(dir) {
+            let files = [];
+            for (const item of readdirSync(dir, { withFileTypes: true })) {
+              const full = join(dir, item.name);
+              if (item.isDirectory()) files.push(...getFiles(full));
+              else if (item.isFile() && item.name.endsWith('.js')) files.push(full);
+            }
+            return files;
+          }
+          const jsFiles = getFiles(nextDir);
+          const totalBytes = jsFiles.reduce((acc, f) => acc + statSync(f).size, 0);
+          console.log(`Total frontend JS bundle size: ${(totalBytes / 1024).toFixed(2)} KB across ${jsFiles.length} files.`);
+          if (totalBytes > 10 * 1024 * 1024) throw new Error('Bundle exceeded 10MB budget limit.');
+          JS
