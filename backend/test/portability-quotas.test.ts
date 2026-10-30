@@ -40,3 +40,4 @@ test("export job serializes authorized canonical structure", () => {
   assert.equal(parsed.records.length, 2);
   assert.equal(parsed.projects.length, 1);
 });
+

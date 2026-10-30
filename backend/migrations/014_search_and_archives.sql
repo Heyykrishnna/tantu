@@ -60,3 +60,4 @@ DO $$ DECLARE t text; BEGIN
     EXECUTE format('CREATE POLICY %I_admin ON tantu.%I FOR ALL USING(workspace_id=tantu.tenant() AND tantu.member_role(workspace_id) IN (\'owner\',\'admin\')) WITH CHECK(workspace_id=tantu.tenant() AND tantu.member_role(workspace_id) IN (\'owner\',\'admin\'))',t,t);
   END LOOP;
 END $$;
+

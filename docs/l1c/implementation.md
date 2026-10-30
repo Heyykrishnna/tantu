@@ -46,3 +46,4 @@ Accessibility compliance targets WCAG 2.2 AA standards:
 ## Qualification
 
 Local verification is conducted via automated test suites covering capture conversion, promise tracking, rule automation, search projections, archive manifests, portability exports, and quota enforcement. The [readiness record](readiness.md) details exact test commands and gate criteria.
+

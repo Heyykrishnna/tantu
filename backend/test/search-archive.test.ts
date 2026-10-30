@@ -25,3 +25,4 @@ test("tombstone ledger mapping skips deleted records during archive scan", () =>
   const filtered = records.filter((id) => !tombstones.has(id));
   assert.deepEqual(filtered, ["rec-001", "rec-003"]);
 });
+

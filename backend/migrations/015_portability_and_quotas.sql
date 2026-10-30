@@ -43,3 +43,4 @@ CREATE POLICY pref_scope ON tantu.user_preferences FOR ALL USING(workspace_id=ta
 ALTER TABLE tantu.export_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tantu.export_jobs FORCE ROW LEVEL SECURITY;
 CREATE POLICY export_scope ON tantu.export_jobs FOR ALL USING(workspace_id=tantu.tenant() AND user_id=tantu.actor() AND tantu.member_role(workspace_id) IS NOT NULL) WITH CHECK(workspace_id=tantu.tenant() AND user_id=tantu.actor() AND tantu.member_role(workspace_id) IS NOT NULL);
+

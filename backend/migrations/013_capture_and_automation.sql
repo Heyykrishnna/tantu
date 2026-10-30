@@ -86,3 +86,4 @@ ALTER TABLE tantu.automation_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tantu.automation_runs FORCE ROW LEVEL SECURITY;
 CREATE POLICY run_read ON tantu.automation_runs FOR SELECT USING(workspace_id=tantu.tenant() AND tantu.member_role(workspace_id) IS NOT NULL);
 CREATE POLICY run_insert ON tantu.automation_runs FOR INSERT WITH CHECK(workspace_id=tantu.tenant() AND tantu.member_role(workspace_id) IS NOT NULL);
+

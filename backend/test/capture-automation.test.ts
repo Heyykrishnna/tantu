@@ -44,3 +44,4 @@ test("rule condition evaluator matches equals, not_equals, and contains", () => 
   assert.equal(evaluateConditions(conditions, failingContext2), false);
   assert.equal(evaluateConditions(conditions, failingContext3), false);
 });
+
