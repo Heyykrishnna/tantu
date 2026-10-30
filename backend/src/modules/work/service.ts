@@ -33,6 +33,7 @@ export class Records {
       let version: number;
       if (!recordId) {
         if (!input) throw new Error("Record input is required.");
+        if (!(await client.query("UPDATE tantu.workspaces SET record_count=record_count+1 WHERE id=$1 AND record_count<10000 RETURNING id", [scope.workspaceId])).rowCount) throw new Failure(409, "QUOTA_EXCEEDED", "Workspace record limit reached.");
         if (input.parentId) {
           const parent = await client.query("SELECT id FROM tantu.records WHERE id=$1 AND kind='page' AND tantu.can_access(id,true)", [input.parentId]);
           if (!parent.rowCount) throw new Failure(404, "NOT_FOUND", "Parent page is unavailable.");

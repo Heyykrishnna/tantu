@@ -2,6 +2,8 @@ GRANT USAGE ON SCHEMA tantu TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE ON tantu.users,tantu.workspaces,tantu.memberships,tantu.sessions,tantu.login_limits,tantu.invitations,tantu.grants,tantu.operations,tantu.events,tantu.job_claims TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE ON tantu.records,tantu.files TO tantu_runtime;
 GRANT SELECT,INSERT ON tantu.revisions TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE ON tantu.deletions TO tantu_runtime;
+GRANT SELECT ON tantu.audit TO tantu_runtime;
 GRANT EXECUTE ON FUNCTION tantu.actor(),tantu.tenant(),tantu.member_role(uuid),tantu.can_access(uuid,boolean) TO tantu_runtime;
 GRANT EXECUTE ON FUNCTION tantu.is_new_record(uuid,uuid,uuid,uuid) TO tantu_runtime;
 GRANT USAGE ON SCHEMA tantu_jobs TO tantu_runtime;

@@ -12,6 +12,9 @@ import type { Database } from "./platform/database/database.js";
 import { Queue } from "./workers/queue.js";
 import { Records } from "./modules/work/service.js";
 import { recordRoutes } from "./modules/work/routes.js";
+import { Files } from "./modules/files/service.js";
+import { fileRoutes } from "./modules/files/routes.js";
+import { operationalRoutes } from "./http/routes/operations.js";
 
 export interface AppDependencies { database: Database; settings: RuntimeSettings }
 
@@ -46,10 +49,14 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies):
   if (dependencies) {
     const identity = new Identity(dependencies.database, dependencies.settings);
     const queue = new Queue(dependencies.database);
+    const files = new Files(dependencies.database, queue, dependencies.settings);
     app.addHook("onReady", () => queue.start());
+    app.addHook("onReady", () => files.store.initialize());
     app.addHook("onClose", () => queue.stop());
     identityRoutes(app, identity);
     recordRoutes(app, identity, new Records(dependencies.database, queue));
+    fileRoutes(app, identity, files);
+    operationalRoutes(app, identity, queue);
     app.get("/health/ready", async (_request, reply) => {
       try {
         await dependencies.database.pool.query("SELECT 1");
