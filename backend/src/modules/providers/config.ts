@@ -16,7 +16,7 @@ export function readProviderSettings(environment = process.env): ProviderSetting
     if (!key || !clientId || !clientSecret) throw new Error(`${prefix} requires a vault key and both client credentials.`);
     const tenant = environment.MICROSOFT_TENANT_ID ?? "";
     if (provider === "microsoft" && !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(tenant)) throw new Error("MICROSOFT_TENANT_ID must identify the explicitly approved tenant.");
-    registrations[provider] = { clientId, clientSecret, issuer: provider === "google" ? "https://accounts.google.com" : `https://login.microsoftonline.com/${tenant}/v2.0`, scopes: provider === "google" ? ["openid", "email", "https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/calendar.readonly"] : ["openid", "email", "offline_access", "User.Read", "Mail.ReadWrite", "Mail.Send", "Calendars.Read"] };
+    registrations[provider] = { clientId, clientSecret, issuer: provider === "google" ? "https://accounts.google.com" : `https://login.microsoftonline.com/${tenant}/v2.0`, scopes: provider === "google" ? ["openid", "email", "https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/calendar.events"] : ["openid", "email", "offline_access", "User.Read", "Mail.ReadWrite", "Mail.Send", "Calendars.ReadWrite"] };
   }
   return { key, registrations };
 }

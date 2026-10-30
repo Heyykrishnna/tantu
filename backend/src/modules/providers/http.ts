@@ -16,8 +16,8 @@ export function retrySeconds(value: string | null, now = Date.now()): number {
 }
 export class ProviderHttp {
   constructor(readonly fetcher: typeof fetch = fetch) { }
-  async request(provider: Provider, token: string, path: string, method = "GET", body?: unknown): Promise<unknown> {
-    const response = await this.fetcher(allowedUrl(provider, path), { method, redirect: "error", signal: AbortSignal.timeout(15_000), headers: { authorization: `Bearer ${token}`, ...(provider === "microsoft" ? { Prefer: 'IdType="ImmutableId", outlook.body-content-type="text", outlook.timezone="UTC"' } : {}), ...(body === undefined ? {} : { "content-type": "application/json" }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  async request(provider: Provider, token: string, path: string, method = "GET", body?: unknown, etag?: string): Promise<unknown> {
+    const response = await this.fetcher(allowedUrl(provider, path), { method, redirect: "error", signal: AbortSignal.timeout(15_000), headers: { ...(etag?{"if-match":etag}:{}), authorization: `Bearer ${token}`, ...(provider === "microsoft" ? { Prefer: 'IdType="ImmutableId", outlook.body-content-type="text", outlook.timezone="UTC"' } : {}), ...(body === undefined ? {} : { "content-type": "application/json" }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     if (!response.ok) { await response.body?.cancel(); throw new ProviderFailure(response.status, retrySeconds(response.headers.get("retry-after"))); }
     if (response.status === 202 || response.status === 204) { await response.body?.cancel(); return { accepted: true }; }
     const reader = response.body?.getReader(); if (!reader) throw new Error("Provider response was empty.");

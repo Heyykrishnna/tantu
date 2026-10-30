@@ -27,3 +27,4 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.project_members TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE ON tantu.milestones,tantu.task_coordination,tantu.saved_views,tantu.work_reviews TO tantu_runtime;
 GRANT DELETE ON tantu.work_reviews TO tantu_runtime;
 GRANT SELECT,INSERT,DELETE ON tantu.project_references TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE ON tantu.calendar_preferences,tantu.provider_effect_reviews,tantu.provider_effects TO tantu_runtime;

@@ -1,4 +1,5 @@
 "use client";
+import ProviderCalendarActions from "./provider-calendar-actions";
 
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -361,6 +362,13 @@ export default function MailPanel({
                 >
                   More {kind === "mail" ? "messages" : "events"}
                 </Button>
+              )}
+              {kind === "calendar" && (
+                <ProviderCalendarActions
+                  workspaceId={workspaceId}
+                  connectionId={account.id}
+                  csrf={csrf}
+                />
               )}
               {kind === "mail" && (
                 <>

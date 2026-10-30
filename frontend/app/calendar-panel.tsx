@@ -1,5 +1,6 @@
 "use client";
 
+import CalendarPreferences, { preferences } from "./calendar-preferences";
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, choice, page, record, string } from "../lib/api";
@@ -42,7 +43,13 @@ export default function CalendarPanel({
     Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
   const [mode, setMode] = useState<Mode>("week");
+  const [movedDate,setMovedDate]=useState<string|null>(null);
+  const [overlayVersion,setOverlayVersion]=useState(0);
+  const [overlays,setOverlays]=useState<{id:string;title:string;startsAt:string;endsAt:string}[]>([]);
+  const [overlayCoverage,setOverlayCoverage]=useState("");
+  const [density,setDensity]=useState<"compact"|"comfortable">("comfortable");
   const [weekStart, setWeekStart] = useState("1");
+  const applyPreferences=useCallback((value:ReturnType<typeof preferences>)=>{setZone(value.timezone);setWeekStart(String(value.weekStart));setDensity(value.density);setOverlayVersion(value.version);},[]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [tasks, setTasks] = useState<CanonicalRecord[]>([]);
   const [selected, setSelected] = useState<Block | null>(null);
@@ -126,6 +133,7 @@ export default function CalendarPanel({
       });
     return () => controller.abort();
   }, [base, from, count, workspaceId]);
+  useEffect(()=>{const controller=new AbortController();api(base+`/overlays?from=${dayOffset(from,-1)}T00:00:00Z&to=${dayOffset(from,count+1)}T00:00:00Z`,value=>{const row=record(value);const coverage=record(row.coverage);return {items:Array.isArray(row.items)?row.items.map((value:unknown)=>{const item=record(value);return{id:string(item.connectionId)+":"+string(item.id),title:string(item.title),startsAt:string(item.startsAt),endsAt:string(item.endsAt)};}):[],note:coverage.truncated||coverage.unavailable||Number(coverage.unexpandedSeries)>0?"Provider availability is incomplete. Synchronize selected accounts and review unresolved recurring series before relying on these overlays.":"Selected provider projections are shown separately from local task work blocks."};},{signal:controller.signal}).then(value=>{setOverlays(value.items);setOverlayCoverage(value.note);}).catch((error:unknown)=>{if(!controller.signal.aborted)setOverlayCoverage(error instanceof Error?error.message:"Provider overlays unavailable.");});return()=>controller.abort();},[base,from,count,overlayVersion]);
   async function preview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -219,6 +227,7 @@ export default function CalendarPanel({
         </div>
         <Badge>Personal work blocks</Badge>
       </header>
+      <CalendarPreferences workspaceId={workspaceId} csrf={csrf} onLoaded={applyPreferences}/>
       <Notice role="alert" tone="error">
         {message}
       </Notice>
@@ -285,6 +294,7 @@ export default function CalendarPanel({
           ))}
         </div>
       </div>
+      {overlayCoverage&&<Notice>{overlayCoverage}</Notice>}
       {loading ? (
         <p role="status">Loading calendar…</p>
       ) : (
@@ -309,13 +319,17 @@ export default function CalendarPanel({
                 </p>
               );
             }
-            if (mode === "agenda" && !daily.length) return null;
+            const external=overlays.filter(event=>localDate(event.startsAt,zone)<=day&&localDate(new Date(Date.parse(event.endsAt)-1).toISOString(),zone)>=day);
+            if (mode === "agenda" && !daily.length&&!external.length) return null;
             return (
-              <section key={day} className={`${panelClass} min-w-0 p-3`}>
+              <section onDragOver={event=>event.preventDefault()} onDrop={event=>{event.preventDefault();const block=blocks.find(value=>value.id===event.dataTransfer.getData("text/plain"));if(block&&!block.locked){setSelected(block);setMovedDate(day);setReview(null);setMessage("Review the dragged block’s local date and time in the form before applying.");}}} key={day} className={`${panelClass} min-w-0 ${density === "compact" ? "p-2" : "p-4"}`}>
                 <h2 className="mb-3 text-[11px] font-medium">{day}</h2>
                 <div className="grid gap-2">
+                  {external.map(event=><article key={event.id} className="rounded-lg border border-teal-400/20 bg-teal-400/10 p-2 text-[10px]"><p>{event.title}</p><span className={mutedClass}>Provider calendar · {localTime(event.startsAt,zone)}</span></article>)}
                   {daily.map((block) => (
                     <div
+                      draggable={!block.locked}
+                      onDragStart={event=>event.dataTransfer.setData("text/plain",block.id)}
                       key={block.id}
                       className="grid gap-2 rounded-lg border border-violet-400/20 bg-violet-400/8 p-2.5"
                     >
@@ -337,7 +351,7 @@ export default function CalendarPanel({
                         variant="ghost"
                         disabled={busy}
                         onClick={() => {
-                          setSelected(block);
+                          setMovedDate(null);setSelected(block);
                           setReview(null);
                         }}
                       >
@@ -373,7 +387,7 @@ export default function CalendarPanel({
           {selected ? "Review work-block changes" : "Schedule a task"}
         </summary>
         <form
-          key={selected?.id ?? "new"}
+          key={`${selected?.id ?? "new"}:${movedDate ?? ""}`}
           onSubmit={(event) => void preview(event)}
           onChange={() => setReview(null)}
           className="mt-4 grid gap-4 sm:grid-cols-2"
@@ -426,7 +440,7 @@ export default function CalendarPanel({
               required
               defaultValue={
                 selected
-                  ? localDate(selected.startsAt, zone) +
+                  ? (movedDate ?? localDate(selected.startsAt, zone)) +
                     "T" +
                     localTime(selected.startsAt, zone)
                   : date + "T09:00"
@@ -441,7 +455,7 @@ export default function CalendarPanel({
               required
               defaultValue={
                 selected
-                  ? localDate(selected.endsAt, zone) +
+                  ? (movedDate ? dayOffset(movedDate,Math.round((Date.parse(localDate(selected.endsAt,zone))-Date.parse(localDate(selected.startsAt,zone)))/86400000)) : localDate(selected.endsAt, zone)) +
                     "T" +
                     localTime(selected.endsAt, zone)
                   : date + "T10:00"
@@ -476,6 +490,7 @@ export default function CalendarPanel({
           className={`${panelClass} grid gap-4 p-5`}
         >
           <h2 className={`${headingClass} text-lg`}>Review before applying</h2>
+          <Notice>{review.providerBusy} provider busy intervals · {review.bufferMinutes} minute buffers.{review.outsideHours ? " This selection is outside your configured working hours." : ""}{review.coverage.truncated||review.coverage.unavailable||Number(review.coverage.unexpandedSeries)>0?" Provider coverage is incomplete; availability is unknown for unresolved events.":""}</Notice>
           <p className="text-[12px]">
             {review.startsAt} → {review.endsAt}
           </p>
