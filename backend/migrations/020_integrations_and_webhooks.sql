@@ -67,3 +67,4 @@ CREATE POLICY webhook_deliveries_tenant_isolation ON tantu.webhook_deliveries
       WHERE user_id = nullif(current_setting('app.current_user_id', true), '')::uuid
     )
   );
+

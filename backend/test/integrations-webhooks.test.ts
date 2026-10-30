@@ -64,3 +64,4 @@ test("provider capability matrix accurately reflects supported and evaluated int
   assert.equal(imap.status, "evaluated");
   assert.ok(imap.capabilities.includes("mail.read.evaluated"));
 });
+

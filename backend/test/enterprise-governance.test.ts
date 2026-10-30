@@ -62,3 +62,4 @@ test("dlp engine bypasses scanning when disabled in enterprise policy", () => {
   assert.equal(result.cleanText, input);
   assert.equal(result.violations.length, 0);
 });
+

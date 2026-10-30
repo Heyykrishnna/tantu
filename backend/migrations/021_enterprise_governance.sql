@@ -66,3 +66,4 @@ CREATE POLICY enterprise_audit_exports_tenant_isolation ON tantu.enterprise_audi
       WHERE user_id = nullif(current_setting('app.current_user_id', true), '')::uuid
     )
   );
+
