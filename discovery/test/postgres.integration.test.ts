@@ -4,6 +4,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 import { test } from "node:test";
 import { PgBoss } from "pg-boss";
+import * as Y from "yjs";
 import { startPostgresFixture } from "../src/postgres-fixture.js";
 import { claimAttempt, completeAttempt } from "../src/fenced-completion.js";
 
@@ -72,6 +73,23 @@ test("isolated PostgreSQL authorization, outbox, jobs, recovery, and search qual
       assert.equal(counts.rows[0]?.count, 1);
       await assert.rejects(client.query("SELECT l0.capture_task($1,$2,$3,$4)", ["alpha", operation, "different-digest", randomUUID()]), /operation payload conflict/);
     } finally { await second.end(); }
+  });
+
+  await context.test("persisted collaborative snapshots do not acquire permission authority", async () => {
+    const live = new Y.Doc();
+    const restored = new Y.Doc();
+    try {
+      live.getText("body").insert(0, "Persisted synthetic document");
+      live.getMap<boolean>("permissions").set("public", true);
+      await client.query("INSERT INTO l0.document_snapshots VALUES($1,$2)", ["private-alpha", Buffer.from(Y.encodeStateAsUpdate(live))]);
+      const rows = await client.query<{ snapshot: Buffer }>("SELECT snapshot FROM l0.document_snapshots WHERE record_id=$1", ["private-alpha"]);
+      const snapshot = rows.rows[0]?.snapshot;
+      assert.ok(snapshot && Buffer.isBuffer(snapshot));
+      Y.applyUpdate(restored, snapshot);
+      assert.equal(restored.getText("body").toString(), "Persisted synthetic document");
+      assert.deepEqual(await scoped("member-a", "alpha", "SELECT id FROM l0.records WHERE id='private-alpha'"), []);
+      assert.equal((await scoped("owner-a", "alpha", "SELECT id FROM l0.records WHERE id='private-alpha'")).length, 1);
+    } finally { live.destroy(); restored.destroy(); }
   });
 
   await context.test("terminating a session rolls back uncommitted task and outbox writes", async () => {

@@ -53,6 +53,8 @@ Pilot policy defaults retain the PRD proposals: 30-day recoverable trash, backup
 
 ## External readiness ledger
 
+The local HTTP foundation bounds bodies at 1 MiB and request/connection timeouts at 10 seconds. Draft contracts bound search pages at 100 records and queries at 256 characters; archive fixtures independently bound patterns at 1 KiB, compressed inputs/sidecars at 8 MiB each, decoded output at 4 MiB, and result count at 10,000. These are local/interface budgets, not approved production attachment, storage, retention, or tenant pricing limits. Review production quotas against workload, provider caps, and cost before pilot ingestion.
+
 | Item | Status | Responsible role | Release impact |
 | --- | --- | --- | --- |
 | Google project, exact scope review, redirect/consent setup, approved test users | Not started; external account access excluded from local L0. | Project owner / Integration | Blocks real-provider qualification, not synthetic local execution. |

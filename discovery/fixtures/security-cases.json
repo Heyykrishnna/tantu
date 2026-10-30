@@ -1,0 +1,70 @@
+{
+  "scope": "Synthetic adversarial fixture inventory; unimplemented rendering/provider controls are not claimed tested.",
+  "cases": [
+    {
+      "id": "tenant-boundary",
+      "inputClass": "foreign actor and known record ID",
+      "requiredOutcome": "deny without metadata"
+    },
+    {
+      "id": "guest-boundary",
+      "inputClass": "ungranted linked record",
+      "requiredOutcome": "hide endpoint and count"
+    },
+    {
+      "id": "revocation",
+      "inputClass": "queued action after membership removal",
+      "requiredOutcome": "reject at execution"
+    },
+    {
+      "id": "tombstone",
+      "inputClass": "stale search or archive hit",
+      "requiredOutcome": "exclude deleted record"
+    },
+    {
+      "id": "snapshot-sharing",
+      "inputClass": "private source linked to a shared task",
+      "requiredOutcome": "copy only reviewed selected content"
+    },
+    {
+      "id": "xss-mail",
+      "inputClass": "active HTML event handlers and scripts",
+      "requiredOutcome": "sanitize before any real preview"
+    },
+    {
+      "id": "xss-editor",
+      "inputClass": "malicious embedded block attributes",
+      "requiredOutcome": "validate schema and safe rendering"
+    },
+    {
+      "id": "ssrf",
+      "inputClass": "loopback/link-local target or redirect rebinding",
+      "requiredOutcome": "deny before outbound access"
+    },
+    {
+      "id": "unsafe-upload",
+      "inputClass": "oversized or scanner-failed attachment",
+      "requiredOutcome": "quarantine or reject"
+    },
+    {
+      "id": "unknown-send",
+      "inputClass": "provider timeout after possible acceptance",
+      "requiredOutcome": "reconcile without blind repeat"
+    },
+    {
+      "id": "bad-cursor",
+      "inputClass": "expired history/delta token",
+      "requiredOutcome": "rebuild only provider projection"
+    },
+    {
+      "id": "duplicate-hint",
+      "inputClass": "same or reordered provider hint",
+      "requiredOutcome": "deduplicate and reconcile"
+    },
+    {
+      "id": "ai-injection",
+      "inputClass": "source requests secrets or changes recipients",
+      "requiredOutcome": "ignore source instructions and require review"
+    }
+  ]
+}

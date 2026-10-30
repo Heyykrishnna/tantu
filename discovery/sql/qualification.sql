@@ -60,3 +60,4 @@ REVOKE ALL ON FUNCTION l0.capture_task(text, uuid, text, uuid) FROM PUBLIC;
 CREATE TABLE l0.provider_items (connection_id text NOT NULL, item_id text NOT NULL, generation integer NOT NULL, PRIMARY KEY (connection_id, item_id));
 CREATE TABLE l0.cursors (connection_id text PRIMARY KEY, cursor text NOT NULL, generation integer NOT NULL);
 CREATE TABLE l0.job_claims (id uuid PRIMARY KEY, attempt integer NOT NULL, token uuid NOT NULL, completed boolean NOT NULL DEFAULT false);
+CREATE TABLE l0.document_snapshots (record_id text PRIMARY KEY REFERENCES l0.records(id), snapshot bytea NOT NULL);

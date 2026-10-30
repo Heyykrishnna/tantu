@@ -235,7 +235,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/SchedulePreviewResult"
                 }
               }
             }
@@ -649,7 +649,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/SearchPage"
                 }
               }
             }
@@ -1569,6 +1569,12 @@
           },
           "reviewed": {
             "const": true
+          },
+          "action": {
+            "enum": [
+              "grant",
+              "revoke"
+            ]
           }
         },
         "required": [
@@ -1577,7 +1583,8 @@
           "recordId",
           "recipientId",
           "expectedVersion",
-          "reviewed"
+          "reviewed",
+          "action"
         ]
       },
       "SyncRequest": {
@@ -1717,6 +1724,145 @@
           "correlationId",
           "occurredAt"
         ]
+      },
+      "SearchPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "records",
+          "nextCursor",
+          "coverage",
+          "mode",
+          "asOf"
+        ],
+        "properties": {
+          "records": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "snippet"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "kind": {
+                  "enum": [
+                    "task",
+                    "page",
+                    "mail",
+                    "event",
+                    "promise"
+                  ]
+                },
+                "snippet": {
+                  "type": "string",
+                  "maxLength": 1024
+                }
+              }
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2048
+          },
+          "coverage": {
+            "enum": [
+              "complete",
+              "partial",
+              "failed"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "live",
+              "archive-literal"
+            ]
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SchedulePreviewResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "previewId",
+          "sourceVersion",
+          "expiresAt",
+          "timezone",
+          "intervals",
+          "conflicts",
+          "requiresReview"
+        ],
+        "properties": {
+          "previewId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "intervals": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "taskId",
+                "start",
+                "end"
+              ],
+              "properties": {
+                "taskId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "start": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "end": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "conflicts": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "string",
+              "maxLength": 300
+            }
+          },
+          "requiresReview": {
+            "const": true
+          }
+        }
       }
     }
   }

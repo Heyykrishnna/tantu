@@ -57,6 +57,6 @@ The [module ownership guide](src/modules/README.md) maps all nine PRD domains. R
 
 The [platform guide](src/platform/README.md) separates database, jobs, storage, and provider adapters. [Worker boundaries](src/workers/README.md) and [migration rules](migrations/README.md) reserve the planned asynchronous and persistence work without starting fake jobs or creating speculative schemas.
 
-The isolated Go archive adapter is described in the [archive boundary](../archive/README.md). Runtime-validated network contracts will follow the [contract policy](../contracts/README.md). No database driver, OAuth SDK, queue, AI client, or archive package is installed yet.
+The isolated Go archive adapter is described in the [archive boundary](../archive/README.md). Runtime-validated network contracts will follow the [contract policy](../contracts/README.md). Those dependencies are not installed in this production backend. The isolated discovery harness uses PostgreSQL/queue clients and a pinned Go archive qualification module without importing them into the HTTP application.
 
 See the [backend foundation decision](../docs/decisions/0001-backend-foundation.md) for implementation scope and remaining decisions.

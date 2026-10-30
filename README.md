@@ -4,9 +4,9 @@
 
 tantu is a connected workspace for individuals and small teams, designed to bring tasks, projects, calendars, email, and knowledge into a single workflow. Incoming information becomes reviewed work, linked context, scheduled time, and trackable commitments.
 
-**Status:** Initial application boilerplate. The project includes a Next.js frontend starter and a runnable TypeScript/Fastify backend foundation. Product workflows, authentication, persistence, provider integrations, and historical search remain planned.
+**Status:** Application boilerplate with an isolated local L0 qualification suite. The project includes a Next.js frontend starter and a runnable TypeScript/Fastify backend foundation. Product workflows, authentication, persistence, provider integrations, and historical search remain planned.
 
-The [Product Requirements Document](docs/product-requirements.md) and [delivery roadmap](docs/roadmap.md) capture the product baseline. The [backend foundation decision](docs/decisions/0001-backend-foundation.md) records the concrete scaffold choices.
+The [Product Requirements Document](docs/product-requirements.md) and [delivery roadmap](docs/roadmap.md) capture the product baseline. The [backend foundation decision](docs/decisions/0001-backend-foundation.md) records the scaffold choices. The [L0 readiness record](docs/l0/readiness.md) distinguishes measured engineering evidence from unresolved production and provider gates.
 
 ## Product direction
 
@@ -60,7 +60,7 @@ These are planned capabilities, not implemented product endpoints. Core workflow
 
 The backend exposes `GET /health/live`, returning `{"status":"ok"}`. This reports process liveness only. Database, worker, provider, and product readiness are not claimed. Unimplemented routes return 404.
 
-No database driver, authentication service, OAuth client, queue, AI client, or MinLZ package is installed. Reserved domain folders contain no business implementations or fake responses.
+The production backend installs no database driver, authentication service, OAuth client, queue, AI client, or MinLZ package. PostgreSQL and queue dependencies and the pinned Go archive module are isolated in the discovery/qualification suites. Reserved domain folders contain no business implementations or fake responses.
 
 ## Getting started
 
@@ -89,22 +89,23 @@ The frontend uses `next/font/google` for Geist fonts, so its build may require n
 
 ## Development commands
 
-Run these commands from the project root. The root package orchestrates the two independent npm packages; it does not require a separate dependency installation.
+Run these commands from the project root. The root package orchestrates the application and isolated discovery packages; it does not require a separate dependency installation.
 
 | Command | Behavior |
 | --- | --- |
-| `npm run setup` | Install frontend and backend dependencies using their lockfiles. |
+| `npm run setup` | Install the frontend, backend, and isolated discovery package from their lockfiles. |
 | `npm run dev:frontend` | Start the Next.js development server. |
 | `npm run dev:backend` | Start the TypeScript backend in watch mode. |
-| `npm run lint` | Run both packages’ ESLint checks. |
-| `npm run typecheck` | Generate frontend route types, then check frontend and backend TypeScript. |
-| `npm test` | Run the backend foundation tests. |
+| `npm run lint` | Run application and discovery ESLint checks. |
+| `npm run typecheck` | Generate frontend route types, then check application and discovery TypeScript. |
+| `npm test` | Run backend foundation and isolated discovery unit tests. |
 | `npm run build` | Build the frontend and compile the backend. |
-| `npm run check` | Run lint, type checking, backend tests, and both builds. |
+| `npm run check` | Run lint, type checking, unit tests, and both application builds. |
+| `npm run check:l0` | Also run prototype browser checks, disposable PostgreSQL qualification, archive checks, dependency audits, and baseline validation. |
 | `npm run start:frontend` | Serve a previously built frontend. |
 | `npm run start:backend` | Run the compiled backend. |
 
-The frontend does not yet have an automated test suite. Provider, database, archive, browser, and accessibility qualification will be added alongside the corresponding functionality. No CI pipeline is configured yet.
+The production frontend has no application test suite yet. The discovery package separately tests synthetic journeys, contracts, collaboration, recurrence, policy fixtures, a disposable database, and the pinned archive library. These experiments do not qualify live providers or production authorization. A pinned-action CI workflow reproduces the local engineering checks; execution on GitHub is not implied by its presence.
 
 ## Architecture
 
@@ -159,6 +160,8 @@ Keep secrets, dependency directories, builds, logs, and local planning material 
 - [Backend foundation decision](docs/decisions/0001-backend-foundation.md)
 - [Frontend guide](frontend/README.md)
 - [Backend guide](backend/README.md)
+- [L0 local readiness and limitations](docs/l0/readiness.md)
+- [Discovery qualification guide](discovery/README.md)
 
 The PRD and roadmap preserve the 29 October 2026 planning baseline. Current package READMEs and adopted decisions describe what the scaffold actually implements.
 

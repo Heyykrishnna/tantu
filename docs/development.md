@@ -16,7 +16,7 @@ Root setup commands install each package from its own lockfile. Keep a single Gi
 
 Use Node.js 24 with npm 11; `.nvmrc` records the local development version. Root and backend package engines describe the supported major versions. The frontend’s existing framework and dependency versions are preserved.
 
-Frontend and backend are independent npm packages with separate lockfiles. Root scripts delegate with `npm --prefix`; there is no npm workspace migration, shared dependency installation, or duplicate root lockfile. Run `npm run setup` from the root to install both locked packages.
+Frontend and backend are independent application packages; the discovery harness is a third, isolated development package. Each has its own npm lockfile. Root scripts delegate with `npm --prefix`; there is no npm workspace migration, shared dependency installation, or duplicate root lockfile. Run `npm run setup` from the root to install all three locked packages.
 
 Use package-specific `npm install` when deliberately changing dependencies, then review the relevant manifest and lockfile. Use `npm ci` for reproducible installation. Never copy dependencies or hand-edit lockfile resolutions to manufacture a passing install.
 
@@ -36,15 +36,15 @@ From the root:
 npm run check
 ```
 
-This runs frontend/backend lint and type checks, backend foundation tests, and both production builds. Frontend type generation happens inside its `typecheck` command. Tests cover configuration boundaries, security headers, sanitized errors, strict schemas, payload limits, and honest unimplemented routes.
+This runs application/discovery lint and type checks, backend and discovery unit tests, and both application builds. Frontend type generation happens inside its `typecheck` command. Tests cover configuration boundaries, security headers, sanitized errors, strict schemas, payload limits, and honest unimplemented routes.
 
-The frontend has no automated application test suite. Database/provider/archive integration, browser/accessibility qualification, CI, container deployment, and performance targets remain future work. Do not report those checks as passing based on the scaffold tests.
+The frontend has no production application test suite. Run `npm run check:l0` for isolated prototype browser, PostgreSQL, archive, audit, and baseline checks. PostgreSQL tools, Python, Go, and a local browser are required; set `PG_BIN` or `TANTU_GO_BINARY` when necessary. Real-provider qualification, manual accessibility, container deployment, and production performance targets remain future work. Do not report those checks as passing based on the scaffold tests.
 
 ## Git hygiene and local plans
 
 The root `.gitignore` excludes dependency directories, builds, coverage, logs, TypeScript caches, local environment files, and the entire `phases/` folder. `.env.example` files remain eligible for tracking. Ignore rules do not remove files already committed.
 
-Detailed phase plans are local development material and must not be force-added or linked from tracked documentation. Current implementation status belongs in package READMEs and adopted decisions. Preserve unrelated local work and review the complete root diff before staging.
+The `local-docs/` folder is also ignored and contains the private technology guide. Detailed phase plans are local development material and must not be force-added or linked from tracked documentation. Current implementation status belongs in package READMEs and adopted decisions. Preserve unrelated local work and review the complete root diff before staging.
 
 ## Domain implementation
 

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"sync/atomic"
 
 	"github.com/minio/minlz"
 )
@@ -21,9 +22,12 @@ type Manifest struct {
 }
 
 type Result struct {
-	State   string
-	Offsets []int64
-	Stats   minlz.SearchStats
+	State            string
+	Offsets          []int64
+	Stats            minlz.SearchStats
+	MainReadCalls    int64
+	MainBytesRead    int64
+	SidecarBytesRead int64
 }
 
 type RecordSpan struct {
@@ -50,20 +54,28 @@ func ValidatePair(stream, sidecar []byte, manifest Manifest) error {
 type guardedReader struct {
 	ctx    context.Context
 	reader *bytes.Reader
+	calls  *atomic.Int64
+	bytes  *atomic.Int64
 }
 
 func (reader guardedReader) Read(data []byte) (int, error) {
 	if err := reader.ctx.Err(); err != nil {
 		return 0, err
 	}
-	return reader.reader.Read(data)
+	n, err := reader.reader.Read(data)
+	reader.calls.Add(1)
+	reader.bytes.Add(int64(n))
+	return n, err
 }
 
 func (reader guardedReader) ReadAt(data []byte, offset int64) (int, error) {
 	if err := reader.ctx.Err(); err != nil {
 		return 0, err
 	}
-	return reader.reader.ReadAt(data, offset)
+	n, err := reader.reader.ReadAt(data, offset)
+	reader.calls.Add(1)
+	reader.bytes.Add(int64(n))
+	return n, err
 }
 
 func Search(ctx context.Context, stream, sidecar, pattern []byte, limit int) (Result, error) {
@@ -82,12 +94,15 @@ func Search(ctx context.Context, stream, sidecar, pattern []byte, limit int) (Re
 		return nil
 	}
 	var err error
+	var mainCalls, mainBytes, sideCalls, sideBytes atomic.Int64
+	mainReader := guardedReader{ctx: ctx, reader: bytes.NewReader(stream), calls: &mainCalls, bytes: &mainBytes}
 	if len(sidecar) == 0 {
-		searcher := minlz.NewBlockSearcher(guardedReader{ctx, bytes.NewReader(stream)}, minlz.BlockSearchCollectStats(), minlz.BlockSearchMaxBlockSize(4096))
+		searcher := minlz.NewBlockSearcher(mainReader, minlz.BlockSearchCollectStats(), minlz.BlockSearchMaxBlockSize(4096))
 		err = searcher.Search(pattern, callback)
 		result.Stats = searcher.Stats()
 	} else {
-		searcher := minlz.NewSidecarSearcher(guardedReader{ctx, bytes.NewReader(stream)}, guardedReader{ctx, bytes.NewReader(sidecar)}, minlz.BlockSearchCollectStats(), minlz.BlockSearchMaxBlockSize(4096))
+		sideReader := guardedReader{ctx: ctx, reader: bytes.NewReader(sidecar), calls: &sideCalls, bytes: &sideBytes}
+		searcher := minlz.NewSidecarSearcher(mainReader, sideReader, minlz.BlockSearchCollectStats(), minlz.BlockSearchMaxBlockSize(4096))
 		err = searcher.Search(pattern, callback)
 		result.Stats = searcher.Stats()
 	}
@@ -98,6 +113,9 @@ func Search(ctx context.Context, stream, sidecar, pattern []byte, limit int) (Re
 			result = Result{State: "failed"}
 		}
 	}
+	result.MainReadCalls = mainCalls.Load()
+	result.MainBytesRead = mainBytes.Load()
+	result.SidecarBytesRead = sideBytes.Load()
 	return result, err
 }
 

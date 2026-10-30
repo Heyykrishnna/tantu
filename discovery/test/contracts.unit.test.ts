@@ -19,7 +19,7 @@ const validators = new Map(Object.entries(schemas).map(([name, schema]) => {
 const id = "11111111-1111-4111-8111-111111111111";
 
 test("all draft schemas compile under JSON Schema 2020-12", () => {
-  assert.equal(validators.size, 14);
+  assert.equal(validators.size, 16);
 });
 
 test("task contract requires version and operation identity and rejects unknown fields", () => {
@@ -69,4 +69,17 @@ test("draft product paths declare authorization and safe failures without claimi
       for (const code of ["400", "401", "403", "409", "429", "503"]) assert.ok(code in operation.responses);
     }
   }
+});
+
+
+test("read responses expose bounded coverage and reviewable schedule versions", () => {
+  const search = validators.get("SearchPage");
+  const preview = validators.get("SchedulePreviewResult");
+  assert.ok(search && preview);
+  assert.equal(search({ records: [], nextCursor: null, coverage: "partial", mode: "archive-literal", asOf: "2026-10-30T00:00:00Z" }), true);
+  assert.equal(search({ records: [], nextCursor: null, mode: "live", asOf: "2026-10-30T00:00:00Z" }), false);
+  const input = { previewId: id, sourceVersion: 1, expiresAt: "2026-10-30T00:05:00Z", timezone: "UTC", intervals: [], conflicts: [], requiresReview: true };
+  assert.equal(preview(input), true);
+  assert.equal(preview({ ...input, requiresReview: false }), false);
+  assert.equal(preview({ ...input, sourceVersion: 0 }), false);
 });

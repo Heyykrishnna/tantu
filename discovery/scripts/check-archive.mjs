@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 
 const root = new URL("../../", import.meta.url);
@@ -15,9 +15,9 @@ const environment = {
   GOPATH: process.env.GOPATH || join(tmpdir(), "tantu-l0-go-path"),
 };
 
-function execute(arguments_, filename) {
+function execute(arguments_, filename, executable = go) {
   return new Promise((resolve, reject) => {
-    const child = spawn(go, arguments_, { cwd: workingDirectory, env: environment, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(executable, arguments_, { cwd: workingDirectory, env: environment, stdio: ["ignore", "pipe", "pipe"] });
     let output = "";
     child.stdout.on("data", (chunk) => { output += chunk.toString(); });
     child.stderr.on("data", (chunk) => { output += chunk.toString(); });
@@ -36,10 +36,13 @@ function execute(arguments_, filename) {
 
 try {
   const version = await execute(["version"], "toolchain.txt");
+  const formatter = dirname(go) === "." ? "gofmt" : join(dirname(go), "gofmt");
+  const formatting = await execute(["-l", "qualification.go", "qualification_test.go"], "format.txt", formatter);
+  if (formatting.trim()) throw new Error("Go formatting differs from gofmt.");
   await execute(["vet", "./..."], "vet.txt");
   const tests = await execute(["test", "-mod=readonly", "-json", "-race", "./..."], "tests.jsonl");
   await execute(["test", "-mod=readonly", "-run=^$", "-fuzz=FuzzOracleParity", "-fuzztime=5s", "-parallel=2"], "fuzz.txt");
-  await execute(["test", "-mod=readonly", "-run=^$", "-bench=BenchmarkIndexedSearch", "-benchtime=20x", "-benchmem"], "benchmark.txt");
+  await execute(["test", "-mod=readonly", "-run=^$", "-bench=Benchmark(Indexed|Sidecar)Search", "-benchtime=20x", "-benchmem"], "benchmark.txt");
   const events = tests.split("\n").filter((line) => line.startsWith("{")).map((line) => JSON.parse(line));
   const passedTests = events.filter((event) => event.Action === "pass" && event.Test).length;
   const moduleText = await readFile(new URL("go.mod", workingDirectory), "utf8");

@@ -183,18 +183,28 @@ func FuzzOracleParity(f *testing.F) {
 	})
 }
 
-func BenchmarkIndexedSearch(b *testing.B) {
+func benchmarkSearch(b *testing.B, useSidecar bool) {
 	data := bytes.Repeat([]byte("structured synthetic archive record zzz\n"), 30000)
 	copy(data[len(data)/2:], []byte("UNIQUE_NEEDLE_PATTERN"))
-	stream, side := encode(b, data, false, 4096)
+	stream, side := encode(b, data, useSidecar, 4096)
 	b.ReportAllocs()
 	b.SetBytes(int64(len(data)))
 	b.ResetTimer()
+	var last Result
 	for i := 0; i < b.N; i++ {
 		result, err := Search(context.Background(), stream, side, []byte("UNIQUE_NEEDLE_PATTERN"), 10)
 		if err != nil || len(result.Offsets) != 1 {
 			b.Fatalf("benchmark mismatch: %v", err)
 		}
+		last = result
 	}
-	b.ReportMetric(float64(len(stream))/float64(len(data)), "compressed/input")
+	b.ReportMetric(float64(len(stream)+len(side))/float64(len(data)), "compressed/input")
+	b.ReportMetric(float64(last.Stats.TablesBytes), "table-bytes")
+	b.ReportMetric(float64(last.MainReadCalls), "main-read-calls")
+	b.ReportMetric(float64(last.MainBytesRead+last.SidecarBytesRead), "bytes-read")
+	b.ReportMetric(float64(last.Stats.BlocksSkipped), "blocks-skipped")
 }
+
+func BenchmarkIndexedSearch(b *testing.B) { benchmarkSearch(b, false) }
+
+func BenchmarkSidecarSearch(b *testing.B) { benchmarkSearch(b, true) }

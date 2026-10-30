@@ -9,7 +9,8 @@ test("six keyboard-operable journey previews keep private sources unavailable to
   await expect(page.getByRole("link", { name: "Skip to journeys" })).toBeFocused();
   for (const article of await page.locator("article[data-journey]").all()) {
     await article.getByLabel("Review as").selectOption("guest");
-    await article.getByRole("button", { name: "Review synthetic preview" }).click();
+    await article.getByRole("button", { name: "Review synthetic preview" }).focus();
+    await page.keyboard.press("Enter");
     await expect(article.locator("output")).toContainText("Private source unavailable");
     await expect(article.locator("output")).toContainText("No private excerpt is copied");
     await article.getByRole("checkbox").check();
