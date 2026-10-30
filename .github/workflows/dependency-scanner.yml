@@ -37,3 +37,4 @@ jobs:
         run: npm --prefix backend audit --audit-level=high
       - name: Audit discovery dependencies
         run: npm --prefix discovery audit --audit-level=high
+

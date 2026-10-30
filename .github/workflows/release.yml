@@ -44,3 +44,4 @@ jobs:
           files: |
             tantu-release.tar.gz
             tantu-release.tar.gz.sha256
+

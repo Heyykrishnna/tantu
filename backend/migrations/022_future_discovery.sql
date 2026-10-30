@@ -121,3 +121,4 @@ CREATE POLICY attention_budgets_isolation ON tantu.attention_budgets
       WHERE user_id = nullif(current_setting('app.current_user_id', true), '')::uuid
     )
   );
+

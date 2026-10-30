@@ -53,3 +53,4 @@ The migrations establish:
 ### Running container builds locally
 - Build the production container image: `docker build -t tantu:latest .`
 - Run containerized service: `docker run -p 4000:4000 tantu:latest`
+

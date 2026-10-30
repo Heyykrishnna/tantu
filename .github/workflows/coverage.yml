@@ -37,3 +37,4 @@ jobs:
       - name: Run discovery test coverage
         working-directory: discovery
         run: node --import tsx --test --experimental-test-coverage test/*.unit.test.ts
+

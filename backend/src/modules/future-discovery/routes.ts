@@ -339,3 +339,4 @@ export function futureDiscoveryRoutes(app: FastifyInstance, identity: Identity):
     }
   );
 }
+

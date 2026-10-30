@@ -80,3 +80,4 @@ test("handover pack token structure adheres to entropy and prefix standards", ()
   assert.ok(mockToken.startsWith(prefix));
   assert.equal(mockToken.length, 4 + 48);
 });
+

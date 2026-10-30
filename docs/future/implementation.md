@@ -58,3 +58,4 @@ The legacy monolithic `validate.yml` workflow has been replaced with 14 modular,
 12. `lighthouse.yml`: Performance audits and JavaScript bundle budget enforcement.
 13. `dependency-updates.yml`: Automated scheduled dependency updates and lockfile checks.
 14. `maintenance.yml`: Scheduled repository maintenance, branch pruning, and workflow run retention.
+

@@ -47,3 +47,4 @@ jobs:
         run: npm --prefix backend run test
       - name: Build backend production distribution
         run: npm --prefix backend run build
+
