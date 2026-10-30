@@ -1,0 +1,3 @@
+import { object, uuid, email } from "../../http/schema.js";
+export const draftFields = { recipients: { type: "array", minItems: 0, maxItems: 20, uniqueItems: true, items: email }, subject: { type: "string", maxLength: 200, pattern: "^[^\\r\\n]*$" }, body: { type: "string", maxLength: 100000 }, mode: { enum: ["new", "reply", "replyAll", "forward"] }, sourceId: { anyOf: [{ type: "string", minLength: 1, maxLength: 1024 }, { type: "null" }] }, attachmentIds: { type: "array", maxItems: 10, uniqueItems: true, items: uuid }, operationId: uuid };
+export const draftSchema = object(draftFields, ["recipients", "subject", "body", "operationId"]);

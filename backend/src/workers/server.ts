@@ -5,7 +5,7 @@ import { Database } from "../platform/database/database.js";
 import { Files } from "../modules/files/service.js";
 import { Providers } from "../modules/providers/service.js";
 import { processProviderSync } from "../modules/providers/routes.js";
-import { executeCalendarEffect } from "../modules/providers/calendar-effects.js";
+import { executeProviderEffect } from "../modules/providers/mail-actions.js";
 import { jobScope } from "./events.js";
 import { eventQueue, effectQueue, providerQueue, scanQueue, Queue } from "./queue.js";
 import { publishEvents } from "./events.js";
@@ -35,7 +35,7 @@ async function start(): Promise<void> {
     while (!stopping) {
       await queue.boss.supervise();
       await queue.runOne(eventQueue, publishEvents());
-      await queue.runOne(effectQueue, async (_client, data) => { const scope = jobScope(data); if (typeof data !== "object" || data === null || !("effectId" in data) || typeof data.effectId !== "string") throw new Error("Invalid provider effect job."); await executeCalendarEffect(providers, scope, data.effectId); });
+      await queue.runOne(effectQueue, async (_client, data) => { const scope = jobScope(data); if (typeof data !== "object" || data === null || !("effectId" in data) || typeof data.effectId !== "string") throw new Error("Invalid provider effect job."); await executeProviderEffect(providers, scope, data.effectId); });
       await queue.runOne(providerQueue, async (_client, data) => processProviderSync(providers, queue, data));
       await queue.runOne(scanQueue, (client, data) => files.process(client, data));
       await setTimeout(500);

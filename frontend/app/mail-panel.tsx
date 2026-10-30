@@ -1,4 +1,6 @@
 "use client";
+import MailboxActions from "./mailbox-actions";
+import MailWorkflows from "./mail-workflows";
 import ProviderCalendarActions from "./provider-calendar-actions";
 
 import { useCallback, useEffect, useState } from "react";
@@ -372,6 +374,23 @@ export default function MailPanel({
               )}
               {kind === "mail" && (
                 <>
+                  <MailboxActions
+                    key={accountId + "-actions"}
+                    workspaceId={workspaceId}
+                    connectionId={accountId}
+                    csrf={csrf}
+                    provider={account?.provider ?? "google"}
+                  />
+                  <MailWorkflows
+                    workspaceId={workspaceId}
+                    connectionId={account.id}
+                    csrf={csrf}
+                    onSaved={refresh}
+                  />
+                </>
+              )}
+              {kind === "mail" && (
+                <>
                   <details className={`${panelClass} p-5`}>
                     <summary className="cursor-pointer text-[12px] font-medium">
                       Compose a plain-text draft
@@ -469,8 +488,13 @@ export default function MailPanel({
                     {review.body}
                   </p>
                   <p className={`text-[11px] ${mutedClass}`}>
-                    No attachments. Confirmation sends this exact saved draft
-                    through your provider. Review expires in ten minutes.
+                    {review.attachments.length
+                      ? review.attachments
+                          .map((file) => `${file.name} (${file.bytes} bytes)`)
+                          .join(" · ")
+                      : "No attachments."}{" "}
+                    Confirmation sends this exact saved draft through your
+                    provider. Review expires in ten minutes.
                   </p>
                   <div className="flex gap-3">
                     <Button

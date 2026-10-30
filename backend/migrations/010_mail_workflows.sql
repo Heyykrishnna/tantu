@@ -1,0 +1,10 @@
+ALTER TABLE tantu.mail_drafts ADD mode text NOT NULL DEFAULT 'new' CHECK(mode IN('new','reply','replyAll','forward')),ADD source_id text,ADD source_meta jsonb NOT NULL DEFAULT '{}',ADD attachment_ids uuid[] NOT NULL DEFAULT '{}';
+ALTER TABLE tantu.send_reviews ADD attachment_fingerprint text NOT NULL DEFAULT '';
+CREATE TABLE tantu.mail_preferences(workspace_id uuid NOT NULL,connection_id uuid NOT NULL,message_id text NOT NULL,snoozed_until timestamptz,tag text,version integer NOT NULL DEFAULT 1,PRIMARY KEY(connection_id,message_id),FOREIGN KEY(workspace_id,connection_id) REFERENCES tantu.provider_connections(workspace_id,id));
+CREATE TABLE tantu.mail_rules(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),workspace_id uuid NOT NULL,connection_id uuid NOT NULL,name text NOT NULL CHECK(length(name) BETWEEN 1 AND 100),field text NOT NULL CHECK(field IN('from','subject')),contains text NOT NULL CHECK(length(contains) BETWEEN 1 AND 200),tag text NOT NULL CHECK(length(tag) BETWEEN 1 AND 100),enabled boolean NOT NULL DEFAULT true,version integer NOT NULL DEFAULT 1,FOREIGN KEY(workspace_id,connection_id) REFERENCES tantu.provider_connections(workspace_id,id));
+ALTER TABLE tantu.mail_preferences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tantu.mail_preferences FORCE ROW LEVEL SECURITY;
+CREATE POLICY mail_preference_scope ON tantu.mail_preferences FOR ALL USING(workspace_id=tantu.tenant() AND EXISTS(SELECT 1 FROM tantu.provider_connections WHERE id=connection_id)) WITH CHECK(workspace_id=tantu.tenant() AND EXISTS(SELECT 1 FROM tantu.provider_connections WHERE id=connection_id));
+ALTER TABLE tantu.mail_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tantu.mail_rules FORCE ROW LEVEL SECURITY;
+CREATE POLICY mail_rule_scope ON tantu.mail_rules FOR ALL USING(workspace_id=tantu.tenant() AND EXISTS(SELECT 1 FROM tantu.provider_connections WHERE id=connection_id)) WITH CHECK(workspace_id=tantu.tenant() AND EXISTS(SELECT 1 FROM tantu.provider_connections WHERE id=connection_id));
