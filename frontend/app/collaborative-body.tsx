@@ -1,4 +1,5 @@
 "use client";
+import RichBody from "./rich-body";
 
 import { useEffect, useRef, useState } from "react";
 import * as Y from "yjs";
@@ -51,6 +52,7 @@ export default function CollaborativeBody({
 }) {
   const document = useRef<Y.Doc | null>(null);
   const [text, setText] = useState("");
+  const [richDocument,setRichDocument]=useState<Y.Doc|null>(null);
   const [status, setStatus] = useState("Connecting…");
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
@@ -175,6 +177,7 @@ export default function CollaborativeBody({
         }
         setText(doc.getText("body").toString());
         setReady(true);
+        setRichDocument(doc);
         setStatus(
           pending ? "Recovered unsaved body changes" : "All body changes saved",
         );
@@ -222,6 +225,7 @@ export default function CollaborativeBody({
   }
   return (
     <section className="grid gap-3">
+      {ready && richDocument && <RichBody document={richDocument} editable={editable} />}
       <Field label="Page text">
         <textarea
           name="collaborative-body"

@@ -1,3 +1,4 @@
+import { insertDocument } from "./rich-text.js";
 import type { FastifyInstance } from "fastify";
 import { object, text, uuid } from "../../http/schema.js";
 import { Failure } from "../../platform/failure.js";
@@ -5,7 +6,7 @@ import type { Identity } from "../workspace-access/service.js";
 import type { Records } from "../work-management/service.js";
 import type { CanonicalRecord } from "../work-management/contracts.js";
 import { change, receipt, versionConflict } from "../connected-work/change.js";
-import { hydrate, pageDocument, persistDocument, documentText } from "./collaboration.js";
+import { hydrate, pageDocument, persistDocument } from "./collaboration.js";
 
 const params = object({ workspaceId: uuid, recordId: uuid });
 export function relationRoutes(app: FastifyInstance, identity: Identity, records: Records): void {
@@ -52,7 +53,7 @@ export function relationRoutes(app: FastifyInstance, identity: Identity, records
       const revision = (await client.query<{ snapshot: CanonicalRecord }>("SELECT snapshot FROM tantu.revisions WHERE record_id=$1 AND version=$2", [record.id, request.body.revision])).rows[0];
       if (!revision) throw new Failure(404, "NOT_FOUND", "Revision is unavailable.");
       const doc = hydrate(record.body, state);
-      try { doc.transact(() => { const text = doc.getText("body"); text.delete(0, text.length); text.insert(0, documentText(revision.snapshot.body)); }); return await persistDocument(client, scope, records, record, doc); }
+      try { doc.transact(() => { const text = doc.getText("body"); text.delete(0, text.length); insertDocument(text,revision.snapshot.body); }); return await persistDocument(client, scope, records, record, doc); }
       finally { doc.destroy(); }
     });
   });

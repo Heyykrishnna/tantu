@@ -35,7 +35,7 @@ function document(value: unknown): Document {
         type: choice(block.type, ["paragraph", "heading"]), content: list(block.content, (value) => {
           const text = record(value);
           if (text.type !== "text") throw new Error("The document text is unsupported.");
-          return { type: "text", text: string(text.text) };
+          return { type: "text", text: string(text.text), ...(text.marks ? {marks:list(text.marks,value=>({type:choice(record(value).type,["bold","italic","strike","code"])}))}: {}) };
         })
       };
     })

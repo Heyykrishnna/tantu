@@ -1,9 +1,9 @@
 import { object, text, uuid } from "../../http/schema.js";
 
-const inlineText = object({ type: { const: "text" }, text: { type: "string", maxLength: 4000 } });
+const inlineText = object({ type: { const: "text" }, text: { type: "string", maxLength: 4000 }, marks: { type: "array", maxItems: 4, uniqueItems: true, items: object({ type: { enum: ["bold", "italic", "strike", "code"] } }) } }, ["type", "text"]);
 const block = object({ type: { enum: ["paragraph", "heading"] }, content: { type: "array", maxItems: 100, items: inlineText } });
 export const documentSchema = object({ type: { const: "doc" }, content: { type: "array", maxItems: 200, items: block } });
-export interface Document { type: "doc"; content: { type: "paragraph" | "heading"; content: { type: "text"; text: string }[] }[] }
+export interface Document { type: "doc"; content: { type: "paragraph" | "heading"; content: { type: "text"; text: string; marks?: { type: "bold" | "italic" | "strike" | "code" }[] }[] }[] }
 export interface RecordInput {
   title: string;
   visibility?: "private" | "workspace";

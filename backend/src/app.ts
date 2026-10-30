@@ -1,3 +1,5 @@
+import { templateRoutes } from "./modules/knowledge/template-routes.js";
+import { sourceRoutes } from "./modules/knowledge/source-routes.js";
 import { collaborationRoutes } from "./modules/knowledge/collaboration-routes.js";
 import { collectionRoutes } from "./modules/knowledge/collection-routes.js";
 import { relationRoutes } from "./modules/knowledge/relations-routes.js";
@@ -90,6 +92,8 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
     collaborationRoutes(app, identity, new Records(dependencies.database, queue));
     collectionRoutes(app, identity);
     relationRoutes(app, identity, new Records(dependencies.database, queue));
+    templateRoutes(app,identity,new Records(dependencies.database,queue));
+    sourceRoutes(app,identity);
     app.get("/health/ready", async (_request, reply) => {
       try {
         await dependencies.database.pool.query("SELECT 1");

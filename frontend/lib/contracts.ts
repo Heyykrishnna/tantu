@@ -5,6 +5,9 @@ export interface Document {
         content: {
             type: "text";
             text: string;
+            marks?: {
+                type: "bold" | "italic" | "strike" | "code";
+            }[];
         }[];
     }[];
 }

@@ -46,12 +46,14 @@ export function collectionRoutes(app: FastifyInstance, identity: Identity): void
       if (!current || current.version !== request.body.expectedVersion) versionConflict();
       const before = properties(current.properties); const removed = before.filter((property) => !schema.some((next) => next.id === property.id)).map((property) => property.id);
       const rows = (await client.query<{ values: unknown }>("SELECT values FROM tantu.collection_items WHERE collection_id=$1 LIMIT 1001", [request.params.collectionId])).rows;
+      const viewRows = (await client.query<{ id: string; name: string; settings: unknown }>("SELECT id,name,settings FROM tantu.saved_views WHERE kind='collection' AND resource_id=$1 ORDER BY id LIMIT 100",[request.params.collectionId])).rows;
+      const affectedViews = viewRows.filter(row=>{const settings=valueObject(row.settings);return JSON.stringify(settings).includes(removed[0]??"__no_removed_property__") || removed.some(id=>JSON.stringify(settings).includes(id));}).map(row=>({id:row.id,name:row.name}));
       const affected = rows.filter((row) => evaluate(schema, valueObject(row.values)).repairs.length > 0).length;
       await client.query("DELETE FROM tantu.schema_reviews WHERE expires_at<now()");
       if (Number((await client.query<{ count: string }>("SELECT count(*) FROM tantu.schema_reviews")).rows[0]?.count) >= 100) throw new Failure(429, "REVIEW_LIMIT", "Finish an existing schema review or wait for it to expire.");
       const result = (await client.query<{ id: string }>("INSERT INTO tantu.schema_reviews(workspace_id,collection_id,user_id,properties,expected_version,item_fingerprint) VALUES($1,$2,$3,$4,$5,$6) RETURNING id", [scope.workspaceId, request.params.collectionId, scope.userId, JSON.stringify(schema), current.version, await fingerprint(client, request.params.collectionId)])).rows[0];
       if (!result) throw new Error("Schema review was not created.");
-      return { id: result.id, removed, affectedVisibleRows: affected, coverage: "current-access-only; up to 1001 rows inspected", repair: "Stored values for removed or incompatible properties are retained and marked for repair.", properties: schema };
+      return { id: result.id, removed, affectedVisibleRows: affected, affectedViews, coverage: "current-access-only; up to 1001 rows inspected", repair: "Stored values for removed or incompatible properties are retained and marked for repair.", properties: schema };
     });
   });
   app.post<{ Params: { workspaceId: string; collectionId: string }; Body: { reviewId: string; operationId: string } }>(base + "/:collectionId/schema/apply", { schema: { params, body: object({ reviewId: uuid, operationId: uuid }) } }, async (request) => {

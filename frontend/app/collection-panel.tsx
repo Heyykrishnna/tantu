@@ -1,4 +1,7 @@
 "use client";
+import CollectionViews from "./collection-views";
+import type {CollectionView} from "./collection-views";
+import CollectionTemplates from "./collection-templates";
 
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -65,6 +68,9 @@ export default function CollectionPanel({
   const [editRow, setEditRow] = useState("");
   const [filter, setFilter] = useState("");
   const [sort, setSort] = useState("title");
+  const [columns,setColumns]=useState<string[]|null>(null);
+  const [group,setGroup]=useState("none");
+  const [propertyFilter,setPropertyFilter]=useState({propertyId:"",value:""});
   const [mode, setMode] = useState<"table" | "list">("table");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -125,6 +131,7 @@ export default function CollectionPanel({
   async function select(id: string) {
     const data = await api(base + "/" + id, collection);
     setDetail(data);
+    setColumns(null);setGroup("none");setPropertyFilter({propertyId:"",value:""});
     setDefinitions(data.properties);
     setReview(null);
     setEditRow("");
@@ -229,17 +236,20 @@ export default function CollectionPanel({
   const visible =
     detail?.items
       .filter((row) =>
-        row.record.title.toLowerCase().includes(filter.toLowerCase()),
+        row.record.title.toLowerCase().includes(filter.toLowerCase()) && (!propertyFilter.propertyId || display(row.values[propertyFilter.propertyId]).toLowerCase().includes(propertyFilter.value.toLowerCase())),
       )
       .sort((a, b) =>
-        sort === "title"
+        (group !== "none" ? display(a.values[group]).localeCompare(display(b.values[group])) : 0) || (sort === "title"
           ? a.record.title.localeCompare(b.record.title)
           : display(a.values[sort]).localeCompare(
               display(b.values[sort]),
               undefined,
               { numeric: true },
-            ),
+            )),
       ) ?? [];
+  const visibleProperties=detail?.properties.filter(property=>columns===null||columns.includes(property.id))??[];
+  const view:CollectionView={mode,sort:"title",group:"none",status:"all",columns:columns??detail?.properties.map(property=>property.id)??[],filter,propertySort:sort,propertyGroup:group,propertyFilter};
+  function applyView(value:CollectionView){setMode(value.mode);setColumns(value.columns);setFilter(value.filter);setSort(value.propertySort);setGroup(value.propertyGroup);setPropertyFilter(value.propertyFilter);}
   const valueField = (property: Property, value: unknown) =>
     property.type === "formula" ? (
       <p className={`text-[11px] ${mutedClass}`}>
@@ -305,7 +315,12 @@ export default function CollectionPanel({
           className="mt-4 flex flex-wrap items-end gap-3"
         >
           <Field label="Collection page">
-            <select aria-label="Collection page" name="pageId" required className={inputClass}>
+            <select
+              aria-label="Collection page"
+              name="pageId"
+              required
+              className={inputClass}
+            >
               <option value="">Choose a page (first 50)</option>
               {sources
                 .filter((source) => source.kind === "page" && source.canEdit)
@@ -375,7 +390,8 @@ export default function CollectionPanel({
                 />
               </Field>
               <Field label="Sort by">
-                <select aria-label="Sort by"
+                <select
+                  aria-label="Sort by"
                   value={sort}
                   onChange={(event) => setSort(event.target.value)}
                   className={inputClass}
@@ -389,6 +405,8 @@ export default function CollectionPanel({
                 </select>
               </Field>
             </div>
+            <CollectionViews key={detail.id} workspaceId={workspaceId} collectionId={detail.id} csrf={csrf} properties={detail.properties} current={view} onApply={applyView}/>
+            <CollectionTemplates workspaceId={workspaceId} collectionId={detail.id} csrf={csrf} canEdit={detail.canEdit}/>
             <div className={`${panelClass} overflow-auto`}>
               {!visible.length ? (
                 <p className="p-6 text-[12px]">
@@ -402,7 +420,8 @@ export default function CollectionPanel({
                   <thead>
                     <tr>
                       <th className="px-4 py-3">Record</th>
-                      {detail.properties.map((property) => (
+                      {group!=="none"&&<th className="px-4 py-3">Group: {detail.properties.find(property=>property.id===group)?.name??"Unavailable"}</th>}
+                      {visibleProperties.map((property) => (
                         <th
                           className="whitespace-nowrap px-4 py-3"
                           key={property.id}
@@ -434,7 +453,8 @@ export default function CollectionPanel({
                             </span>
                           )}
                         </td>
-                        {detail.properties.map((property) => (
+                        {group!=="none"&&<td className="px-4 py-3">{display(row.values[group])}</td>}
+                        {visibleProperties.map((property) => (
                           <td
                             className="max-w-xs truncate px-4 py-3"
                             key={property.id}
@@ -470,7 +490,7 @@ export default function CollectionPanel({
                       >
                         {row.record.title}
                       </button>
-                      <Badge>{row.record.kind}</Badge>
+                      <Badge>{group!=="none"?display(row.values[group]):row.record.kind}</Badge>
                     </li>
                   ))}
                 </ul>
@@ -502,7 +522,9 @@ export default function CollectionPanel({
             {detail.canEdit && (
               <>
                 <Field label="Link or edit an existing record">
-                  <select disabled={busy} aria-label="Link or edit an existing record"
+                  <select
+                    disabled={busy}
+                    aria-label="Link or edit an existing record"
                     value={editRow}
                     onChange={(event) => setEditRow(event.target.value)}
                     className={inputClass}
@@ -604,7 +626,11 @@ export default function CollectionPanel({
                         />
                       </Field>
                       <Field label="Property type">
-                        <select aria-label="Property type" name="type" className={inputClass}>
+                        <select
+                          aria-label="Property type"
+                          name="type"
+                          className={inputClass}
+                        >
                           {[
                             "text",
                             "number",
@@ -625,7 +651,11 @@ export default function CollectionPanel({
                         />
                       </Field>
                       <Field label="Formula operator">
-                        <select aria-label="Formula operator" name="operator" className={inputClass}>
+                        <select
+                          aria-label="Formula operator"
+                          name="operator"
+                          className={inputClass}
+                        >
                           {["add", "subtract", "multiply", "divide"].map(
                             (operator) => (
                               <option key={operator}>{operator}</option>
@@ -695,7 +725,7 @@ export default function CollectionPanel({
                     </h2>
                     <p className="text-[12px]">
                       {review.removed.length} removed properties ·{" "}
-                      {review.affected} visible rows need repair
+                      {review.affected} visible rows need repair. Affected saved views: {review.affectedViews.join(", ")||"None visible to you"}
                     </p>
                     <p className={`text-[11px] ${mutedClass}`}>
                       {review.repair}
