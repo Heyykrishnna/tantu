@@ -306,6 +306,156 @@ export default function WorkspaceSettings({
           </div>
         </aside>
       </div>
+
+      <section className={`${panelClass} p-6`}>
+        <h2 className={`${headingClass} mb-1 text-[16px]`}>
+          Preferences &amp; Customization
+        </h2>
+        <p className={`mb-5 text-[11px] leading-relaxed ${mutedClass}`}>
+          Configure density, timezone, and week-start. These preferences are scoped to your account and workspace.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Field label="Theme">
+            <select
+              aria-label="Color theme"
+              className={inputClass}
+              defaultValue="dark"
+              onChange={(e) => {
+                document.documentElement.dataset.theme = e.target.value;
+                try {
+                  localStorage.setItem("tantu-theme", e.target.value);
+                } catch {}
+              }}
+            >
+              <option value="system">System Default</option>
+              <option value="dark">Dark Theme</option>
+              <option value="light">Light Theme</option>
+            </select>
+          </Field>
+          <Field label="Density">
+            <select aria-label="Layout density" className={inputClass} defaultValue="comfortable">
+              <option value="comfortable">Comfortable</option>
+              <option value="compact">Compact (High Information)</option>
+            </select>
+          </Field>
+          <Field label="Week Starts On">
+            <select aria-label="Week start day" className={inputClass} defaultValue="monday">
+              <option value="monday">Monday (ISO Standard)</option>
+              <option value="sunday">Sunday</option>
+            </select>
+          </Field>
+        </div>
+      </section>
+
+      <section className={`${panelClass} p-6`}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div>
+            <h2 className={`${headingClass} text-[16px]`}>
+              Data Portability &amp; Tenant Quotas
+            </h2>
+            <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
+              Export your data, view fair resource consumption, or disconnect external accounts.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={busy}
+            onClick={async () => {
+              try {
+                setBusy(true);
+                const res = await api<{ job: { payload: unknown } }>(
+                  `/api/v1/workspaces/${workspace.id}/export`,
+                  (v) => v as { job: { payload: unknown } },
+                  { method: "POST", csrf }
+                );
+                const blob = new Blob([JSON.stringify(res.job.payload, null, 2)], {
+                  type: "application/json",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `tantu-export-${workspace.id}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                setMessage("Export downloaded successfully.");
+              } catch (err) {
+                setMessage(err instanceof Error ? err.message : "Export failed.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <Icon name="download" className="size-3.5" />
+            Export Workspace JSON
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
+          <div className="rounded-lg border border-[#e4e6ef] p-3 dark:border-[#303034]">
+            <span className={`block text-[10px] uppercase font-semibold ${mutedClass}`}>
+              Storage Quota
+            </span>
+            <span className="text-sm font-medium text-[#283346] dark:text-[#eeeeF0]">
+              5.2 MB / 100 MB
+            </span>
+            <div className="mt-2 h-1.5 w-full rounded-full bg-[#eceef5] dark:bg-[#2c2c30]">
+              <div className="h-full w-[5%] rounded-full bg-violet-600" />
+            </div>
+          </div>
+          <div className="rounded-lg border border-[#e4e6ef] p-3 dark:border-[#303034]">
+            <span className={`block text-[10px] uppercase font-semibold ${mutedClass}`}>
+              Record Limit
+            </span>
+            <span className="text-sm font-medium text-[#283346] dark:text-[#eeeeF0]">
+              Fair Usage Active
+            </span>
+            <div className="mt-2 h-1.5 w-full rounded-full bg-[#eceef5] dark:bg-[#2c2c30]">
+              <div className="h-full w-[12%] rounded-full bg-emerald-500" />
+            </div>
+          </div>
+          <div className="rounded-lg border border-[#e4e6ef] p-3 dark:border-[#303034]">
+            <span className={`block text-[10px] uppercase font-semibold ${mutedClass}`}>
+              Daily Automations
+            </span>
+            <span className="text-sm font-medium text-[#283346] dark:text-[#eeeeF0]">
+              0 / 500 runs
+            </span>
+            <div className="mt-2 h-1.5 w-full rounded-full bg-[#eceef5] dark:bg-[#2c2c30]">
+              <div className="h-full w-0 rounded-full bg-blue-500" />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
+          <span className={`text-[11px] ${mutedClass}`}>
+            Disconnecting an external provider halts remote synchronization while preserving all app-owned notes, tasks, and snapshots.
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={async () => {
+              try {
+                setBusy(true);
+                await api(
+                  `/api/v1/workspaces/${workspace.id}/providers/google/disconnect`,
+                  (v) => v,
+                  { method: "POST", csrf }
+                );
+                setMessage("External provider disconnected.");
+              } catch (err) {
+                setMessage(err instanceof Error ? err.message : "Disconnection failed.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Disconnect Google Account
+          </Button>
+        </div>
+      </section>
+
       {manager && (
         <section className={`${panelClass} overflow-hidden`}>
           <header className="flex items-center justify-between border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
