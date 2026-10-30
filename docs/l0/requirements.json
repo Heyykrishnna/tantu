@@ -1,0 +1,514 @@
+{
+  "schemaVersion": 1,
+  "baselineDate": "2026-10-30",
+  "authority": "Derived L0 traceability register; original PRD remains the dated source. These are newly assigned IDs, not recovered original functional IDs.",
+  "legacyAliases": {
+    "ARCHIVE-06": "TNT-ARCHIVE-006"
+  },
+  "requirements": [
+    {
+      "id": "TNT-US-001",
+      "source": "PRD section 8, story 1",
+      "statement": "As an individual, I want a private personal space so that I can organize work without sharing it with my team.",
+      "release": "L1",
+      "module": "workspace-access",
+      "acceptance": "Qualify the user-visible behavior in US-01 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-002",
+      "source": "PRD section 8, story 2",
+      "statement": "As a member, I want shared spaces so that project information has an understandable audience.",
+      "release": "L1",
+      "module": "workspace-access",
+      "acceptance": "Qualify the user-visible behavior in US-02 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-003",
+      "source": "PRD section 8, story 3",
+      "statement": "As a contributor, I want tasks with clear owners and deadlines so that responsibility is explicit.",
+      "release": "L1",
+      "module": "work-management",
+      "acceptance": "Qualify the user-visible behavior in US-03 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-004",
+      "source": "PRD section 8, story 4",
+      "statement": "As a contributor, I want subtasks so that large work can be completed incrementally.",
+      "release": "L1",
+      "module": "work-management",
+      "acceptance": "Qualify the user-visible behavior in US-04 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-005",
+      "source": "PRD section 8, story 5",
+      "statement": "As a project owner, I want dependencies so that blocked work and downstream risk are visible.",
+      "release": "L1",
+      "module": "work-management",
+      "acceptance": "Qualify the user-visible behavior in US-05 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-006",
+      "source": "PRD section 8, story 6",
+      "statement": "As an individual, I want recurring tasks so that routine work does not require repeated entry.",
+      "release": "L1",
+      "module": "work-management",
+      "acceptance": "Qualify the user-visible behavior in US-06 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-007",
+      "source": "PRD section 8, story 7",
+      "statement": "As a team lead, I want project milestones and progress so that status reflects actual work.",
+      "release": "L1",
+      "module": "work-management",
+      "acceptance": "Qualify the user-visible behavior in US-07 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-008",
+      "source": "PRD section 8, story 8",
+      "statement": "As a contributor, I want board, list, table and timeline views so that I can choose how to work.",
+      "release": "L1",
+      "module": "work-management",
+      "acceptance": "Qualify the user-visible behavior in US-08 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-009",
+      "source": "PRD section 8, story 9",
+      "statement": "As a member, I want saved filters and layouts so that I can return to a useful view.",
+      "release": "L1",
+      "module": "work-management",
+      "acceptance": "Qualify the user-visible behavior in US-09 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-010",
+      "source": "PRD section 8, story 10",
+      "statement": "As a collaborator, I want comments, mentions and history so that decisions and changes are traceable.",
+      "release": "L1",
+      "module": "knowledge",
+      "acceptance": "Qualify the user-visible behavior in US-10 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-011",
+      "source": "PRD section 8, story 11",
+      "statement": "As a scheduler, I want day, week, month and agenda views so that I can navigate different planning horizons.",
+      "release": "L1",
+      "module": "scheduling",
+      "acceptance": "Qualify the user-visible behavior in US-11 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-012",
+      "source": "PRD section 8, story 12",
+      "statement": "As a contributor, I want to drag or keyboard-schedule a task so that it has protected working time.",
+      "release": "L1",
+      "module": "scheduling",
+      "acceptance": "Qualify the user-visible behavior in US-12 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-013",
+      "source": "PRD section 8, story 13",
+      "statement": "As an individual, I want configurable hours and timezones so that the calendar reflects my actual day.",
+      "release": "L1",
+      "module": "scheduling",
+      "acceptance": "Qualify the user-visible behavior in US-13 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-014",
+      "source": "PRD section 8, story 14",
+      "statement": "As a traveler, I want timezone-safe recurrence so that meetings retain their intended local time.",
+      "release": "L1",
+      "module": "scheduling",
+      "acceptance": "Qualify the user-visible behavior in US-14 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-015",
+      "source": "PRD section 8, story 15",
+      "statement": "As a member, I want calendar overlays so that I can compare work and personal availability safely.",
+      "release": "L1",
+      "module": "scheduling",
+      "acceptance": "Qualify the user-visible behavior in US-15 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-016",
+      "source": "PRD section 8, story 16",
+      "statement": "As a scheduler, I want conflicts and buffers shown so that I avoid impossible plans.",
+      "release": "L1",
+      "module": "scheduling",
+      "acceptance": "Qualify the user-visible behavior in US-16 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-017",
+      "source": "PRD section 8, story 17",
+      "statement": "As an account owner, I want Google and Microsoft calendar synchronization so that external changes remain visible.",
+      "release": "L1",
+      "module": "scheduling",
+      "acceptance": "Qualify the user-visible behavior in US-17 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-018",
+      "source": "PRD section 8, story 18",
+      "statement": "As a mail user, I want multiple connected accounts so that I can work from one client.",
+      "release": "L1",
+      "module": "mail",
+      "acceptance": "Qualify the user-visible behavior in US-18 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-019",
+      "source": "PRD section 8, story 19",
+      "statement": "As a mail user, I want provider-faithful labels and folders so that organizing mail has predictable results.",
+      "release": "L1",
+      "module": "mail",
+      "acceptance": "Qualify the user-visible behavior in US-19 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-020",
+      "source": "PRD section 8, story 20",
+      "statement": "As a mail user, I want threaded conversations so that context is retained.",
+      "release": "L1",
+      "module": "mail",
+      "acceptance": "Qualify the user-visible behavior in US-20 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-021",
+      "source": "PRD section 8, story 21",
+      "statement": "As a mail user, I want drafts, replies and attachments so that the inbox supports real correspondence.",
+      "release": "L1",
+      "module": "mail",
+      "acceptance": "Qualify the user-visible behavior in US-21 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-022",
+      "source": "PRD section 8, story 22",
+      "statement": "As a mail user, I want visible sending and failure states so that I know whether a message was sent.",
+      "release": "L1",
+      "module": "mail",
+      "acceptance": "Qualify the user-visible behavior in US-22 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-023",
+      "source": "PRD section 8, story 23",
+      "statement": "As a mail user, I want rules and snoozing so that I can control attention.",
+      "release": "L1",
+      "module": "mail",
+      "acceptance": "Qualify the user-visible behavior in US-23 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-024",
+      "source": "PRD section 8, story 24",
+      "statement": "As a contributor, I want email-to-task conversion so that requests become trackable work.",
+      "release": "L1",
+      "module": "capture-relationships",
+      "acceptance": "Qualify the user-visible behavior in US-24 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-025",
+      "source": "PRD section 8, story 25",
+      "statement": "As an account owner, I want selected content sharing so that creating a team task does not expose my mailbox.",
+      "release": "L1",
+      "module": "capture-relationships",
+      "acceptance": "Qualify the user-visible behavior in US-25 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-026",
+      "source": "PRD section 8, story 26",
+      "statement": "As a writer, I want nested pages and a rich block editor so that knowledge is structured and readable.",
+      "release": "L1",
+      "module": "knowledge",
+      "acceptance": "Qualify the user-visible behavior in US-26 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-027",
+      "source": "PRD section 8, story 27",
+      "statement": "As a project owner, I want typed collection properties so that different records can be compared consistently.",
+      "release": "L1",
+      "module": "knowledge",
+      "acceptance": "Qualify the user-visible behavior in US-27 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-028",
+      "source": "PRD section 8, story 28",
+      "statement": "As a member, I want linked views so that I can reuse records without duplicating them.",
+      "release": "L1",
+      "module": "knowledge",
+      "acceptance": "Qualify the user-visible behavior in US-28 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-029",
+      "source": "PRD section 8, story 29",
+      "statement": "As a reader, I want relations and backlinks so that I can discover relevant authorized context.",
+      "release": "L1",
+      "module": "knowledge",
+      "acceptance": "Qualify the user-visible behavior in US-29 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-030",
+      "source": "PRD section 8, story 30",
+      "statement": "As a writer, I want templates and history so that repeated work is consistent and mistakes are recoverable.",
+      "release": "L1",
+      "module": "knowledge",
+      "acceptance": "Qualify the user-visible behavior in US-30 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-031",
+      "source": "PRD section 8, story 31",
+      "statement": "As a member, I want global search so that I can find tasks, mail, pages, events and commitments together.",
+      "release": "L1",
+      "module": "search-archive",
+      "acceptance": "Qualify the user-visible behavior in US-31 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-032",
+      "source": "PRD section 8, story 32",
+      "statement": "As a member, I want filters and explained search matches so that results are useful and trustworthy.",
+      "release": "L1",
+      "module": "search-archive",
+      "acceptance": "Qualify the user-visible behavior in US-32 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-033",
+      "source": "PRD section 8, story 33",
+      "statement": "As a user, I want to search archived text so that older context stays retrievable at controlled storage cost.",
+      "release": "L1",
+      "module": "search-archive",
+      "acceptance": "Qualify the user-visible behavior in US-33 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-034",
+      "source": "PRD section 8, story 34",
+      "statement": "As an individual, I want one capture action so that I can record information without choosing its final structure immediately.",
+      "release": "L1",
+      "module": "capture-relationships",
+      "acceptance": "Qualify the user-visible behavior in US-34 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-035",
+      "source": "PRD section 8, story 35",
+      "statement": "As a contributor, I want an explicit promise record so that requests and commitments are distinguished.",
+      "release": "L1",
+      "module": "capture-relationships",
+      "acceptance": "Qualify the user-visible behavior in US-35 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-036",
+      "source": "PRD section 8, story 36",
+      "statement": "As a team lead, I want a context graph so that dependencies and supporting evidence can be explored.",
+      "release": "L2",
+      "module": "capture-relationships",
+      "acceptance": "Qualify the user-visible behavior in US-36 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-037",
+      "source": "PRD section 8, story 37",
+      "statement": "As an individual, I want a reviewable daily plan so that scheduling assistance respects my choices.",
+      "release": "L2",
+      "module": "scheduling",
+      "acceptance": "Qualify the user-visible behavior in US-37 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-038",
+      "source": "PRD section 8, story 38",
+      "statement": "As a contributor, I want understandable workload forecasts so that I can address overload early.",
+      "release": "L2",
+      "module": "scheduling",
+      "acceptance": "Qualify the user-visible behavior in US-38 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-039",
+      "source": "PRD section 8, story 39",
+      "statement": "As an administrator, I want reusable workspace kits so that setup is repeatable and safe.",
+      "release": "L2",
+      "module": "knowledge",
+      "acceptance": "Qualify the user-visible behavior in US-39 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-040",
+      "source": "PRD section 8, story 40",
+      "statement": "As a project owner, I want decision memory so that later changes retain the reasons behind earlier choices.",
+      "release": "L2",
+      "module": "capture-relationships",
+      "acceptance": "Qualify the user-visible behavior in US-40 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-041",
+      "source": "PRD section 8, story 41",
+      "statement": "As a guest, I want access limited to invited content so that collaboration does not expose unrelated records.",
+      "release": "L1",
+      "module": "workspace-access",
+      "acceptance": "Qualify the user-visible behavior in US-41 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-042",
+      "source": "PRD section 8, story 42",
+      "statement": "As an administrator, I want audit and sync health so that failures can be investigated without reading private content.",
+      "release": "L1",
+      "module": "sync",
+      "acceptance": "Qualify the user-visible behavior in US-42 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-043",
+      "source": "PRD section 8, story 43",
+      "statement": "As a user, I want export and account disconnection so that I control my data.",
+      "release": "L1",
+      "module": "workspace-access",
+      "acceptance": "Qualify the user-visible behavior in US-43 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-044",
+      "source": "PRD section 8, story 44",
+      "statement": "As a keyboard or screen-reader user, I want equivalent scheduling and editing actions so that all essential work is accessible.",
+      "release": "L1",
+      "module": "workspace-access",
+      "acceptance": "Qualify the user-visible behavior in US-44 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-045",
+      "source": "PRD section 8, story 45",
+      "statement": "As a mobile-browser user, I want usable capture, mail and agenda flows so that I can act away from my desk.",
+      "release": "L1",
+      "module": "work-management",
+      "acceptance": "Qualify the user-visible behavior in US-45 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-046",
+      "source": "PRD section 8, story 46",
+      "statement": "As a user with an interrupted connection, I want safe recovery of local drafts so that accepted work is not silently lost.",
+      "release": "L1",
+      "module": "sync",
+      "acceptance": "Qualify the user-visible behavior in US-46 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-047",
+      "source": "PRD section 8, story 47",
+      "statement": "As an account owner, I want AI controls and source citations so that assisted actions remain reviewable.",
+      "release": "L2",
+      "module": "workspace-access",
+      "acceptance": "Qualify the user-visible behavior in US-47 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-048",
+      "source": "PRD section 8, story 48",
+      "statement": "As a team, I want reliable automations so that repeated events do not create duplicate work or feedback loops.",
+      "release": "L1",
+      "module": "automation",
+      "acceptance": "Qualify the user-visible behavior in US-48 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-049",
+      "source": "PRD section 8, story 49",
+      "statement": "As a project owner, I want meeting preparation and review summaries so that relevant actions are visible before and after a meeting.",
+      "release": "L2",
+      "module": "knowledge",
+      "acceptance": "Qualify the user-visible behavior in US-49 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-US-050",
+      "source": "PRD section 8, story 50",
+      "statement": "As a workspace owner, I want usage controls so that storage, provider sync and optional AI costs remain understandable.",
+      "release": "L1",
+      "module": "workspace-access",
+      "acceptance": "Qualify the user-visible behavior in US-50 under allowed, forbidden, stale, empty, and failure states where applicable.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-ARCHIVE-001",
+      "source": "PRD sections 10, 15, 18, and archive references",
+      "statement": "Eligible immutable manifests preserve generation, tenant/privacy compartment, object identity, and source offsets.",
+      "release": "L1",
+      "module": "search-archive",
+      "acceptance": "Recorded archive qualification evidence; production gate remains independent of L0.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-ARCHIVE-002",
+      "source": "PRD sections 10, 15, 18, and archive references",
+      "statement": "Exact literal-byte matches equal an independent decoded-byte oracle, including short and cross-block patterns.",
+      "release": "L1",
+      "module": "search-archive",
+      "acceptance": "Recorded archive qualification evidence; production gate remains independent of L0.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-ARCHIVE-003",
+      "source": "PRD sections 10, 15, 18, and archive references",
+      "statement": "Sidecar/stream identity, checksums, encryption boundaries, corruption, and unsupported formats fail safely.",
+      "release": "L1",
+      "module": "search-archive",
+      "acceptance": "Recorded archive qualification evidence; production gate remains independent of L0.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-ARCHIVE-004",
+      "source": "PRD sections 10, 15, 18, and archive references",
+      "statement": "Current authorization and deletion tombstones filter records, offsets, snippets, and counts.",
+      "release": "L1",
+      "module": "search-archive",
+      "acceptance": "Recorded archive qualification evidence; production gate remains independent of L0.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-ARCHIVE-005",
+      "source": "PRD sections 10, 15, 18, and archive references",
+      "statement": "Queries enforce bounded input/output, CPU/memory work, cancellation, deadlines, and honest completeness.",
+      "release": "L1",
+      "module": "search-archive",
+      "acceptance": "Recorded archive qualification evidence; production gate remains independent of L0.",
+      "state": "specified"
+    },
+    {
+      "id": "TNT-ARCHIVE-006",
+      "source": "PRD sections 10, 15, 18, and archive references",
+      "statement": "Production archive search is enabled only after correctness, security, and corpus-specific resource/suitability evidence; otherwise it remains disabled.",
+      "release": "L1",
+      "module": "search-archive",
+      "acceptance": "Recorded archive qualification evidence; production gate remains independent of L0.",
+      "state": "specified"
+    }
+  ]
+}

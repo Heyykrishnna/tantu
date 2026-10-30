@@ -1,4 +1,6 @@
 /phases/
+/local-docs/
+/discovery/.artifacts/
 node_modules/
 .next/
 dist/

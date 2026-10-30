@@ -1,0 +1,86 @@
+[
+  {
+    "id": "email-to-work",
+    "title": "Email to scheduled work",
+    "steps": [
+      "Open private message",
+      "Review task and destination audience",
+      "Preview selected excerpt sharing",
+      "Create one linked task",
+      "Review calendar block",
+      "Complete and optionally review reply"
+    ],
+    "invariant": "Private mailbox access is never granted by a task link.",
+    "failure": "Duplicate capture offers the existing task; an ambiguous send remains Unknown."
+  },
+  {
+    "id": "meeting-to-execution",
+    "title": "Meeting to execution",
+    "steps": [
+      "Open authorized event",
+      "Create linked notes",
+      "Record manual decision and owner",
+      "Create follow-up tasks",
+      "Confirm promises",
+      "Review project progress"
+    ],
+    "invariant": "Attendee invitations and copied source excerpts require review.",
+    "failure": "Revoked attendees cannot retrieve newly private notes."
+  },
+  {
+    "id": "daily-planning",
+    "title": "Daily planning",
+    "steps": [
+      "Review commitments and availability",
+      "Choose eligible tasks",
+      "Preview conflicts and locked time",
+      "Adjust working blocks",
+      "Review external effects",
+      "Apply a current-version plan"
+    ],
+    "invariant": "Manual scheduling is L1; assisted Plan My Day is L2.",
+    "failure": "A stale preview is rejected and unscheduled work keeps an explanation."
+  },
+  {
+    "id": "research-to-knowledge",
+    "title": "Research to knowledge",
+    "steps": [
+      "Capture a link or note",
+      "Triage its destination",
+      "Review source and audience",
+      "Create page or collection record",
+      "Link canonical context",
+      "Find authorized backlinks"
+    ],
+    "invariant": "Linked views reuse one identity and do not grant source access.",
+    "failure": "Unsafe embeds remain unavailable and removed properties show repair states."
+  },
+  {
+    "id": "project-recovery",
+    "title": "Project recovery",
+    "steps": [
+      "Inspect slipped dependency",
+      "Review affected tasks and milestones",
+      "Compare feasible changes",
+      "Preserve locked events",
+      "Review schedule preview",
+      "Apply approved current changes"
+    ],
+    "invariant": "Dependency graphs are acyclic and external meetings are not silently cancelled.",
+    "failure": "Insufficient capacity leaves work unplaced rather than inventing time."
+  },
+  {
+    "id": "connection-recovery",
+    "title": "Connection recovery",
+    "steps": [
+      "See revoked or expired connection",
+      "Continue app-owned local work",
+      "Review reconnect requirements",
+      "Rebuild provider projection safely",
+      "Reconcile cursors and duplicates",
+      "Inspect honest coverage and outcome"
+    ],
+    "invariant": "Provider recovery cannot destroy app-owned records or resurrect tombstones.",
+    "failure": "Dropped hints trigger reconciliation; Unknown sends are not blindly replayed."
+  }
+]
