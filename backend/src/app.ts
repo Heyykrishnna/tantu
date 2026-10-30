@@ -1,3 +1,6 @@
+import { collaborationRoutes } from "./modules/knowledge/collaboration-routes.js";
+import { collectionRoutes } from "./modules/knowledge/collection-routes.js";
+import { relationRoutes } from "./modules/knowledge/relations-routes.js";
 import { Providers } from "./modules/providers/service.js";
 import { providerRoutes } from "./modules/providers/routes.js";
 import { schedulingRoutes } from "./modules/scheduling/routes.js";
@@ -67,6 +70,9 @@ export function createApp(config: ServerConfig, dependencies?: AppDependencies, 
     schedulingRoutes(app, identity);
     providerRoutes(app, identity, dependencies.providers ?? new Providers(dependencies.database, dependencies.settings), queue);
     recurrenceRoutes(app, identity, new Records(dependencies.database, queue));
+    collaborationRoutes(app, identity, new Records(dependencies.database, queue));
+    collectionRoutes(app, identity);
+    relationRoutes(app, identity, new Records(dependencies.database, queue));
     app.get("/health/ready", async (_request, reply) => {
       try {
         await dependencies.database.pool.query("SELECT 1");

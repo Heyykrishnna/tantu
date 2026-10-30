@@ -17,3 +17,8 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.schedule_reviews TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE ON tantu.recurrences,tantu.recurrence_occurrences TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.oauth_states,tantu.provider_projections,tantu.provider_cursors TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE ON tantu.provider_connections,tantu.mail_drafts,tantu.send_reviews,tantu.send_intents TO tantu_runtime;
+GRANT EXECUTE ON FUNCTION tantu.can_access_as(uuid,uuid) TO tantu_runtime;
+GRANT SELECT,INSERT,UPDATE ON tantu.page_collaboration,tantu.page_presence,tantu.collections,tantu.collection_items,tantu.schema_reviews TO tantu_runtime;
+GRANT DELETE ON tantu.schema_reviews TO tantu_runtime;
+GRANT SELECT,INSERT,DELETE ON tantu.record_relations TO tantu_runtime;
+GRANT SELECT,INSERT ON tantu.record_comments TO tantu_runtime;
