@@ -4,6 +4,10 @@ export default [
   ...baseline,
   { ignores: [".artifacts/**"] },
   {
+    files: ["scripts/**/*.mjs"],
+    languageOptions: { globals: { process: "readonly", setTimeout: "readonly", clearTimeout: "readonly" } },
+  },
+  {
     files: ["prototype/interaction.js"],
     languageOptions: { globals: { document: "readonly", FormData: "readonly" } },
   },
