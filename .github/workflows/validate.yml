@@ -27,7 +27,7 @@ jobs:
             discovery/package-lock.json
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
-          go-version: 1.27.3
+          go-version: 1.24.0
           cache-dependency-path: archive/qualification/go.sum
       - name: Resolve installed PostgreSQL binaries
         run: |
