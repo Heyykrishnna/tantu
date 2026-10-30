@@ -210,3 +210,92 @@ test("reference UI uses local fonts, aligned surfaces and working mobile navigat
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-sign-in.png", import.meta.url)), fullPage: true });
 });
+
+test("connected project views, reviewed scheduling and private provider configuration", async ({ page }) => {
+  const title = "Connected journey task";
+  const created = await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${owner.workspaceId}/tasks`, headers: owner.headers, payload: { operationId: randomUUID(), title, deadline: "2026-12-31" } });
+  expect(created.statusCode).toBe(201);
+  await login(page);
+  await page.getByRole("button", { name: "Projects", exact: true }).click();
+  await page.getByText("New project", { exact: true }).click();
+  await page.getByLabel("Project title", { exact: true }).fill("Connected journey project");
+  await page.getByRole("button", { name: "Create project", exact: true }).click();
+  await page.getByRole("button", { name: /Connected journey project/ }).click();
+  await page.getByText("Manage project and task links", { exact: true }).click();
+  await page.getByLabel("Existing task (first 50)", { exact: true }).selectOption(created.json<{ id: string }>().id);
+  await page.getByRole("button", { name: "Link task", exact: true }).click();
+  await expect(page.getByRole("button", { name: title, exact: true })).toBeVisible();
+  for (const mode of ["board", "table", "timeline", "list"]) {
+    await page.getByRole("button", { name: mode, exact: true }).click();
+    await expect(page.getByRole("button", { name: title, exact: true })).toBeVisible();
+  }
+  await page.getByRole("button", { name: "Calendar", exact: true }).click();
+  await page.getByLabel("Calendar date", { exact: true }).fill("2026-11-03");
+  await page.getByText("Schedule a task", { exact: true }).click();
+  await page.getByLabel("Task to schedule", { exact: true }).selectOption(created.json<{ id: string }>().id);
+  await page.getByLabel("Start (local time)", { exact: true }).fill("2026-11-03T09:00");
+  await page.getByLabel("End (local time)", { exact: true }).fill("2026-11-03T10:00");
+  await page.getByRole("button", { name: "Review schedule", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Schedule review" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm and apply schedule", exact: true }).click();
+  await expect(page.getByRole("button", { name: title, exact: true })).toBeVisible();
+  const persisted = await environment.app.inject({ url: `/api/v1/workspaces/${owner.workspaceId}/tasks/${created.json<{ id: string }>().id}`, headers: owner.headers });
+  expect(persisted.json<{ deadline: string }>().deadline).toBe("2026-12-31");
+  await page.getByRole("button", { name: "Mail", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Connect Google", exact: true })).toBeDisabled();
+  await expect(page.getByText("No connected accounts yet.", { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("typed collection UI keeps canonical identity and reviews shared schema edits", async ({ page }) => {
+  const source = await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${owner.workspaceId}/pages`, headers: owner.headers, payload: { operationId: randomUUID(), title: "Collection journey page" } });
+  const task = await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${owner.workspaceId}/tasks`, headers: owner.headers, payload: { operationId: randomUUID(), title: "Collection journey task" } });
+  expect(source.statusCode).toBe(201); expect(task.statusCode).toBe(201);
+  await login(page);
+  await page.getByRole("button", { name: "Collections", exact: true }).click();
+  await page.getByText("Create a collection on a page", { exact: true }).click();
+  await page.getByLabel("Collection page", { exact: true }).selectOption(source.json<{ id: string }>().id);
+  await page.getByRole("button", { name: "Create collection", exact: true }).click();
+  await page.getByText("Shared collection schema", { exact: true }).click();
+  await page.getByLabel("New property name", { exact: true }).fill("Hours");
+  await page.getByLabel("Property type", { exact: true }).selectOption("number");
+  await page.getByRole("button", { name: "Add property to review", exact: true }).click();
+  await page.getByRole("button", { name: "Review schema changes", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Schema change review" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm schema changes", exact: true }).click();
+  await page.getByLabel("Link or edit an existing record", { exact: true }).selectOption(task.json<{ id: string }>().id);
+  await page.getByLabel("Hours", { exact: true }).fill("4");
+  await page.getByRole("button", { name: "Save linked values", exact: true }).click();
+  await expect(page.getByRole("cell", { name: "4", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Collection journey task", exact: true }).click();
+  await expect(page.getByLabel("Title", { exact: true })).toHaveValue("Collection journey task");
+  expect(new URL(page.url()).searchParams.get("r")).toBe(task.json<{ id: string }>().id);
+});
+
+test("two browser editors converge and recover an unacknowledged collaborative draft", async ({ page, context }) => {
+  const response = await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${owner.workspaceId}/pages`, headers: owner.headers, payload: { operationId: randomUUID(), title: "Concurrent browser body", visibility: "workspace", body: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Initial" }] }] } } });
+  expect(response.statusCode).toBe(201); const id = response.json<{ id: string }>().id;
+  await login(page); await page.goto(`/?w=${owner.workspaceId}&view=pages&r=${id}`);
+  await expect(page.getByLabel("Page text", { exact: true })).toHaveValue("Initial");
+  const second = await context.newPage(); await second.goto(`/?w=${owner.workspaceId}&view=pages&r=${id}`);
+  await expect(second.getByLabel("Page text", { exact: true })).toHaveValue("Initial");
+  let release: (() => void) | undefined; const gate = new Promise<void>((resolve) => { release = resolve; });
+  for (const editor of [page, second]) await editor.route("**/collaboration", async (route) => { if (route.request().method() === "POST") await gate; await route.continue(); });
+  await page.getByLabel("Page text", { exact: true }).fill("Left Initial");
+  await second.getByLabel("Page text", { exact: true }).fill("Initial Right");
+  release?.();
+  await expect(page.getByLabel("Page text", { exact: true })).toHaveValue("Left Initial Right");
+  await expect(second.getByLabel("Page text", { exact: true })).toHaveValue("Left Initial Right");
+  await page.unroute("**/collaboration");
+  await page.route("**/collaboration", async (route) => { if (route.request().method() === "POST") await route.abort("connectionfailed"); else await route.continue(); });
+  await page.getByLabel("Page text", { exact: true }).fill("Left Initial Right recovered draft");
+  await expect(page.getByRole("status").filter({ hasText: "Offline or unavailable" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Page text", { exact: true })).toHaveValue("Left Initial Right recovered draft");
+  await page.unroute("**/collaboration");
+  await page.getByRole("button", { name: "Sync body now", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "All body changes saved" })).toBeVisible();
+  await expect(second.getByLabel("Page text", { exact: true })).toHaveValue("Left Initial Right recovered draft");
+  await second.close();
+});

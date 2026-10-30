@@ -1,11 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { Failure } from "../../platform/failure.js";
-export function object(value: unknown): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("Invalid provider response.");
-  return { ...value };
-}
-export function string(value: unknown): string { if (typeof value !== "string") throw new Error("Invalid provider text."); return value; }
-export function array(value: unknown): unknown[] { if (!Array.isArray(value)) throw new Error("Invalid provider list."); return value; }
+import { object, string } from "../../platform/value.js";
+export { object, string, array } from "../../platform/value.js";
 export function seal(value: unknown, key: Buffer | null, context: string): object {
   if (!key) throw new Failure(503, "PROVIDER_DISABLED", "Provider connections require an operator-configured encryption key.");
   const nonce = randomBytes(12); const cipher = createCipheriv("aes-256-gcm", key, nonce); cipher.setAAD(Buffer.from(context));

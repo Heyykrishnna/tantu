@@ -10,4 +10,6 @@ test("civil scheduling preserves local intent and rejects DST ambiguity", () => 
   assert.deepEqual(expandCivilRecurrence("DTSTART:20261030T090000\nRRULE:FREQ=DAILY;COUNT=4", "America/New_York"), ["2026-10-30T13:00:00.000Z", "2026-10-31T13:00:00.000Z", "2026-11-01T14:00:00.000Z", "2026-11-02T14:00:00.000Z"]);
   assert.throws(() => expandCivilRecurrence("DTSTART:20261030T090000\nRRULE:FREQ=DAILY", "UTC"));
   assert.throws(() => expandCivilRecurrence("DTSTART:20261030T090000\nRRULE:FREQ=SECONDLY;COUNT=1000", "UTC"));
+  assert.throws(() => expandCivilRecurrence("DTSTART:20261030T090000\nRRULE:FREQ=DAILY;COUNT=1\nRRULE:FREQ=DAILY", "UTC"));
+  assert.throws(() => expandCivilRecurrence("DTSTART:20261030T090000\nRRULE:FREQ=DAILY;COUNT=1;BYMONTH=2;BYMONTHDAY=30", "UTC"));
 });

@@ -4,13 +4,17 @@
 
 tantu is a private workspace for tasks and pages, designed to grow into connected project, calendar, mail and knowledge workflows for individuals and small teams.
 
-**Current delivery: L1A local foundation.** The application includes password sign-in, workspaces and invitations, current-access authorization, PostgreSQL task/page persistence, version conflicts and replay protection, durable jobs, quarantined files, activity and operational controls. L1B mail/calendar/project work and L1C launch integration remain planned. Production approval is conditional; see [L1A readiness](docs/l1a/readiness.md).
+**Current delivery: L1A foundation and L1B connected-work core.** Projects, reviewed local scheduling, recurring tasks, optional private provider connections, reviewed plain-text mail, typed collections and collaborative page bodies extend the durable foundation. Full L1B acceptance remains open; [L1B readiness](docs/l1b/readiness.md) lists the remaining implementation and qualification work. Production approval is conditional.
 
 ## What you can use
 
 - Sign in, create a workspace, switch workspaces and invite members or record-scoped guests.
 - Create, edit, complete and delete canonical tasks with deadlines, priorities and estimates.
-- Create nested pages with paragraph/heading documents and version history metadata.
+- Create nested pages with collaborative paragraph/heading text, authorized comments, source relationships and body revision restoration.
+- Organize canonical tasks in projects, review dependency cycles, materialize recurring occurrences and inspect consistent work views.
+- Review personal calendar work blocks before applying them, preserving task deadlines.
+- Connect approved Google/Microsoft accounts, queue bounded read synchronization and review plain-text messages before sending. Provider consent/registration is optional and disabled by default.
+- Link existing tasks/pages into typed collections, review schema changes and repair preserved values.
 - Recover browser-session drafts and retry a lost save acknowledgement without creating a duplicate task.
 - Keep records private or share them with workspace members. Administrators receive no implicit private-record access.
 - Upload bounded private files into quarantine. Downloads require a clean scan, a current session, live record access and a short-lived signed token.
@@ -41,7 +45,7 @@ A working ClamAV daemon is required to release quarantined files. A scanner outa
 ## Validate
 
 ```bash
-npm run check:l1a
+npm run check:l1b
 ```
 
 This runs application/discovery lint and strict type checks, unit tests, both production builds, real PostgreSQL integration and backup/restore tests, actual browser journeys, contract-sync checks, all three npm audits and documentation/ignore checks. Synthetic evidence is written only to ignored artifacts.
@@ -50,16 +54,17 @@ This runs application/discovery lint and strict type checks, unit tests, both pr
 
 ## Architecture and contracts
 
-The application uses Next.js/React with one TypeScript/Fastify modular backend. PostgreSQL owns identity, membership, canonical records, operation results, revisions, audit metadata and outbox events. A separate pg-boss worker processes internal events and file scans. Accepted record writes, durable results and queued work commit atomically.
+The application uses Next.js/React with one TypeScript/Fastify modular backend. PostgreSQL owns identity, membership, canonical records, operation results, revisions, audit metadata and outbox events. A separate pg-boss worker processes internal events, file scans and provider-read continuation pages. External send uncertainty is persisted before remote mutation; unknown sends are reconciled without blindly retrying. Accepted record writes, durable results and queued work commit atomically.
 
 Runtime connections cannot be superusers or bypass row security. Record/file policies enforce current tenant, membership, visibility, grants and ancestor deletion state. Structured edits use expected versions; operation keys reject changed-payload reuse. Operational logs exclude content and credentials.
 
 The [implemented API](contracts/l1a.openapi.json) is generated from registered request schemas and canonical response schemas. Frontend canonical types are generated from backend interfaces and checked for drift. The [L0 contract](contracts/openapi.json) remains a historical draft, including unimplemented future-provider operations.
 
-The isolated [Go archive qualification](archive/qualification/README.md) does not enable production historical ingestion or search. Google/Microsoft adapters, real-time collaboration, rich editor extensions, collections, automation and AI are not registered product capabilities yet.
+The isolated [Go archive qualification](archive/qualification/README.md) does not enable production historical ingestion or search. Provider adapters and HTTP-polled Yjs page bodies are implemented locally. External calendar writes, richer project coordination, rich editor extensions, comprehensive mailbox actions, webhook/periodic sync, automation and AI remain outside the implemented core.
 
 ## Documentation
 
+- [Connected-work implementation](docs/l1b/implementation.md), [provider setup and recovery](docs/l1b/setup.md) and [remaining L1B acceptance](docs/l1b/readiness.md).
 - [Local setup](docs/l1a/setup.md), [implementation](docs/l1a/implementation.md), [operations](docs/l1a/operations.md) and [readiness](docs/l1a/readiness.md).
 - [Backend](backend/README.md), [frontend](frontend/README.md), [development](docs/development.md) and [network contracts](contracts/README.md).
 - [Product requirements](docs/product-requirements.md) and [delivery roadmap](docs/roadmap.md), preserving the original planning baseline.

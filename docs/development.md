@@ -14,9 +14,9 @@ The HTTP factory is separate from listening and accepts explicit database/settin
 
 ## Validation and synchronization
 
-Run `npm run check:l1a` for source lint/types, unit tests, both builds, database/backup/restore/crash tests, browser journeys, generated-contract checks, three dependency audits and documentation checks. PostgreSQL 16+ tools and local Chrome or Playwright Chromium are required. Set `PG_BIN` if necessary. Test logs, reports and screenshots stay in ignored artifacts.
+Run `npm run check:l1b` for source lint/types, unit tests, both builds, database/backup/restore/crash tests, browser journeys, generated-contract checks, three dependency audits and documentation checks. PostgreSQL 16+ tools and local Chrome or Playwright Chromium are required. Set `PG_BIN` if necessary. Test logs, reports and screenshots stay in ignored artifacts.
 
-`npm run check:l0` retains the earlier isolated engineering experiments and requires Python/Go in addition. CI runs that baseline and the L1A database/browser/contracts checks. Report commands actually executed; do not infer remote CI success from local output or a workflow file.
+`npm run check:l0` retains the earlier isolated engineering experiments and requires Python/Go in addition. CI runs that baseline and the connected-work aggregate checks. Report commands actually executed; do not infer remote CI success from local output or a workflow file.
 
 When canonical interfaces or route schemas change, run `npm --prefix backend run contracts:types` and `npm --prefix backend run contracts:openapi`. Check generated diffs and run `contracts:check`. Do not hand-edit generated contract artifacts or suppress compiler/library errors. No formatter is configured; lint and type checks remain mandatory.
 
@@ -24,4 +24,4 @@ When canonical interfaces or route schemas change, run `npm --prefix backend run
 
 Dependency directories, builds, logs, coverage, local environments, phase plans and local technology guides are ignored. Track `.env.example` with variable names and safe empty secret fields. Never force-add private planning/evidence or include production credentials in diagnostics. Preserve unrelated work and stage only relevant files.
 
-The [operations runbook](l1a/operations.md) covers migration recovery, worker failures, file reconciliation, key/session rotation and local restoration. Production identity, malware-engine qualification, retention, deployment and manual accessibility remain explicit readiness conditions.
+The [connected-work setup](l1b/setup.md) covers optional providers and uncertainty recovery. The [operations runbook](l1a/operations.md) covers migration recovery, worker failures, file reconciliation, key/session rotation and local restoration. Production identity, malware-engine qualification, retention, deployment and manual accessibility remain explicit readiness conditions.

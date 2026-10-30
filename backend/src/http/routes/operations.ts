@@ -21,7 +21,7 @@ export function operationalRoutes(app: FastifyInstance, identity: Identity, queu
     const scope = await identity.scope(request, request.params.workspaceId);
     return identity.database.transaction(scope, async (client) => {
       await identity.requireManager(client, scope);
-      const result = await client.query("SELECT j.id,j.name,j.state,j.retry_count AS attempts,j.created_on AS \"createdAt\",j.start_after AS \"availableAt\" FROM tantu_jobs.job j WHERE j.data->>'workspaceId'=$1 AND j.name IN ('canonical-events','file-scans','dead-letters') AND (j.data->>'userId'=$2 OR tantu.can_access((j.data->>'recordId')::uuid)) ORDER BY j.created_on DESC,j.id LIMIT 50", [scope.workspaceId, scope.userId]);
+      const result = await client.query("SELECT j.id,j.name,j.state,j.retry_count AS attempts,j.created_on AS \"createdAt\",j.start_after AS \"availableAt\" FROM tantu_jobs.job j WHERE j.data->>'workspaceId'=$1 AND j.name IN ('canonical-events','file-scans','provider-sync','dead-letters') AND (j.data->>'userId'=$2 OR tantu.can_access((j.data->>'recordId')::uuid)) ORDER BY j.created_on DESC,j.id LIMIT 50", [scope.workspaceId, scope.userId]);
       return { items: result.rows };
     });
   });
@@ -29,7 +29,7 @@ export function operationalRoutes(app: FastifyInstance, identity: Identity, queu
     const scope = await identity.scope(request, request.params.workspaceId, true);
     return identity.database.transaction(scope, async (client) => {
       await identity.requireManager(client, scope);
-      const result = await client.query<{ name: string; state: string }>("SELECT name,state FROM tantu_jobs.job WHERE id=$1 AND data->>'workspaceId'=$2 AND name IN ('canonical-events','file-scans') AND (data->>'userId'=$3 OR tantu.can_access((data->>'recordId')::uuid)) FOR UPDATE", [request.params.jobId, scope.workspaceId, scope.userId]);
+      const result = await client.query<{ name: string; state: string }>("SELECT name,state FROM tantu_jobs.job WHERE id=$1 AND data->>'workspaceId'=$2 AND name IN ('canonical-events','file-scans','provider-sync') AND (data->>'userId'=$3 OR tantu.can_access((data->>'recordId')::uuid)) FOR UPDATE", [request.params.jobId, scope.workspaceId, scope.userId]);
       const job = result.rows[0];
       if (!job) throw new Failure(404, "NOT_FOUND", "Job is unavailable.");
       if (request.body.action === "retry" && job.state !== "failed") throw new Failure(409, "JOB_CONFLICT", "Only failed jobs can be retried.");

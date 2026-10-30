@@ -7,7 +7,7 @@ import { change, receipt, versionConflict } from "../connected-work/change.js";
 import { recordColumns } from "../work-management/contracts.js";
 import type { CanonicalRecord } from "../work-management/contracts.js";
 import { properties, evaluate, valueIssue } from "./properties.js";
-import { object as valueObject } from "../providers/vault.js";
+import { object as valueObject } from "../../platform/value.js";
 
 const params = object({ workspaceId: uuid, collectionId: uuid });
 const version = { type: "integer", minimum: 1 };

@@ -27,7 +27,11 @@ export function hydrate(body: Document, state: Buffer | null): Y.Doc {
 }
 export async function persistDocument(client: PoolClient, scope: Scope, records: Records, record: CanonicalRecord, doc: Y.Doc, operationId = randomUUID()): Promise<{ id: string; version: number }> {
   if ([...doc.share.keys()].some((name) => name !== "body")) throw new Failure(400, "INVALID_UPDATE", "Only the page-body text is collaborative.");
-  const body = textDocument(doc.getText("body").toString()); const state = Buffer.from(Y.encodeStateAsUpdate(doc));
+  let sharedText: Y.Text;
+  try { sharedText = doc.getText("body"); } catch { throw new Failure(400, "INVALID_UPDATE", "The page body must remain collaborative text."); }
+  const invalid = sharedText.toDelta().some((part: unknown) => typeof part !== "object" || part === null || !("insert" in part) || typeof part.insert !== "string" || ("attributes" in part && part.attributes !== undefined));
+  if (invalid || Object.keys(sharedText.getAttributes()).length) throw new Failure(400, "INVALID_UPDATE", "Page bodies support plain text and heading prefixes; embedded objects and formatting attributes are unsupported.");
+  const body = textDocument(sharedText.toString()); const state = Buffer.from(Y.encodeStateAsUpdate(doc));
   if (state.length > 262144) throw new Failure(413, "DOCUMENT_CAPACITY", "This collaborative document reached its snapshot capacity. Keep your browser draft and export its text before starting a new page.");
   const result = await records.mutateIn(client, scope, "page", operationId, { title: record.title, body }, record.id, record.version, true);
   if ("deleted" in result) throw new Error("Page update unexpectedly deleted its record.");

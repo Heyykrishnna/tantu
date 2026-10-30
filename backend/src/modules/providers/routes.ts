@@ -24,8 +24,10 @@ export function providerRoutes(app: FastifyInstance, identity: Identity, provide
     const scope = await identity.scope(request, request.params.workspaceId, true);
     return providers.begin(scope, request.params.provider, digest(cookies(request).get("tantu_session") ?? ""));
   });
-  app.get<{ Params: { workspaceId: string; provider: "google" | "microsoft" }; Querystring: { state: string; code?: string; error?: string; error_description?: string; scope?: string; authuser?: string; prompt?: string; session_state?: string; iss?: string } }>(base + "/:provider/callback", { schema: { params: object({ workspaceId: uuid, provider: { enum: ["google", "microsoft"] } }), querystring: object({ state: text(200), code: text(4096), error: text(200), error_description: text(1000), scope: text(2000), authuser: text(100), prompt: text(100), session_state: text(200), iss: text(500) }, ["state"]) } }, async (request, reply) => {
-    const scope = await identity.scope(request, request.params.workspaceId);
+  app.get<{ Params: { provider: "google" | "microsoft" }; Querystring: { state: string; code?: string; error?: string; error_description?: string; scope?: string; authuser?: string; prompt?: string; session_state?: string; iss?: string } }>("/api/v1/providers/:provider/callback", { schema: { params: object({ provider: { enum: ["google", "microsoft"] } }), querystring: object({ state: text(200), code: text(4096), error: text(200), error_description: text(1000), scope: text(2000), authuser: text(100), prompt: text(100), session_state: text(200), iss: text(500) }, ["state"]) } }, async (request, reply) => {
+    const workspaceId = request.query.state.split(".")[0] ?? "";
+    if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(workspaceId)) throw new Failure(400, "INVALID_CONSENT", "This consent request is invalid.");
+    const scope = await identity.scope(request, workspaceId);
     const query = request.url.slice(request.url.indexOf("?"));
     await providers.complete(scope, request.params.provider, digest(cookies(request).get("tantu_session") ?? ""), query, request.query.state);
     reply.header("cache-control", "no-store"); reply.header("referrer-policy", "no-referrer"); return reply.redirect(providers.runtime.origin + `/?w=${scope.workspaceId}&view=mail`);

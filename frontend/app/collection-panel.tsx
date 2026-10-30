@@ -305,7 +305,7 @@ export default function CollectionPanel({
           className="mt-4 flex flex-wrap items-end gap-3"
         >
           <Field label="Collection page">
-            <select name="pageId" required className={inputClass}>
+            <select aria-label="Collection page" name="pageId" required className={inputClass}>
               <option value="">Choose a page (first 50)</option>
               {sources
                 .filter((source) => source.kind === "page" && source.canEdit)
@@ -375,7 +375,7 @@ export default function CollectionPanel({
                 />
               </Field>
               <Field label="Sort by">
-                <select
+                <select aria-label="Sort by"
                   value={sort}
                   onChange={(event) => setSort(event.target.value)}
                   className={inputClass}
@@ -502,7 +502,7 @@ export default function CollectionPanel({
             {detail.canEdit && (
               <>
                 <Field label="Link or edit an existing record">
-                  <select
+                  <select disabled={busy} aria-label="Link or edit an existing record"
                     value={editRow}
                     onChange={(event) => setEditRow(event.target.value)}
                     className={inputClass}
@@ -604,7 +604,7 @@ export default function CollectionPanel({
                         />
                       </Field>
                       <Field label="Property type">
-                        <select name="type" className={inputClass}>
+                        <select aria-label="Property type" name="type" className={inputClass}>
                           {[
                             "text",
                             "number",
@@ -625,7 +625,7 @@ export default function CollectionPanel({
                         />
                       </Field>
                       <Field label="Formula operator">
-                        <select name="operator" className={inputClass}>
+                        <select aria-label="Formula operator" name="operator" className={inputClass}>
                           {["add", "subtract", "multiply", "divide"].map(
                             (operator) => (
                               <option key={operator}>{operator}</option>

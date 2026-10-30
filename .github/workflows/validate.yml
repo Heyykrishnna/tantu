@@ -1,4 +1,4 @@
-name: Validate application and L0 evidence
+name: Validate foundation and connected-work core
 
 on:
   push:
@@ -45,12 +45,10 @@ jobs:
         working-directory: discovery
         run: npx playwright install --with-deps chromium
       - run: npm run check:l0
-      - run: npm --prefix backend run test:integration
-      - run: npm --prefix discovery run test:l1a:browser
-      - run: npm --prefix backend run contracts:check
+      - run: npm run check:l1b
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: always()
         with:
-          name: l0-synthetic-qualification
+          name: local-synthetic-qualification
           path: discovery/.artifacts/
           if-no-files-found: warn

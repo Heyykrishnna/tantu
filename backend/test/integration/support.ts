@@ -9,7 +9,7 @@ import { createAccount } from "../../src/modules/workspace-access/service.js";
 import { createApp } from "../../src/app.js";
 import { readEnvironment } from "../../src/config/environment.js";
 import { initializeJobs } from "../../src/workers/queue.js";
-import type { Providers } from "../../src/modules/providers/service.js";
+import { Providers } from "../../src/modules/providers/service.js";
 import type { RuntimeSettings } from "../../src/config/runtime.js";
 
 export const settings = { origin: "http://localhost:3000", secureCookies: false, storagePath: "/private/tmp/tantu-l1a-test", signingSecret: "local-synthetic-qualification-secret-32", scannerHost: "127.0.0.1", scannerPort: 3310 };
@@ -31,7 +31,7 @@ export async function fixture(overrides: Partial<RuntimeSettings> = {}, provider
     const storagePath = await mkdtemp(join(tmpdir(), "tantu-l1a-files-"));
     cleanupDirectory = storagePath;
     const runtime = { ...settings, ...overrides, storagePath };
-    const app = createApp(readEnvironment({ NODE_ENV: "test" }), { database, settings: runtime, ...(providerFactory ? { providers: providerFactory(database, runtime) } : {}) });
+    const app = createApp(readEnvironment({ NODE_ENV: "test" }), { database, settings: runtime, providers: providerFactory ? providerFactory(database, runtime) : new Providers(database, runtime, { key: null, registrations: {} }) });
     async function account(email: string) {
       const userId = await database.transaction(undefined, (client) => createAccount(client, email, email.split("@")[0] ?? "Account", testPassword));
       const response = await app.inject({ method: "POST", url: "/api/v1/auth/login", headers: { origin: runtime.origin }, payload: { email, password: testPassword } });

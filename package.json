@@ -23,6 +23,7 @@
     "check:archive": "node discovery/scripts/check-archive.mjs",
     "check:l1a": "node discovery/scripts/check-l1a.mjs",
     "dev:worker": "npm --prefix backend run worker",
-    "start:worker": "npm --prefix backend run start:worker"
+    "start:worker": "npm --prefix backend run start:worker",
+    "check:l1b": "node discovery/scripts/check-l1a.mjs --connected"
   }
 }

@@ -1,6 +1,6 @@
 # Domain module ownership
 
-This is the canonical module map. L1A implements workspace access, canonical task/page persistence and secure file services; the remaining domains retain their reserved boundaries. Task/page mutations share one canonical record service under work-management, so pages and tasks do not acquire competing identity, version or permission systems. File services are cross-domain attachment infrastructure. No provider routes or fabricated production responses are registered.
+This is the canonical module map. The foundation implements workspace access, canonical persistence and secure files. Connected-work adds projects, scheduling, private delegated providers and knowledge services. Task/page mutations share one canonical record service under work-management, so pages and tasks do not acquire competing identity, version or permission systems. File services are cross-domain attachment infrastructure. Provider routes require real configured registrations; production paths never return fabricated provider responses.
 
 | Module | Responsibility | Future operations | Required behavioral evidence |
 | --- | --- | --- | --- |
@@ -13,6 +13,8 @@ This is the canonical module map. L1A implements workspace access, canonical tas
 | `search-archive` | Authorized live search, historical manifests, exact-byte retrieval, and completeness. | Search live records; query eligible archives. | Relevance, current ACL/tombstones, oracle parity, and resource limits. |
 | `sync` | Provider cursors, renewal, retries, reconciliation, checkpoints, and health. | Reconcile; apply approved provider intent; report coverage. | Crash/replay, expired cursors, lost hints, throttling, and revocation. |
 | `automation` | Scoped triggers, conditions, rule previews, durable execution, and run history. | Preview a rule; execute an approved run. | Deduplication, loop prevention, quotas, and execution-time access checks. |
+
+The concrete `projects` directory implements the project/dependency portion of work management; `providers` owns the shared delegated mail/calendar HTTP, vault and synchronization boundary rather than duplicating clients under `mail` and `sync`. `connected-work` supplies scoped durable receipts, not a competing identity store. Remaining ownership boundaries describe planned product responsibilities; consult [readiness](../../../docs/l1b/readiness.md) for unimplemented requirements.
 
 ## Implementation rules
 

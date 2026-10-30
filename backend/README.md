@@ -15,6 +15,7 @@ Use Node.js 24/npm 11. Follow the [installation guide](../docs/l1a/setup.md) bef
 | `APP_ORIGIN` | Exact browser origin for mutation checks. Default `http://localhost:3000`; production requires HTTPS. |
 | `FILE_STORAGE_PATH` | Absolute private storage directory shared by the local HTTP and worker processes. There is no implicit temporary-storage default. |
 | `FILE_SIGNING_SECRET` | At least 32 random bytes; an environment/secret-manager value, never a committed literal. |
+| `PROVIDER_VAULT_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID` | Optional delegated provider configuration; see the connected-work setup. Empty settings keep connections disabled. |
 | `SCANNER_HOST`, `SCANNER_PORT` | Trusted ClamAV endpoint; defaults loopback/3310. |
 | `BOOTSTRAP_EMAIL`, `BOOTSTRAP_NAME`, `BOOTSTRAP_PASSWORD` | One-time empty-installation account creation; remove afterward. |
 
@@ -36,4 +37,4 @@ Run from this package:
 
 `GET /health/live` reports process liveness. `/health/ready` checks HTTP database availability; it does not certify scanner freshness, worker progress or production readiness. Protected `/api/v1` routes require a live session, workspace membership and current record permissions. Unsafe requests also require the configured Origin and session CSRF token.
 
-See [module ownership](src/modules/README.md), [migrations](migrations/README.md), [workers](src/workers/README.md), [operations](../docs/l1a/operations.md) and [readiness](../docs/l1a/readiness.md). Provider clients, mail/calendar operations, AI and production archive ingestion remain unimplemented.
+See [module ownership](src/modules/README.md), [migrations](migrations/README.md), [workers](src/workers/README.md), [operations](../docs/l1a/operations.md) and [readiness](../docs/l1a/readiness.md). The [connected-work guide](../docs/l1b/implementation.md) describes implemented provider reads, reviewed sends, projects, scheduling and knowledge. [Provider setup](../docs/l1b/setup.md) documents optional credentials, the independent encryption key, fixed callbacks and recovery. AI, production archive ingestion and the remaining full-phase requirements are not enabled.

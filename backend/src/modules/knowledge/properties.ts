@@ -1,5 +1,5 @@
 import { Failure } from "../../platform/failure.js";
-import { array, object, string } from "../providers/vault.js";
+import { array, object, string } from "../../platform/value.js";
 
 export interface Property { id: string; name: string; type: "text" | "number" | "boolean" | "date" | "select" | "formula"; options: string[]; formula: { operator: "add" | "subtract" | "multiply" | "divide"; left: string; right: string } | null }
 export function properties(value: unknown): Property[] {
