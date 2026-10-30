@@ -3,10 +3,16 @@ import helmet from "@fastify/helmet";
 import Fastify, { LogController } from "fastify";
 import type { FastifyInstance } from "fastify";
 import type { ServerConfig } from "./config/environment.js";
+import type { RuntimeSettings } from "./config/runtime.js";
 import { registerErrorHandlers } from "./http/errors.js";
 import { healthRoutes } from "./http/routes/health.js";
+import { identityRoutes } from "./modules/identity/routes.js";
+import { Identity } from "./modules/identity/service.js";
+import type { Database } from "./platform/database/database.js";
 
-export function createApp(config: ServerConfig): FastifyInstance {
+export interface AppDependencies { database: Database; settings: RuntimeSettings }
+
+export function createApp(config: ServerConfig, dependencies?: AppDependencies): FastifyInstance {
   const app = Fastify({
     logger:
       config.nodeEnvironment === "test"
@@ -34,6 +40,16 @@ export function createApp(config: ServerConfig): FastifyInstance {
   registerErrorHandlers(app);
   app.register(helmet);
   app.register(healthRoutes);
+  if (dependencies) {
+    const identity = new Identity(dependencies.database, dependencies.settings);
+    identityRoutes(app, identity);
+    app.get("/health/ready", async (_request, reply) => {
+      try {
+        await dependencies.database.pool.query("SELECT 1");
+        return { status: "ready" };
+      } catch { return reply.code(503).send({ status: "unavailable" }); }
+    });
+  }
 
   return app;
 }

@@ -1,9 +1,18 @@
 import { createApp } from "./app.js";
 import { readEnvironment } from "./config/environment.js";
+import { readRuntimeSettings } from "./config/runtime.js";
+import { Database } from "./platform/database/database.js";
 
 async function start(): Promise<void> {
   const config = readEnvironment();
-  const app = createApp(config);
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("DATABASE_URL is required to run the application.");
+  const settings = readRuntimeSettings(config);
+  const database = new Database({ connectionString });
+  try { await database.verifyRole(); }
+  catch (error) { await database.close(); throw error; }
+  const app = createApp(config, { database, settings });
+  app.addHook("onClose", () => database.close());
   let closing = false;
 
   async function shutdown(): Promise<void> {
