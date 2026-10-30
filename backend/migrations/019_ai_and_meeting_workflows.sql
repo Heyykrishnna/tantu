@@ -50,3 +50,4 @@ CREATE POLICY meeting_briefs_tenant_isolation ON tantu.meeting_briefs
       WHERE user_id = nullif(current_setting('app.current_user_id', true), '')::uuid
     )
   );
+

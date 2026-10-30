@@ -138,3 +138,4 @@ export function aiMeetingRoutes(app: FastifyInstance, identity: Identity): void 
     }
   );
 }
+

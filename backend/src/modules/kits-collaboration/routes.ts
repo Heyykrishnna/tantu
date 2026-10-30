@@ -206,3 +206,4 @@ export function kitsCollaborationRoutes(app: FastifyInstance, identity: Identity
     }
   );
 }
+

@@ -47,3 +47,4 @@ test("kit manifest conflict checker detects colliding collection schema names", 
   assert.equal(conflicts.length, 1);
   assert.equal(conflicts[0]?.name, "Sprint Backlog");
 });
+

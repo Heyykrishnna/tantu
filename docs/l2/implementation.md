@@ -43,3 +43,4 @@ Meeting briefs (`tantu.meeting_briefs`) prepare source-grounded agendas from eve
 ## Qualification
 
 Validation is confirmed through automated unit tests in `backend/test/` covering decision revisions, context graph traversal, planning candidate sorting, workload weather calibration, formula evaluation, and AI opt-in defaults. The [readiness record](readiness.md) outlines test results and release gates.
+

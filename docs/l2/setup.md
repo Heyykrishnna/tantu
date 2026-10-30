@@ -53,3 +53,4 @@ The migrations establish:
 ### AI and Meeting Briefs
 - AI features require explicit tenant opt-in via `PUT /api/v1/workspaces/:workspaceId/ai/settings`.
 - Outages or quota exhaustion trigger safe fallbacks to deterministic meeting brief generation.
+

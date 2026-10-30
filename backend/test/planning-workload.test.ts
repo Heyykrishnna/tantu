@@ -71,3 +71,4 @@ test("missing task estimates trigger fallback allocation and uncertain item coun
   assert.equal(missingCount, 2);
   assert.equal(totalMinutes, 165);
 });
+

@@ -66,3 +66,4 @@ CREATE POLICY synced_blocks_tenant_isolation ON tantu.synced_blocks
       WHERE user_id = nullif(current_setting('app.current_user_id', true), '')::uuid
     )
   );
+

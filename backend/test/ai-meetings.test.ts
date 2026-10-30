@@ -30,3 +30,4 @@ test("source citations preserve excerpt and timestamp without executing text com
   assert.equal(citation.sourceType, "task");
   assert.equal(citation.excerpt.includes("admin token"), true);
 });
+

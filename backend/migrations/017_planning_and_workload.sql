@@ -51,3 +51,4 @@ CREATE POLICY daily_plan_blocks_tenant_isolation ON tantu.daily_plan_blocks
       )
     )
   );
+

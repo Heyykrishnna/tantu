@@ -267,3 +267,4 @@ export async function getMeetingBrief(
   if (result.rows.length === 0) return null;
   return result.rows[0] as MeetingBriefRecord;
 }
+
