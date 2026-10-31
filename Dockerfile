@@ -26,6 +26,8 @@ FROM node:24-alpine AS runner
 
 WORKDIR /app
 
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 ENV NODE_ENV=production
 ENV PORT=4000
 ENV HOST=0.0.0.0

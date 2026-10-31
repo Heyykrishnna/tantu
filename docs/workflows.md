@@ -7,13 +7,13 @@ All workflows can be started from GitHub Actions with `workflow_dispatch`. Run t
 | Workflow | Checks |
 | --- | --- |
 | CI Pipeline | Application checks, foundation qualification, connected-work qualification, real isolated PostgreSQL, browser journeys, audits, Go archive checks, and baseline validation |
-| Backend Testing & Validation | Backend lint, types, generated contract synchronization, unit tests, and production compilation |
+| Backend Testing & Validation | Backend lint, types, generated contract synchronization, unit tests, real PostgreSQL integration tests, and production compilation |
 | Frontend Quality & Build | Frontend lint, types, route regression tests, and production build |
 | End-to-End Testing | Isolated prototype browser journeys; connected application journeys additionally run through CI qualification |
 | Code Quality & Coverage | Instrumented backend and discovery unit tests |
 | Dependency Vulnerability Scanner | All three npm dependency trees, including development dependencies |
 | Automated Dependency Updates | Informational outdated-package inventory; does not install updates |
-| Docker Build & Container Security | Container image build and Trivy vulnerability report |
+| Docker Build & Container Security | Container image build and a blocking Trivy high/critical vulnerability scan |
 | Performance & Lighthouse Audit | Static JavaScript bundle budget; this workflow currently does not run Lighthouse |
 | Secret Detection | Gitleaks scan with the repository's reviewed example-template exceptions |
 | CodeQL Security Analysis | JavaScript/TypeScript and Go analysis; requires an eligible repository and enabled GitHub code scanning |
@@ -25,6 +25,8 @@ The reviewed minimatch advisory [GHSA-g3hv-75wg-m249](https://github.com/advisor
 Each package overrides minimatch to this local development dependency. Package-local `.npmrc` files enable npm's packed `file:` dependencies with `install-links=true`, so clean installs resolve the engine independently in each package. The Dockerfile copies the adapter and npm configuration before installation. `npm run test:tooling` verifies the APIs used by the current lint configuration, ESM/CommonJS imports, and bounded brace expansion in all three installations. APIs removed by upstream minimatch 11, such as `makeRe`, are not restored; enabling a lint rule that requires them needs a separate compatibility review.
 
 Keep all three lockfiles and the adapter engine pin synchronized. Run `npm run setup`, `npm run check`, and the low-severity audits after changing this dependency. The audits continue to include development dependencies.
+
+The runtime image excludes the base image's npm package manager and its unused vulnerable dependencies. Compose starts Next.js directly with Node. Build stages retain npm for reproducible dependency installation. CI artifacts explicitly include the scoped hidden `discovery/.artifacts/` evidence directory, and failed qualification stages print bounded diagnostic output.
 
 ## Operational workflows
 

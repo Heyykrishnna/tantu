@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "Dockerfile"
+      - "docker-compose.yml"
       - ".dockerignore"
       - "backend/**"
       - "frontend/**"
@@ -15,6 +16,7 @@ on:
     branches: [main]
     paths:
       - "Dockerfile"
+      - "docker-compose.yml"
       - ".dockerignore"
       - "backend/**"
       - "frontend/**"
@@ -55,7 +57,7 @@ jobs:
         with:
           image-ref: tantu:local-test
           format: "table"
-          exit-code: "0"
+          exit-code: "1"
           ignore-unfixed: true
           vuln-type: "os,library"
           severity: "CRITICAL,HIGH"

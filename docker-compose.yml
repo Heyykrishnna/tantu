@@ -126,7 +126,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: tantu-frontend
-    command: ["npm", "--prefix", "frontend", "run", "start"]
+    command: ["node", "frontend/node_modules/next/dist/bin/next", "start", "frontend"]
     environment:
       NODE_ENV: production
       PORT: 3000
