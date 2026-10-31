@@ -1,0 +1,13 @@
+title = "Tantu Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist for example environment templates"
+paths = [
+    '''^\.env\.example$''',
+    '''(^|/)\.env\.example$''',
+    '''(^|/)backend/\.env\.example$''',
+    '''(^|/)frontend/\.env\.example$'''
+]
