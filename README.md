@@ -66,6 +66,7 @@ The isolated [Go archive qualification](archive/qualification/README.md) does no
 
 - [Connected-work implementation](docs/l1b/implementation.md), [provider setup and recovery](docs/l1b/setup.md) and [L1B qualification and acceptance](docs/l1b/readiness.md).
 - [Local setup](docs/l1a/setup.md), [implementation](docs/l1a/implementation.md), [operations](docs/l1a/operations.md) and [readiness](docs/l1a/readiness.md).
+- [Neon PostgreSQL connections and migration](docs/neon.md), including shared API/worker configuration, runtime privileges, and recovery.
 - [Backend](backend/README.md), [frontend](frontend/README.md), [development](docs/development.md) and [network contracts](contracts/README.md).
 - [Product requirements](docs/product-requirements.md) and [delivery roadmap](docs/roadmap.md), preserving the original planning baseline.
 - [L0 evidence and unresolved decisions](docs/l0/readiness.md).
