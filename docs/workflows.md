@@ -15,7 +15,7 @@ All workflows can be started from GitHub Actions with `workflow_dispatch`. Run t
 | Automated Dependency Updates | Informational outdated-package inventory; does not install updates |
 | Docker Build & Container Security | Container image build and a blocking Trivy high/critical vulnerability scan |
 | Performance & Lighthouse Audit | Static JavaScript bundle budget; this workflow currently does not run Lighthouse |
-| Secret Detection | Gitleaks scan with the repository's reviewed example-template exceptions |
+| Secret Detection | Gitleaks scan with the repository's reviewed example-template and exact historical test-fixture exceptions |
 | CodeQL Security Analysis | JavaScript/TypeScript and Go analysis; requires an eligible repository and enabled GitHub code scanning |
 
 ## Security tooling compatibility
@@ -39,3 +39,7 @@ Repository Maintenance defaults to `dry_run=true` for manual runs. It inspects w
 ## CodeQL availability
 
 Private repositories require an eligible GitHub organization plan with GitHub Code Security enabled. Repository visibility and licensing are external prerequisites, not conditions that source changes can repair. Keep a blocked CodeQL run visible and report the limitation rather than disabling the scanner, bypassing the failure, or changing repository visibility without authorization. See [GitHub's private-repository guidance](https://docs.github.com/en/code-security/reference/code-scanning/troubleshoot-analysis-errors/private-repository-enablement).
+
+## Secret-scan fixtures
+
+The full-history secret scan has one exact historical exception for the synthetic HMAC key in `backend/test/integrations-webhooks.test.ts` at commit `fcb36b7742efafbe8d59c954cb3ba1bd2504719b`, line 10. It was only an in-memory unit-test input, never a provider credential. Current webhook tests generate random keys instead. No test-directory exclusion or scanner disablement is used.

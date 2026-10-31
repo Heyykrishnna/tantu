@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import test from "node:test";
 import {
   getIntegrationProviders,
@@ -7,7 +8,7 @@ import {
 } from "../src/modules/integrations-webhooks/service.js";
 
 test("signed webhook payload creates valid HMAC-SHA256 signature header", () => {
-  const secret = "whsec_test_secret_key_1234567890abcdef";
+  const secret = randomBytes(32).toString("hex");
   const timestamp = Math.floor(Date.now() / 1000);
   const payload = { event: "task.created", id: "task-001", title: "Review RFC" };
 
@@ -17,7 +18,7 @@ test("signed webhook payload creates valid HMAC-SHA256 signature header", () => 
 });
 
 test("webhook signature verification validates authentic payloads within tolerance window", () => {
-  const secret = "whsec_secure_key_abcdef1234567890";
+  const secret = randomBytes(32).toString("hex");
   const timestamp = Math.floor(Date.now() / 1000);
   const payload = { event: "calendar.event_created", id: "evt-42" };
 
@@ -27,7 +28,7 @@ test("webhook signature verification validates authentic payloads within toleran
 });
 
 test("webhook signature verification rejects tampered payload or invalid secret", () => {
-  const secret = "whsec_valid_secret";
+  const secret = randomBytes(32).toString("hex");
   const timestamp = Math.floor(Date.now() / 1000);
   const payload = { amount: 100 };
   const tampered = { amount: 999 };
@@ -41,7 +42,7 @@ test("webhook signature verification rejects tampered payload or invalid secret"
 });
 
 test("webhook signature verification rejects replayed headers exceeding tolerance", () => {
-  const secret = "whsec_replay_secret";
+  const secret = randomBytes(32).toString("hex");
   const expiredTimestamp = Math.floor(Date.now() / 1000) - 600;
   const payload = { action: "sync" };
 
