@@ -16,7 +16,16 @@ import {
 } from "../components/ui";
 
 export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
-  const [invitation, setInvitation] = useState("");
+  const [invitation, setInvitation] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const search = new URLSearchParams(window.location.search);
+    return (
+      search.get("invite") ||
+      search.get("invitation") ||
+      search.get("token") ||
+      ""
+    );
+  });
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {

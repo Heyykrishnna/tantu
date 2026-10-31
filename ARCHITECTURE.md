@@ -430,9 +430,11 @@ sequenceDiagram
 |---|---|---|
 | GET | `/api/v1/workspaces` | List workspaces for authenticated user |
 | POST | `/api/v1/workspaces` | Create workspace |
+| PATCH | `/api/v1/workspaces/:workspaceId` | Rename workspace |
 | GET | `/api/v1/workspaces/:workspaceId/members` | List members |
-| DELETE | `/api/v1/workspaces/:workspaceId/members/:userId` | Remove member |
-| POST | `/api/v1/workspaces/:workspaceId/invitations` | Invite member |
+| PATCH | `/api/v1/workspaces/:workspaceId/members/:userId` | Update member role |
+| DELETE | `/api/v1/workspaces/:workspaceId/members/:userId` | Remove member or leave workspace |
+| POST | `/api/v1/workspaces/:workspaceId/invitations` | Invite member (Admin, Member, Guest) |
 | POST | `/api/v1/invitations/accept` | Accept invitation (creates account if new) |
 
 ### Tasks & Pages (Records)

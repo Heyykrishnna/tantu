@@ -140,8 +140,13 @@ export default function WorkspaceApp({
               window.location.pathname.replace(/^\//, "").split("/")[0],
             )
           : null;
+      const inviteToken =
+        url.get("invite") || url.get("invitation") || url.get("token");
       const targetView =
-        resolveView(url.get("view")) ?? pathView ?? initialViewProp;
+        (inviteToken ? "settings" : null) ??
+        resolveView(url.get("view")) ??
+        pathView ??
+        initialViewProp;
       if (targetView) setView(targetView);
     },
     [initialViewProp],
@@ -616,7 +621,16 @@ export default function WorkspaceApp({
               key={workspaceId}
               workspace={currentWorkspace}
               csrf={csrf}
+              currentUser={user}
               onJoined={() => void authenticate()}
+              onWorkspaceRenamed={(newName) => {
+                setWorkspaces((prev) =>
+                  prev.map((w) =>
+                    w.id === workspaceId ? { ...w, name: newName } : w,
+                  ),
+                );
+              }}
+              onWorkspaceLeft={() => void authenticate()}
             />
           ) : view === "collections" ? (
             <CollectionPanel

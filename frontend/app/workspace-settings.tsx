@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, items, record, string } from "../lib/api";
-import type { Workspace } from "../lib/api";
+import type { User, Workspace } from "../lib/api";
 import { Icon } from "../components/icon";
+import type { IconName } from "../components/icon";
 import {
   Badge,
   Button,
@@ -23,10 +24,45 @@ interface Member {
   role: string;
   active: boolean;
 }
-function member(value: unknown): Member {
+
+interface Quota {
+  storageBytesUsed: number;
+  storageBytesLimit: number;
+  recordCount: number;
+  recordLimit: number;
+  automationRunsToday: number;
+  automationLimitDaily: number;
+  quotaResetAt: string;
+}
+
+interface Preferences {
+  theme: "system" | "light" | "dark";
+  density: "comfortable" | "compact";
+  timezone: string;
+  weekStart: "sunday" | "monday";
+  locale: string;
+}
+
+interface EnterprisePolicy {
+  ssoEnforced: boolean;
+  sessionDurationMinutes: number;
+  dlpEnabled: boolean;
+  retentionDays: number;
+}
+
+type SettingsTab =
+  | "general"
+  | "members"
+  | "preferences"
+  | "quotas"
+  | "security"
+  | "connections";
+
+function parseMember(value: unknown): Member {
   const data = record(value);
-  if (typeof data.active !== "boolean")
+  if (typeof data.active !== "boolean") {
     throw new Error("Invalid membership response.");
+  }
   return {
     id: string(data.id),
     name: string(data.name),
@@ -36,75 +72,228 @@ function member(value: unknown): Member {
   };
 }
 
+function parseQuota(value: unknown): Quota {
+  const root = record(value);
+  const data = record(root.quota ?? value);
+  return {
+    storageBytesUsed: Number(data.storageBytesUsed ?? 0),
+    storageBytesLimit: Number(data.storageBytesLimit ?? 104857600),
+    recordCount: Number(data.recordCount ?? 0),
+    recordLimit: Number(data.recordLimit ?? 5000),
+    automationRunsToday: Number(data.automationRunsToday ?? 0),
+    automationLimitDaily: Number(data.automationLimitDaily ?? 500),
+    quotaResetAt: string(data.quotaResetAt ?? new Date().toISOString()),
+  };
+}
+
+function parsePreferences(value: unknown): Preferences {
+  const root = record(value);
+  const data = record(root.preferences ?? value);
+  return {
+    theme: (data.theme === "light" || data.theme === "dark"
+      ? data.theme
+      : "system") as "system" | "light" | "dark",
+    density: (data.density === "compact" ? "compact" : "comfortable") as
+      | "comfortable"
+      | "compact",
+    timezone: string(data.timezone ?? "UTC"),
+    weekStart: (data.weekStart === "sunday" ? "sunday" : "monday") as
+      | "sunday"
+      | "monday",
+    locale: string(data.locale ?? "en"),
+  };
+}
+
+function parsePolicy(value: unknown): EnterprisePolicy {
+  const root = record(value);
+  const data = record(root.policy ?? value);
+  return {
+    ssoEnforced: Boolean(data.ssoEnforced),
+    sessionDurationMinutes: Number(data.sessionDurationMinutes ?? 480),
+    dlpEnabled: Boolean(data.dlpEnabled),
+    retentionDays: Number(data.retentionDays ?? 90),
+  };
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function WorkspaceSettings({
   workspace,
   csrf,
+  currentUser,
   onJoined,
+  onWorkspaceRenamed,
+  onWorkspaceLeft,
 }: {
   workspace: Workspace;
   csrf: string;
+  currentUser?: User | null;
   onJoined: () => void;
+  onWorkspaceRenamed?: (newName: string) => void;
+  onWorkspaceLeft?: () => void;
 }) {
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    if (typeof window === "undefined") return "general";
+    const search = new URLSearchParams(window.location.search);
+    return search.get("invite") || search.get("invitation") || search.get("token")
+      ? "members"
+      : "general";
+  });
   const [members, setMembers] = useState<Member[]>([]);
-  const [message, setMessage] = useState("");
+  const [quota, setQuota] = useState<Quota | null>(null);
+  const [preferences, setPreferences] = useState<Preferences | null>(null);
+  const [policy, setPolicy] = useState<EnterprisePolicy | null>(null);
+
+  const [workspaceName, setWorkspaceName] = useState(workspace.name);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [selectedInviteRole, setSelectedInviteRole] = useState<string>("member");
+
   const [token, setToken] = useState("");
+  const [acceptTokenInput, setAcceptTokenInput] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const search = new URLSearchParams(window.location.search);
+    return (
+      search.get("invite") ||
+      search.get("invitation") ||
+      search.get("token") ||
+      ""
+    );
+  });
+  const [importContent, setImportContent] = useState("");
+
+  const [message, setMessage] = useState("");
+  const [toast, setToast] = useState<{
+    text: string;
+    tone: "success" | "error" | "info";
+  } | null>(null);
   const [busy, setBusy] = useState(false);
-  const manager = workspace.role === "owner" || workspace.role === "admin";
+
+  const isManager = workspace.role === "owner" || workspace.role === "admin";
+  const isOwner = workspace.role === "owner";
   const path = `/workspaces/${workspace.id}`;
-  const refresh = useCallback(async () => {
-    if (!manager) return;
+
+  const showToast = useCallback(
+    (text: string, tone: "success" | "error" | "info" = "success") => {
+      setToast({ text, tone });
+      setTimeout(() => {
+        setToast((current) => (current?.text === text ? null : current));
+      }, 3500);
+    },
+    [],
+  );
+
+  const refreshMembers = useCallback(async () => {
+    if (!isManager) return;
     try {
-      setMembers(await api(path + "/members", items(member)));
+      setMembers(await api(path + "/members", items(parseMember)));
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Members are unavailable.",
       );
     }
-  }, [manager, path]);
+  }, [isManager, path]);
+
+  const loadQuota = useCallback(async () => {
+    try {
+      const data = await api(path + "/quotas", parseQuota);
+      setQuota(data);
+    } catch {
+      setQuota(null);
+    }
+  }, [path]);
+
   useEffect(() => {
-    if (!manager) return;
     const controller = new AbortController();
-    api(path + "/members", items(member), { signal: controller.signal })
-      .then(setMembers)
-      .catch((error: unknown) => {
-        if (!(error instanceof Error && error.name === "AbortError"))
-          setMessage(
-            error instanceof Error ? error.message : "Members are unavailable.",
-          );
-      });
+    if (isManager) {
+      api(path + "/members", items(parseMember), { signal: controller.signal })
+        .then(setMembers)
+        .catch(() => {});
+      api(path + "/enterprise-policy", parsePolicy, { signal: controller.signal })
+        .then(setPolicy)
+        .catch(() => {});
+    }
+    api(path + "/quotas", parseQuota, { signal: controller.signal })
+      .then(setQuota)
+      .catch(() => {});
+    api(path + "/preferences", parsePreferences, { signal: controller.signal })
+      .then(setPreferences)
+      .catch(() => {});
     return () => controller.abort();
-  }, [manager, path]);
+  }, [path, isManager]);
+
+  async function saveWorkspaceName(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!workspaceName.trim()) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      await api(
+        path,
+        (value) => string(record(value).name),
+        {
+          method: "PATCH",
+          csrf,
+          body: { name: workspaceName.trim() },
+        },
+      );
+      onWorkspaceRenamed?.(workspaceName.trim());
+      showToast("Workspace name updated.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Rename failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setMessage("");
     setToken("");
     const data = new FormData(event.currentTarget);
+    const roleValue = String(data.get("role"));
+    const permissionValue = String(data.get("permission"));
+    const recordIdValue = String(data.get("recordId") || "").trim();
+
+    if (roleValue === "guest" && !recordIdValue) {
+      setMessage("Guests require a specific Record ID.");
+      setBusy(false);
+      return;
+    }
+
     try {
-      setToken(
-        await api(
-          path + "/invitations",
-          (value) => string(record(value).token),
-          {
-            method: "POST",
-            csrf,
-            body: {
-              email: String(data.get("email")),
-              role: String(data.get("role")),
-              permission: String(data.get("permission")),
-              ...(data.get("recordId")
-                ? { recordId: String(data.get("recordId")) }
-                : {}),
-            },
+      const generatedToken = await api(
+        path + "/invitations",
+        (value) => string(record(value).token),
+        {
+          method: "POST",
+          csrf,
+          body: {
+            email: String(data.get("email")).trim(),
+            role: roleValue,
+            permission: permissionValue,
+            ...(recordIdValue ? { recordId: recordIdValue } : {}),
           },
-        ),
+        },
       );
+      setToken(generatedToken);
+      showToast("Invitation created successfully.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Invitation failed.");
+      setMessage(
+        error instanceof Error ? error.message : "Invitation failed.",
+      );
     } finally {
       setBusy(false);
     }
   }
+
   async function join(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -113,397 +302,1061 @@ export default function WorkspaceSettings({
       await api("/invitations/accept", acknowledgment, {
         method: "POST",
         csrf,
-        body: { token: String(new FormData(event.currentTarget).get("token")) },
+        body: { token: acceptTokenInput.trim() },
       });
+      showToast("Joined workspace successfully.");
       onJoined();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Invitation failed.");
+      setMessage(
+        error instanceof Error ? error.message : "Invitation acceptance failed.",
+      );
     } finally {
       setBusy(false);
     }
   }
-  async function remove(item: Member) {
-    if (
-      !window.confirm(
-        `Remove ${item.name} from this workspace? Access will stop immediately.`,
-      )
-    )
-      return;
+
+  async function updateMemberRole(memberId: string, newRole: string) {
     setBusy(true);
+    setMessage("");
+    try {
+      await api(
+        `${path}/members/${memberId}`,
+        acknowledgment,
+        {
+          method: "PATCH",
+          csrf,
+          body: { role: newRole },
+        },
+      );
+      showToast("Member role updated.");
+      await refreshMembers();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Role update failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeMember(item: Member) {
+    const isSelf = currentUser?.id === item.id;
+    const promptMessage = isSelf
+      ? "Leave this workspace? You will lose access immediately."
+      : `Remove ${item.name} from this workspace? Access will stop immediately.`;
+
+    if (!window.confirm(promptMessage)) return;
+
+    setBusy(true);
+    setMessage("");
     try {
       await api(path + "/members/" + item.id, acknowledgment, {
         method: "DELETE",
         csrf,
       });
-      await refresh();
+      showToast(isSelf ? "Left workspace." : "Member removed.");
+      if (isSelf) {
+        onWorkspaceLeft?.();
+      } else {
+        await refreshMembers();
+      }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Removal failed.");
+      setMessage(
+        error instanceof Error ? error.message : "Removal failed.",
+      );
     } finally {
       setBusy(false);
     }
   }
+
+  async function savePreferences(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const themeVal = String(data.get("theme")) as "system" | "light" | "dark";
+    const densityVal = String(data.get("density")) as "comfortable" | "compact";
+    const weekStartVal = String(data.get("weekStart")) as "sunday" | "monday";
+    const timezoneVal = String(data.get("timezone") || "UTC");
+
+    setBusy(true);
+    try {
+      const updated = await api(
+        path + "/preferences",
+        parsePreferences,
+        {
+          method: "PATCH",
+          csrf,
+          body: {
+            theme: themeVal,
+            density: densityVal,
+            weekStart: weekStartVal,
+            timezone: timezoneVal,
+          },
+        },
+      );
+      setPreferences(updated);
+      document.documentElement.dataset.theme =
+        themeVal === "light" ? "light" : "dark";
+      try {
+        localStorage.setItem("tantu-theme", themeVal);
+      } catch {}
+      showToast("Preferences saved.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Preferences update failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function exportWorkspace() {
+    setBusy(true);
+    setMessage("");
+    try {
+      const res = await api<{ job: { payload: unknown } }>(
+        path + "/export",
+        (v) => v as { job: { payload: unknown } },
+        { method: "POST", csrf, body: { format: "json" } },
+      );
+      const blob = new Blob([JSON.stringify(res.job.payload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `tantu-export-${workspace.id}.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      showToast("Workspace exported successfully.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Export failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function importRecords(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!importContent.trim()) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const parsed = JSON.parse(importContent) as {
+        records: { kind: "task" | "page"; title: string; status?: string }[];
+      };
+      const result = await api<{ importedCount: number }>(
+        path + "/import",
+        (v) => v as { importedCount: number },
+        {
+          method: "POST",
+          csrf,
+          body: {
+            version: "1.0",
+            records: parsed.records ?? [],
+          },
+        },
+      );
+      showToast(`Imported ${result.importedCount} records successfully.`);
+      setImportContent("");
+      await loadQuota();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Import failed. Provide valid JSON records array.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleDlp(enabled: boolean) {
+    if (!isManager) return;
+    setBusy(true);
+    try {
+      const updated = await api(
+        path + "/enterprise-policy",
+        parsePolicy,
+        {
+          method: "PUT",
+          csrf,
+          body: { dlpEnabled: enabled },
+        },
+      );
+      setPolicy(updated);
+      showToast(enabled ? "Enterprise DLP enabled." : "Enterprise DLP disabled.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Policy update failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function triggerAuditExport() {
+    setBusy(true);
+    try {
+      await api(
+        path + "/audit-exports",
+        (v) => v,
+        {
+          method: "POST",
+          csrf,
+          body: { format: "ndjson" },
+        },
+      );
+      showToast("Audit export scheduled.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Audit export failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function disconnectGoogle() {
+    setBusy(true);
+    try {
+      await api(
+        path + "/providers/google/disconnect",
+        acknowledgment,
+        { method: "POST", csrf },
+      );
+      showToast("Google Workspace disconnected.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Disconnection failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyLink(content: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(content);
+      showToast(`${label} copied to clipboard!`);
+    } catch {
+      showToast(`Copy failed. Please copy manually.`, "info");
+    }
+  }
+
+  const filteredMembers = members.filter((m) => {
+    const matchesSearch =
+      m.name.toLowerCase().includes(memberSearch.toLowerCase()) ||
+      m.email.toLowerCase().includes(memberSearch.toLowerCase());
+    const matchesRole = roleFilter === "all" || m.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
+  const inviteLink =
+    token && typeof window !== "undefined"
+      ? `${window.location.origin}/?invite=${encodeURIComponent(token)}`
+      : "";
+
+  const tabs: { id: SettingsTab; label: string; icon: IconName }[] = [
+    { id: "general", label: "General", icon: "settings" },
+    { id: "members", label: "People & Roles", icon: "users" },
+    { id: "preferences", label: "Preferences", icon: "panel" },
+    { id: "quotas", label: "Data & Quotas", icon: "download" },
+    { id: "security", label: "Security & DLP", icon: "shield" },
+    { id: "connections", label: "Connected Apps", icon: "external" },
+  ];
+
   return (
     <section className="grid gap-6">
-      <header>
-        <div className="mb-2 flex flex-wrap items-center gap-3">
-          <h1 className={`${headingClass} text-[25px]`}>Workspace settings</h1>
-          <Badge tone="violet">{workspace.role}</Badge>
+      {toast && (
+        <div
+          role="status"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl border border-violet-400/30 bg-[#161520]/95 px-4 py-3 text-[12px] font-medium text-white shadow-2xl backdrop-blur-md dark:border-violet-400/40 dark:bg-[#12111a]/95"
+        >
+          <Icon
+            name={toast.tone === "error" ? "close" : "check"}
+            className={`size-4 ${toast.tone === "error" ? "text-rose-400" : "text-emerald-400"}`}
+          />
+          <span>{toast.text}</span>
         </div>
-        <p className={`text-[12px] ${mutedClass}`}>
-          {workspace.name} · People, permissions, and the space you share.
-        </p>
+      )}
+
+      <header className="border-b border-[#e4e6ef] pb-4 dark:border-[#303034]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-violet-500/10 text-base font-semibold text-violet-600 dark:bg-violet-400/15 dark:text-violet-300">
+              {workspace.name.slice(0, 1).toUpperCase()}
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className={`${headingClass} text-[22px]`}>{workspace.name}</h1>
+                <Badge tone="violet">{workspace.role}</Badge>
+              </div>
+              <p className={`text-[11px] ${mutedClass}`}>
+                Workspace Settings &amp; Member Access
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge tone="neutral">ID: {workspace.id.slice(0, 8)}</Badge>
+          </div>
+        </div>
+
+        <nav className="mt-6 flex flex-wrap gap-1">
+          {tabs.map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[12px] font-medium transition-colors ${
+                  active
+                    ? "bg-violet-500/10 text-violet-600 dark:bg-violet-400/15 dark:text-violet-300"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-[#28282b]"
+                }`}
+              >
+                <Icon name={tab.icon} className="size-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
       </header>
+
       <Notice tone="error" role="alert">
         {message}
       </Notice>
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        {manager ? (
-          <section className={panelClass}>
-            <header className="flex items-center gap-2 border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
-              <Icon name="users" className="size-4 text-[#9690d4]" />
-              <h2 className="text-[12px] font-medium">Invite someone</h2>
-              <Badge>72-hour invitation</Badge>
-            </header>
-            <div className="p-5 sm:p-6">
-              <p className={`mb-5 text-[11px] leading-relaxed ${mutedClass}`}>
-                Make room for a teammate. Guests only see the records you
-                explicitly invite them to.
+
+      {activeTab === "general" && (
+        <div className="grid gap-6">
+          <section className={`${panelClass} p-6`}>
+            <header className="mb-4">
+              <h2 className={`${headingClass} text-[16px]`}>Workspace Profile</h2>
+              <p className={`text-[11px] ${mutedClass}`}>
+                Change the name and basic metadata of your workspace.
               </p>
-              <form onSubmit={invite} className="grid gap-4">
-                <Field label="Email">
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    maxLength={254}
-                    placeholder="teammate@example.com"
-                    className={inputClass}
-                  />
-                </Field>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Role">
-                    <select
-                      name="role"
-                      aria-label="Role"
-                      defaultValue="member"
-                      className={inputClass}
-                    >
-                      <option value="member">Member</option>
-                      <option value="guest">Guest — record access only</option>
-                      {workspace.role === "owner" && (
-                        <option value="admin">Administrator</option>
-                      )}
-                    </select>
-                  </Field>
-                  <Field label="Record permission">
-                    <select
-                      name="permission"
-                      aria-label="Record permission"
-                      className={inputClass}
-                    >
-                      <option value="read">Read</option>
-                      <option value="edit">Edit</option>
-                    </select>
-                  </Field>
-                </div>
-                <Field
-                  label={
-                    <span>
-                      Record ID{" "}
-                      <span
-                        className={`ml-1 text-[10px] font-normal ${mutedClass}`}
-                      >
-                        required for guests
-                      </span>
-                    </span>
-                  }
-                >
-                  <input
-                    name="recordId"
-                    placeholder="Copy the ID from record details"
-                    pattern="[0-9a-f-]{36}"
-                    className={inputClass}
-                  />
-                </Field>
-                <div className="border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
+            </header>
+            <form onSubmit={saveWorkspaceName} className="grid max-w-lg gap-4">
+              <Field label="Workspace Name">
+                <input
+                  name="name"
+                  value={workspaceName}
+                  onChange={(e) => setWorkspaceName(e.target.value)}
+                  required
+                  maxLength={100}
+                  disabled={!isManager || busy}
+                  className={inputClass}
+                />
+              </Field>
+              {isManager && (
+                <div>
                   <Button type="submit" variant="primary" disabled={busy}>
-                    <Icon name="plus" className="size-3.5" />
-                    Create invitation
+                    <Icon name="check" className="size-3.5" />
+                    Save Changes
                   </Button>
                 </div>
-              </form>
-              {token && (
-                <div className="mt-5 grid gap-3 rounded-xl border border-violet-300/20 bg-violet-400/8 p-4">
-                  <Field label="Invitation token">
-                    <textarea
-                      readOnly
-                      aria-label="Invitation token"
-                      value={token}
-                      rows={2}
-                      className={`${inputClass} resize-none break-all font-mono text-[11px]`}
-                    />
-                  </Field>
-                  <p className={`text-[10px] leading-relaxed ${mutedClass}`}>
-                    Share privately with the intended person. Expires after 72
-                    hours and works once. This app has not sent an email.
-                  </p>
-                </div>
               )}
-            </div>
+            </form>
           </section>
-        ) : (
+
           <section className={`${panelClass} p-6`}>
-            <Icon name="shield" className="mb-4 size-6 text-[#9992d7]" />
-            <h2 className={`${headingClass} mb-2 text-[18px]`}>
-              Your workspace access
-            </h2>
-            <p className={`text-[12px] leading-7 ${mutedClass}`}>
-              Your role is {workspace.role}. Workspace owners and administrators
-              manage invitations and membership. Your record permissions always
-              apply.
-            </p>
-          </section>
-        )}
-        <aside className="grid gap-5">
-          <section className={panelClass}>
-            <header className="flex items-center gap-2 border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
-              <Icon name="mail" className="size-4 text-[#9690d4]" />
-              <h2 className="text-[12px] font-medium">Accept an invitation</h2>
-            </header>
-            <div className="p-5 sm:p-6">
-              <p className={`mb-5 text-[11px] leading-relaxed ${mutedClass}`}>
-                Have an invitation for this account? Paste the token below to
-                join.
+            <header className="mb-4">
+              <h2 className={`${headingClass} text-[16px]`}>Membership Overview</h2>
+              <p className={`text-[11px] ${mutedClass}`}>
+                You are currently a <span className="font-semibold">{workspace.role}</span> in this workspace.
               </p>
-              <form onSubmit={join} className="grid gap-4">
-                <Field label="Invitation token">
-                  <input
-                    name="token"
-                    required
-                    maxLength={100}
-                    autoComplete="off"
-                    placeholder="Paste your invitation token"
-                    className={inputClass}
-                  />
-                </Field>
-                <Button type="submit" disabled={busy}>
-                  Join workspace
-                  <Icon name="arrow" className="size-3.5" />
-                </Button>
-              </form>
-            </div>
-          </section>
-          <div className="rounded-xl border border-[#e2e1f0] bg-[#efeff8] p-5 dark:border-[#373344] dark:bg-[#252331]">
-            <div className="mb-2 flex items-center gap-2 text-[12px] font-medium text-[#756b9e] dark:text-[#c3b8ea]">
-              <Icon name="lock" className="size-4" />
-              Sharing with intention
-            </div>
-            <p className={`text-[11px] leading-6 ${mutedClass}`}>
-              Workspace membership never grants automatic access to private
-              records. An invitation or an explicit sharing choice determines
-              who can see your work.
-            </p>
-          </div>
-        </aside>
-      </div>
-
-      <section className={`${panelClass} p-6`}>
-        <h2 className={`${headingClass} mb-1 text-[16px]`}>
-          Preferences &amp; Customization
-        </h2>
-        <p className={`mb-5 text-[11px] leading-relaxed ${mutedClass}`}>
-          Configure density, timezone, and week-start. These preferences are scoped to your account and workspace.
-        </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="Theme">
-            <select
-              aria-label="Color theme"
-              className={inputClass}
-              defaultValue="dark"
-              onChange={(e) => {
-                document.documentElement.dataset.theme = e.target.value;
-                try {
-                  localStorage.setItem("tantu-theme", e.target.value);
-                } catch {}
-              }}
-            >
-              <option value="system">System Default</option>
-              <option value="dark">Dark Theme</option>
-              <option value="light">Light Theme</option>
-            </select>
-          </Field>
-          <Field label="Density">
-            <select aria-label="Layout density" className={inputClass} defaultValue="comfortable">
-              <option value="comfortable">Comfortable</option>
-              <option value="compact">Compact (High Information)</option>
-            </select>
-          </Field>
-          <Field label="Week Starts On">
-            <select aria-label="Week start day" className={inputClass} defaultValue="monday">
-              <option value="monday">Monday (ISO Standard)</option>
-              <option value="sunday">Sunday</option>
-            </select>
-          </Field>
-        </div>
-      </section>
-
-      <section className={`${panelClass} p-6`}>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <div>
-            <h2 className={`${headingClass} text-[16px]`}>
-              Data Portability &amp; Tenant Quotas
-            </h2>
-            <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
-              Export your data, view fair resource consumption, or disconnect external accounts.
-            </p>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={busy}
-            onClick={async () => {
-              try {
-                setBusy(true);
-                const res = await api<{ job: { payload: unknown } }>(
-                  `/workspaces/${workspace.id}/export`,
-                  (v) => v as { job: { payload: unknown } },
-                  { method: "POST", csrf }
-                );
-                const blob = new Blob([JSON.stringify(res.job.payload, null, 2)], {
-                  type: "application/json",
-                });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `tantu-export-${workspace.id}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                setMessage("Export downloaded successfully.");
-              } catch (err) {
-                setMessage(err instanceof Error ? err.message : "Export failed.");
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            <Icon name="download" className="size-3.5" />
-            Export Workspace JSON
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
-          <div className="rounded-lg border border-[#e4e6ef] p-3 dark:border-[#303034]">
-            <span className={`block text-[10px] uppercase font-semibold ${mutedClass}`}>
-              Storage Quota
-            </span>
-            <span className="text-sm font-medium text-[#283346] dark:text-[#eeeeF0]">
-              5.2 MB / 100 MB
-            </span>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-[#eceef5] dark:bg-[#2c2c30]">
-              <div className="h-full w-[5%] rounded-full bg-violet-600" />
-            </div>
-          </div>
-          <div className="rounded-lg border border-[#e4e6ef] p-3 dark:border-[#303034]">
-            <span className={`block text-[10px] uppercase font-semibold ${mutedClass}`}>
-              Record Limit
-            </span>
-            <span className="text-sm font-medium text-[#283346] dark:text-[#eeeeF0]">
-              Fair Usage Active
-            </span>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-[#eceef5] dark:bg-[#2c2c30]">
-              <div className="h-full w-[12%] rounded-full bg-emerald-500" />
-            </div>
-          </div>
-          <div className="rounded-lg border border-[#e4e6ef] p-3 dark:border-[#303034]">
-            <span className={`block text-[10px] uppercase font-semibold ${mutedClass}`}>
-              Daily Automations
-            </span>
-            <span className="text-sm font-medium text-[#283346] dark:text-[#eeeeF0]">
-              0 / 500 runs
-            </span>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-[#eceef5] dark:bg-[#2c2c30]">
-              <div className="h-full w-0 rounded-full bg-blue-500" />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
-          <span className={`text-[11px] ${mutedClass}`}>
-            Disconnecting an external provider halts remote synchronization while preserving all app-owned notes, tasks, and snapshots.
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={busy}
-            onClick={async () => {
-              try {
-                setBusy(true);
-                await api(
-                  `/workspaces/${workspace.id}/providers/google/disconnect`,
-                  (v) => v,
-                  { method: "POST", csrf }
-                );
-                setMessage("External provider disconnected.");
-              } catch (err) {
-                setMessage(err instanceof Error ? err.message : "Disconnection failed.");
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            Disconnect Google Account
-          </Button>
-        </div>
-      </section>
-
-      {manager && (
-        <section className={`${panelClass} overflow-hidden`}>
-          <header className="flex items-center justify-between border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
-            <h2 className="flex items-center gap-2 text-[12px] font-medium">
-              <Icon name="users" className="size-4 text-[#9991d6]" />
-              People
-            </h2>
-            <span className={`text-[10px] ${mutedClass}`}>
-              {members.length} memberships shown
-            </span>
-          </header>
-          <ul className="divide-y divide-[#e6e9f1] dark:divide-[#2e2e32]">
-            {members.map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-wrap items-center gap-3 px-5 py-4"
-              >
-                <span
-                  aria-hidden="true"
-                  className="grid size-8 shrink-0 place-items-center rounded-full bg-[#eeeaf8] text-[10px] text-[#9b8fc3] dark:bg-[#322c40] dark:text-[#c2b0e0]"
-                >
-                  {item.name.slice(0, 2).toUpperCase()}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <strong className="block truncate text-[12px] font-medium">
-                    {item.name}
-                  </strong>
-                  <span className={`block truncate text-[10px] ${mutedClass}`}>
-                    {item.email}
-                  </span>
+            </header>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <div className="mb-1 text-[11px] font-medium text-slate-700 dark:text-zinc-300">
+                  Workspace ID
                 </div>
-                <Badge tone={item.active ? "violet" : "neutral"}>
-                  {item.role}
-                </Badge>
-                {!item.active && <Badge>Removed</Badge>}
-                {item.active && item.role !== "owner" && (
+                <div className="flex items-center justify-between gap-2 font-mono text-[11px] text-slate-500 dark:text-zinc-400">
+                  <span className="truncate">{workspace.id}</span>
                   <Button
                     size="sm"
                     variant="ghost"
-                    disabled={busy}
-                    onClick={() => void remove(item)}
+                    onClick={() => void copyLink(workspace.id, "Workspace ID")}
                   >
-                    Remove member
+                    Copy
                   </Button>
-                )}
-              </li>
-            ))}
-          </ul>
+                </div>
+              </div>
+              <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <div className="mb-1 text-[11px] font-medium text-slate-700 dark:text-zinc-300">
+                  Management Status
+                </div>
+                <p className={`text-[11px] ${mutedClass}`}>
+                  {isOwner
+                    ? "Full administrative custody and ownership."
+                    : isManager
+                      ? "Administrative management permissions granted."
+                      : "Standard member collaborative access."}
+                </p>
+              </div>
+            </div>
+
+            {!isOwner && (
+              <div className="mt-6 border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
+                <Button
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => {
+                    if (currentUser) {
+                      void removeMember({
+                        id: currentUser.id,
+                        name: currentUser.name,
+                        email: currentUser.email,
+                        role: workspace.role,
+                        active: true,
+                      });
+                    }
+                  }}
+                >
+                  <Icon name="logout" className="size-3.5" />
+                  Leave Workspace
+                </Button>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+
+      {activeTab === "members" && (
+        <div className="grid gap-6">
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[12px] font-semibold text-violet-600 dark:text-violet-400">
+                  Owner
+                </span>
+                <Badge tone="violet">Full</Badge>
+              </div>
+              <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
+                Full workspace authority, deletion custody, and ownership management.
+              </p>
+            </div>
+            <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[12px] font-semibold text-slate-800 dark:text-zinc-100">
+                  Administrator
+                </span>
+                <Badge>Admin</Badge>
+              </div>
+              <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
+                Invite members, manage roles, adjust security policies, and integrations.
+              </p>
+            </div>
+            <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[12px] font-semibold text-slate-800 dark:text-zinc-100">
+                  Member
+                </span>
+                <Badge tone="neutral">Standard</Badge>
+              </div>
+              <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
+                Create, organize, and edit all workspace tasks, pages, and projects.
+              </p>
+            </div>
+            <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[12px] font-semibold text-amber-600 dark:text-amber-400">
+                  Guest
+                </span>
+                <Badge tone="neutral">Scoped</Badge>
+              </div>
+              <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
+                External collaborator. Restricted exclusively to designated record ID.
+              </p>
+            </div>
+          </section>
+
+          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+            {isManager && (
+              <section className={panelClass}>
+                <header className="flex items-center justify-between border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
+                  <div className="flex items-center gap-2">
+                    <Icon name="users" className="size-4 text-violet-500" />
+                    <h2 className="text-[13px] font-medium">Invite Teammate</h2>
+                  </div>
+                  <Badge>72-hour validity</Badge>
+                </header>
+                <div className="p-5 sm:p-6">
+                  <p className={`mb-5 text-[11px] leading-relaxed ${mutedClass}`}>
+                    Create a direct invitation link with role-based permissions.
+                  </p>
+                  <form onSubmit={invite} className="grid gap-4">
+                    <Field label="Teammate Email">
+                      <input
+                        name="email"
+                        type="email"
+                        required
+                        maxLength={254}
+                        placeholder="teammate@example.com"
+                        className={inputClass}
+                      />
+                    </Field>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label="Assigned Role">
+                        <select
+                          name="role"
+                          aria-label="Role"
+                          value={selectedInviteRole}
+                          onChange={(e) => setSelectedInviteRole(e.target.value)}
+                          className={inputClass}
+                        >
+                          <option value="member">Member (Workspace wide)</option>
+                          <option value="guest">Guest (Single record only)</option>
+                          {isOwner && (
+                            <option value="admin">Administrator (Settings + Members)</option>
+                          )}
+                        </select>
+                      </Field>
+                      <Field label="Record Permission">
+                        <select
+                          name="permission"
+                          aria-label="Record permission"
+                          className={inputClass}
+                        >
+                          <option value="read">Read Only</option>
+                          <option value="edit">Can Edit</option>
+                        </select>
+                      </Field>
+                    </div>
+
+                    {selectedInviteRole === "guest" && (
+                      <Field
+                        label={
+                          <span>
+                            Target Record ID{" "}
+                            <span className="text-[10px] text-rose-500">
+                              (Required for guest isolation)
+                            </span>
+                          </span>
+                        }
+                      >
+                        <input
+                          name="recordId"
+                          required
+                          placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+                          pattern="[0-9a-f-]{36}"
+                          className={inputClass}
+                        />
+                      </Field>
+                    )}
+
+                    <div className="border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
+                      <Button type="submit" variant="primary" disabled={busy}>
+                        <Icon name="plus" className="size-3.5" />
+                        Generate Invitation Link
+                      </Button>
+                    </div>
+                  </form>
+
+                  {token && (
+                    <div className="mt-5 grid gap-3 rounded-xl border border-violet-400/25 bg-violet-50/50 p-4 dark:border-violet-400/20 dark:bg-violet-950/20">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-violet-700 dark:text-violet-300">
+                          Invitation Link Ready
+                        </span>
+                        <Badge tone="violet">Valid 72 Hours</Badge>
+                      </div>
+
+                      <Field label="Shareable Invite Link">
+                        <div className="flex items-center gap-2">
+                          <input
+                            readOnly
+                            value={inviteLink}
+                            aria-label="Invitation Link"
+                            className={`${inputClass} font-mono text-[11px]`}
+                          />
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => void copyLink(inviteLink, "Invite link")}
+                          >
+                            <Icon name="check" className="size-3.5" />
+                            Copy Link
+                          </Button>
+                        </div>
+                      </Field>
+
+                      <Field label="Raw Invitation Token">
+                        <div className="flex items-center gap-2">
+                          <input
+                            readOnly
+                            value={token}
+                            aria-label="Invitation Token"
+                            className={`${inputClass} font-mono text-[11px]`}
+                          />
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => void copyLink(token, "Token")}
+                          >
+                            Copy Token
+                          </Button>
+                        </div>
+                      </Field>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            <section className={panelClass}>
+              <header className="flex items-center gap-2 border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
+                <Icon name="mail" className="size-4 text-violet-500" />
+                <h2 className="text-[13px] font-medium">Accept an Invitation</h2>
+              </header>
+              <div className="p-5 sm:p-6">
+                <p className={`mb-4 text-[11px] leading-relaxed ${mutedClass}`}>
+                  Have an invitation token for this account? Paste the token below to join this workspace.
+                </p>
+                <form onSubmit={join} className="grid gap-4">
+                  <Field label="Invitation Token">
+                    <input
+                      name="token"
+                      value={acceptTokenInput}
+                      onChange={(e) => setAcceptTokenInput(e.target.value)}
+                      required
+                      maxLength={100}
+                      autoComplete="off"
+                      placeholder="Paste token here"
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Button type="submit" disabled={busy}>
+                    Join Workspace
+                    <Icon name="arrow" className="size-3.5" />
+                  </Button>
+                </form>
+              </div>
+            </section>
+          </div>
+
+          {isManager && (
+            <section className={`${panelClass} overflow-hidden`}>
+              <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[13px] font-medium">Workspace Directory</h2>
+                  <Badge tone="neutral">{members.length} members</Badge>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-1 rounded-lg border border-[#e4e6ef] px-2.5 py-1 text-[11px] dark:border-[#303034]">
+                    <Icon name="search" className="size-3 text-slate-400" />
+                    <input
+                      type="search"
+                      placeholder="Search member..."
+                      value={memberSearch}
+                      onChange={(e) => setMemberSearch(e.target.value)}
+                      className="bg-transparent outline-none"
+                    />
+                  </div>
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    aria-label="Filter by role"
+                    className="rounded-lg border border-[#e4e6ef] bg-transparent px-2.5 py-1 text-[11px] outline-none dark:border-[#303034]"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="owner">Owners</option>
+                    <option value="admin">Admins</option>
+                    <option value="member">Members</option>
+                    <option value="guest">Guests</option>
+                  </select>
+                </div>
+              </header>
+
+              <ul className="divide-y divide-[#e6e9f1] dark:divide-[#2e2e32]">
+                {filteredMembers.map((item) => {
+                  const isCurrent = currentUser?.id === item.id;
+                  return (
+                    <li
+                      key={item.id}
+                      className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="grid size-8 place-items-center rounded-full bg-violet-100 text-[10px] font-semibold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                          {item.name.slice(0, 2).toUpperCase()}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <strong className="text-[12px] font-medium">
+                              {item.name}
+                            </strong>
+                            {isCurrent && <Badge tone="neutral">You</Badge>}
+                          </div>
+                          <span className={`block text-[11px] ${mutedClass}`}>
+                            {item.email}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {isOwner && item.role !== "owner" ? (
+                          <select
+                            value={item.role}
+                            onChange={(e) => void updateMemberRole(item.id, e.target.value)}
+                            aria-label={`Role for ${item.name}`}
+                            className="rounded-md border border-[#e4e6ef] bg-transparent px-2 py-1 text-[11px] outline-none dark:border-[#303034]"
+                          >
+                            <option value="admin">Administrator</option>
+                            <option value="member">Member</option>
+                            <option value="guest">Guest</option>
+                          </select>
+                        ) : (
+                          <Badge tone={item.role === "owner" ? "violet" : "neutral"}>
+                            {item.role}
+                          </Badge>
+                        )}
+
+                        {item.active && item.role !== "owner" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => void removeMember(item)}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+        </div>
+      )}
+
+      {activeTab === "preferences" && (
+        <section className={`${panelClass} p-6`}>
+          <header className="mb-5">
+            <h2 className={`${headingClass} text-[16px]`}>
+              Display &amp; Regional Preferences
+            </h2>
+            <p className={`text-[11px] ${mutedClass}`}>
+              Preferences are saved to your account and synced across sessions.
+            </p>
+          </header>
+          <form onSubmit={savePreferences} className="grid max-w-xl gap-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Interface Theme">
+                <select
+                  name="theme"
+                  defaultValue={preferences?.theme ?? "dark"}
+                  aria-label="Color theme"
+                  className={inputClass}
+                >
+                  <option value="system">System Default</option>
+                  <option value="dark">Dark Theme</option>
+                  <option value="light">Light Theme</option>
+                </select>
+              </Field>
+              <Field label="Layout Density">
+                <select
+                  name="density"
+                  defaultValue={preferences?.density ?? "comfortable"}
+                  aria-label="Layout density"
+                  className={inputClass}
+                >
+                  <option value="comfortable">Comfortable</option>
+                  <option value="compact">Compact (High Information)</option>
+                </select>
+              </Field>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Week Starts On">
+                <select
+                  name="weekStart"
+                  defaultValue={preferences?.weekStart ?? "monday"}
+                  aria-label="Week start day"
+                  className={inputClass}
+                >
+                  <option value="monday">Monday (ISO Standard)</option>
+                  <option value="sunday">Sunday</option>
+                </select>
+              </Field>
+              <Field label="Timezone">
+                <input
+                  name="timezone"
+                  defaultValue={preferences?.timezone ?? "UTC"}
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+            <div>
+              <Button type="submit" variant="primary" disabled={busy}>
+                <Icon name="check" className="size-3.5" />
+                Save Preferences
+              </Button>
+            </div>
+          </form>
+        </section>
+      )}
+
+      {activeTab === "quotas" && (
+        <div className="grid gap-6">
+          <section className={`${panelClass} p-6`}>
+            <header className="mb-4">
+              <h2 className={`${headingClass} text-[16px]`}>
+                Resource Quotas &amp; Fair Usage
+              </h2>
+              <p className={`text-[11px] ${mutedClass}`}>
+                Live consumption metrics for this workspace tenant.
+              </p>
+            </header>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <span className={`block text-[10px] font-semibold uppercase ${mutedClass}`}>
+                  Storage Used
+                </span>
+                <span className="text-sm font-semibold text-slate-800 dark:text-zinc-100">
+                  {formatBytes(quota?.storageBytesUsed ?? 0)} / {formatBytes(quota?.storageBytesLimit ?? 104857600)}
+                </span>
+                <div className="mt-2.5 h-1.5 w-full rounded-full bg-slate-100 dark:bg-zinc-800">
+                  <div
+                    className="h-full rounded-full bg-violet-500"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.round(
+                          ((quota?.storageBytesUsed ?? 0) /
+                            (quota?.storageBytesLimit ?? 104857600)) *
+                            100,
+                        ),
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <span className={`block text-[10px] font-semibold uppercase ${mutedClass}`}>
+                  Record Limit
+                </span>
+                <span className="text-sm font-semibold text-slate-800 dark:text-zinc-100">
+                  {quota?.recordCount ?? 0} / {quota?.recordLimit ?? 5000} items
+                </span>
+                <div className="mt-2.5 h-1.5 w-full rounded-full bg-slate-100 dark:bg-zinc-800">
+                  <div
+                    className="h-full rounded-full bg-emerald-500"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.round(
+                          ((quota?.recordCount ?? 0) /
+                            (quota?.recordLimit ?? 5000)) *
+                            100,
+                        ),
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <span className={`block text-[10px] font-semibold uppercase ${mutedClass}`}>
+                  Automations Today
+                </span>
+                <span className="text-sm font-semibold text-slate-800 dark:text-zinc-100">
+                  {quota?.automationRunsToday ?? 0} / {quota?.automationLimitDaily ?? 500} runs
+                </span>
+                <div className="mt-2.5 h-1.5 w-full rounded-full bg-slate-100 dark:bg-zinc-800">
+                  <div
+                    className="h-full rounded-full bg-sky-500"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.round(
+                          ((quota?.automationRunsToday ?? 0) /
+                            (quota?.automationLimitDaily ?? 500)) *
+                            100,
+                        ),
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className={`${panelClass} p-6`}>
+            <header className="mb-4">
+              <h2 className={`${headingClass} text-[16px]`}>
+                Data Portability (Export &amp; Import)
+              </h2>
+              <p className={`text-[11px] ${mutedClass}`}>
+                Export your workspace in structured JSON or import records in bulk.
+              </p>
+            </header>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <h3 className="mb-1 text-[13px] font-semibold">Export Workspace</h3>
+                <p className={`mb-4 text-[11px] ${mutedClass}`}>
+                  Download all tasks, pages, and projects in a compliant JSON package.
+                </p>
+                <Button variant="secondary" disabled={busy} onClick={() => void exportWorkspace()}>
+                  <Icon name="download" className="size-3.5" />
+                  Export Workspace JSON
+                </Button>
+              </div>
+
+              <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <h3 className="mb-1 text-[13px] font-semibold">Import Records</h3>
+                <p className={`mb-3 text-[11px] ${mutedClass}`}>
+                  Paste JSON containing an array of records to create in this workspace.
+                </p>
+                <form onSubmit={importRecords} className="grid gap-3">
+                  <textarea
+                    rows={3}
+                    placeholder='{"records": [{"kind": "task", "title": "Setup workspace"}]}'
+                    value={importContent}
+                    onChange={(e) => setImportContent(e.target.value)}
+                    className={`${inputClass} font-mono text-[11px]`}
+                  />
+                  <div>
+                    <Button type="submit" size="sm" disabled={busy || !importContent.trim()}>
+                      <Icon name="plus" className="size-3.5" />
+                      Import Records
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === "security" && (
+        <section className={`${panelClass} p-6`}>
+          <header className="mb-5">
+            <h2 className={`${headingClass} text-[16px]`}>
+              Enterprise Governance &amp; DLP
+            </h2>
+            <p className={`text-[11px] ${mutedClass}`}>
+              Automated Data Loss Prevention (DLP) scans text content for PII and secrets.
+            </p>
+          </header>
+
+          <div className="grid max-w-xl gap-5">
+            <div className="flex items-center justify-between rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+              <div>
+                <strong className="block text-[13px] font-medium">
+                  Automated DLP Inspection
+                </strong>
+                <span className={`block text-[11px] ${mutedClass}`}>
+                  Detect and redact SSNs, API tokens, and payment card patterns.
+                </span>
+              </div>
+              <Button
+                variant={policy?.dlpEnabled ? "primary" : "secondary"}
+                disabled={!isManager || busy}
+                onClick={() => void toggleDlp(!policy?.dlpEnabled)}
+              >
+                {policy?.dlpEnabled ? "Active (Redacting)" : "Disabled"}
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+              <div>
+                <strong className="block text-[13px] font-medium">
+                  Audit Log Export
+                </strong>
+                <span className={`block text-[11px] ${mutedClass}`}>
+                  Export structured NDJSON audit records for compliance reviews.
+                </span>
+              </div>
+              <Button
+                variant="secondary"
+                disabled={!isManager || busy}
+                onClick={() => void triggerAuditExport()}
+              >
+                <Icon name="file" className="size-3.5" />
+                Trigger Audit Export
+              </Button>
+            </div>
+
+            <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+              <h3 className="mb-2 text-[12px] font-semibold text-slate-700 dark:text-zinc-300">
+                Security Architecture
+              </h3>
+              <ul className={`grid gap-1.5 text-[11px] ${mutedClass}`}>
+                <li className="flex items-center gap-2">
+                  <Icon name="check" className="size-3 text-emerald-500" />
+                  Double-submit CSRF cookie protection on all mutating routes
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="check" className="size-3 text-emerald-500" />
+                  HMAC-SHA256 session token hashing and isolation
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="check" className="size-3 text-emerald-500" />
+                  ClamAV antivirus background scanning for uploaded files
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="check" className="size-3 text-emerald-500" />
+                  Strict JSON schema parameter and body verification
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activeTab === "connections" && (
+        <section className={`${panelClass} p-6`}>
+          <header className="mb-5">
+            <h2 className={`${headingClass} text-[16px]`}>
+              Connected Apps &amp; External Providers
+            </h2>
+            <p className={`text-[11px] ${mutedClass}`}>
+              Manage remote calendar, mail, and webhook connections.
+            </p>
+          </header>
+
+          <div className="grid max-w-xl gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+              <div className="flex items-center gap-3">
+                <Icon name="calendar" className="size-5 text-violet-500" />
+                <div>
+                  <strong className="block text-[13px] font-medium">
+                    Google Workspace
+                  </strong>
+                  <span className={`block text-[11px] ${mutedClass}`}>
+                    Calendar bidirectional event sync &amp; Gmail integration.
+                  </span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={() => void disconnectGoogle()}
+              >
+                Disconnect
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+              <div className="flex items-center gap-3">
+                <Icon name="mail" className="size-5 text-sky-500" />
+                <div>
+                  <strong className="block text-[13px] font-medium">
+                    Microsoft 365
+                  </strong>
+                  <span className={`block text-[11px] ${mutedClass}`}>
+                    Outlook calendar and Exchange mail sync.
+                  </span>
+                </div>
+              </div>
+              <Badge tone="neutral">Configured in Integrations</Badge>
+            </div>
+          </div>
         </section>
       )}
     </section>

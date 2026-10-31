@@ -46,6 +46,16 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
     });
     return reply.code(201).send(workspace);
   });
+  app.patch<{ Params: { workspaceId: string }; Body: { name: string } }>("/api/v1/workspaces/:workspaceId", { schema: { params: workspaceParams, body: object({ name: text(100) }, ["name"]) } }, async (request) => {
+    const scope = await identity.scope(request, request.params.workspaceId, true);
+    return db.transaction(scope, async (client) => {
+      await identity.requireManager(client, scope);
+      const result = await client.query<{ id: string; name: string }>("UPDATE tantu.workspaces SET name=$1 WHERE id=$2 RETURNING id,name", [request.body.name.trim(), scope.workspaceId]);
+      const row = result.rows[0];
+      if (!row) throw new Failure(404, "NOT_FOUND", "Workspace not found.");
+      return row;
+    });
+  });
   app.get<{ Params: { workspaceId: string } }>("/api/v1/workspaces/:workspaceId/members", { schema: { params: workspaceParams } }, async (request) => {
     const scope = await identity.scope(request, request.params.workspaceId);
     return db.transaction(scope, async (client) => {
@@ -90,14 +100,25 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
     });
     return { workspaceId: accepted.workspaceId, ...await identity.issueSession(accepted.userId, reply, cookies(request).get("tantu_session")) };
   });
+  app.patch<{ Params: { workspaceId: string; userId: string }; Body: { role: "admin" | "member" | "guest" } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }), body: object({ role: { enum: ["admin", "member", "guest"] } }, ["role"]) } }, async (request) => {
+    const scope = await identity.scope(request, request.params.workspaceId, true);
+    return db.transaction(scope, async (client) => {
+      await identity.requireManager(client, scope, true);
+      const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active", [scope.workspaceId, request.params.userId]);
+      if (!member.rows[0]) throw new Failure(404, "NOT_FOUND", "Member not found.");
+      if (member.rows[0].role === "owner") throw new Failure(409, "OWNER_PROTECTED", "Owner role cannot be changed.");
+      await client.query("UPDATE tantu.memberships SET role=$1 WHERE workspace_id=$2 AND user_id=$3", [request.body.role, scope.workspaceId, request.params.userId]);
+      return { updated: true, role: request.body.role };
+    });
+  });
   app.delete<{ Params: { workspaceId: string; userId: string } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }) } }, async (request) => {
     const scope = await identity.scope(request, request.params.workspaceId, true);
     await db.transaction(scope, async (client) => {
       await client.query("SELECT id FROM tantu.workspaces WHERE id=$1 FOR UPDATE", [scope.workspaceId]);
-      await identity.requireManager(client, scope);
+      if (request.params.userId !== scope.userId) await identity.requireManager(client, scope);
       const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active", [scope.workspaceId, request.params.userId]);
       if (member.rows[0]?.role === "owner") throw new Failure(409, "OWNER_PROTECTED", "An owner cannot be removed through this endpoint.");
-      if (member.rows[0]?.role === "admin") await identity.requireManager(client, scope, true);
+      if (member.rows[0]?.role === "admin" && request.params.userId !== scope.userId) await identity.requireManager(client, scope, true);
       await client.query("UPDATE tantu.memberships SET active=false WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, request.params.userId]);
     });
     return { removed: true };
