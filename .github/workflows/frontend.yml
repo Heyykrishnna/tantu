@@ -49,6 +49,7 @@ jobs:
         with:
           name: frontend-production-build
           path: frontend/.next/
+          include-hidden-files: true
           retention-days: 7
           if-no-files-found: ignore
 
