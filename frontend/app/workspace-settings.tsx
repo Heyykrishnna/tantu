@@ -25,6 +25,21 @@ interface Member {
   active: boolean;
 }
 
+interface PendingInvitation {
+  id: string;
+  email: string;
+  role: string;
+  recordId: string | null;
+  permission: string;
+  expiresAt: string;
+}
+
+interface RecordOption {
+  id: string;
+  title: string;
+  kind: "task" | "page";
+}
+
 interface Quota {
   storageBytesUsed: number;
   storageBytesLimit: number;
@@ -69,6 +84,18 @@ function parseMember(value: unknown): Member {
     email: string(data.email),
     role: string(data.role),
     active: data.active,
+  };
+}
+
+function parsePendingInvitation(value: unknown): PendingInvitation {
+  const data = record(value);
+  return {
+    id: string(data.id),
+    email: string(data.email),
+    role: string(data.role),
+    recordId: data.recordId ? string(data.recordId) : null,
+    permission: string(data.permission),
+    expiresAt: string(data.expiresAt),
   };
 }
 
@@ -139,19 +166,29 @@ export default function WorkspaceSettings({
   const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
     if (typeof window === "undefined") return "general";
     const search = new URLSearchParams(window.location.search);
-    return search.get("invite") || search.get("invitation") || search.get("token")
+    return search.get("invite") ||
+      search.get("invitation") ||
+      search.get("token")
       ? "members"
       : "general";
   });
+
   const [members, setMembers] = useState<Member[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvitation[]>([]);
+  const [recordOptions, setRecordOptions] = useState<RecordOption[]>([]);
+  const [selectedRecordId, setSelectedRecordId] = useState("");
+  const [manualRecordId, setManualRecordId] = useState(false);
+
   const [quota, setQuota] = useState<Quota | null>(null);
   const [preferences, setPreferences] = useState<Preferences | null>(null);
   const [policy, setPolicy] = useState<EnterprisePolicy | null>(null);
 
   const [workspaceName, setWorkspaceName] = useState(workspace.name);
+  const [workspaceEmoji, setWorkspaceEmoji] = useState("⚡");
   const [memberSearch, setMemberSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [selectedInviteRole, setSelectedInviteRole] = useState<string>("member");
+  const [selectedInviteRole, setSelectedInviteRole] =
+    useState<string>("member");
 
   const [token, setToken] = useState("");
   const [acceptTokenInput, setAcceptTokenInput] = useState(() => {
@@ -198,6 +235,17 @@ export default function WorkspaceSettings({
     }
   }, [isManager, path]);
 
+  const refreshPendingInvites = useCallback(async () => {
+    if (!isManager) return;
+    try {
+      setPendingInvites(
+        await api(path + "/invitations", items(parsePendingInvitation)),
+      );
+    } catch {
+      setPendingInvites([]);
+    }
+  }, [isManager, path]);
+
   const loadQuota = useCallback(async () => {
     try {
       const data = await api(path + "/quotas", parseQuota);
@@ -213,9 +261,42 @@ export default function WorkspaceSettings({
       api(path + "/members", items(parseMember), { signal: controller.signal })
         .then(setMembers)
         .catch(() => {});
-      api(path + "/enterprise-policy", parsePolicy, { signal: controller.signal })
+      api(path + "/invitations", items(parsePendingInvitation), {
+        signal: controller.signal,
+      })
+        .then(setPendingInvites)
+        .catch(() => {});
+      api(path + "/enterprise-policy", parsePolicy, {
+        signal: controller.signal,
+      })
         .then(setPolicy)
         .catch(() => {});
+      Promise.all([
+        api<{ items: { id: string; title: string }[] }>(
+          path + "/tasks?limit=25",
+          (v) => v as { items: { id: string; title: string }[] },
+          { signal: controller.signal },
+        ).catch(() => ({ items: [] })),
+        api<{ items: { id: string; title: string }[] }>(
+          path + "/pages?limit=25",
+          (v) => v as { items: { id: string; title: string }[] },
+          { signal: controller.signal },
+        ).catch(() => ({ items: [] })),
+      ]).then(([tasksRes, pagesRes]) => {
+        const combined: RecordOption[] = [
+          ...tasksRes.items.map((t) => ({
+            id: t.id,
+            title: t.title,
+            kind: "task" as const,
+          })),
+          ...pagesRes.items.map((p) => ({
+            id: p.id,
+            title: p.title,
+            kind: "page" as const,
+          })),
+        ];
+        setRecordOptions(combined);
+      });
     }
     api(path + "/quotas", parseQuota, { signal: controller.signal })
       .then(setQuota)
@@ -232,21 +313,15 @@ export default function WorkspaceSettings({
     setBusy(true);
     setMessage("");
     try {
-      await api(
-        path,
-        (value) => string(record(value).name),
-        {
-          method: "PATCH",
-          csrf,
-          body: { name: workspaceName.trim() },
-        },
-      );
+      await api(path, (value) => string(record(value).name), {
+        method: "PATCH",
+        csrf,
+        body: { name: workspaceName.trim() },
+      });
       onWorkspaceRenamed?.(workspaceName.trim());
       showToast("Workspace name updated.");
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Rename failed.",
-      );
+      setMessage(error instanceof Error ? error.message : "Rename failed.");
     } finally {
       setBusy(false);
     }
@@ -260,7 +335,11 @@ export default function WorkspaceSettings({
     const data = new FormData(event.currentTarget);
     const roleValue = String(data.get("role"));
     const permissionValue = String(data.get("permission"));
-    const recordIdValue = String(data.get("recordId") || "").trim();
+    const recordIdValue = String(
+      manualRecordId
+        ? data.get("manualRecordId") || ""
+        : selectedRecordId || data.get("recordId") || "",
+    ).trim();
 
     if (roleValue === "guest" && !recordIdValue) {
       setMessage("Guests require a specific Record ID.");
@@ -285,10 +364,27 @@ export default function WorkspaceSettings({
       );
       setToken(generatedToken);
       showToast("Invitation created successfully.");
+      await refreshPendingInvites();
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Invitation failed.",
-      );
+      setMessage(error instanceof Error ? error.message : "Invitation failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function revokeInvitation(tokenHash: string) {
+    if (!window.confirm("Revoke this invitation? It will become invalid."))
+      return;
+    setBusy(true);
+    try {
+      await api(path + "/invitations/" + tokenHash, acknowledgment, {
+        method: "DELETE",
+        csrf,
+      });
+      showToast("Invitation revoked.");
+      await refreshPendingInvites();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Revocation failed.");
     } finally {
       setBusy(false);
     }
@@ -316,24 +412,29 @@ export default function WorkspaceSettings({
   }
 
   async function updateMemberRole(memberId: string, newRole: string) {
+    const memberName = members.find((m) => m.id === memberId)?.name ?? "member";
+    if (newRole === "owner") {
+      const confirmed = window.confirm(
+        `Transfer primary workspace ownership to ${memberName}? You will become an Administrator.`,
+      );
+      if (!confirmed) return;
+    }
     setBusy(true);
     setMessage("");
     try {
-      await api(
-        `${path}/members/${memberId}`,
-        acknowledgment,
-        {
-          method: "PATCH",
-          csrf,
-          body: { role: newRole },
-        },
+      await api(`${path}/members/${memberId}`, acknowledgment, {
+        method: "PATCH",
+        csrf,
+        body: { role: newRole },
+      });
+      showToast(
+        newRole === "owner"
+          ? "Workspace ownership transferred."
+          : "Member role updated.",
       );
-      showToast("Member role updated.");
       await refreshMembers();
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Role update failed.",
-      );
+      setMessage(error instanceof Error ? error.message : "Role update failed.");
     } finally {
       setBusy(false);
     }
@@ -361,9 +462,7 @@ export default function WorkspaceSettings({
         await refreshMembers();
       }
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Removal failed.",
-      );
+      setMessage(error instanceof Error ? error.message : "Removal failed.");
     } finally {
       setBusy(false);
     }
@@ -373,26 +472,24 @@ export default function WorkspaceSettings({
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const themeVal = String(data.get("theme")) as "system" | "light" | "dark";
-    const densityVal = String(data.get("density")) as "comfortable" | "compact";
+    const densityVal = String(data.get("density")) as
+      | "comfortable"
+      | "compact";
     const weekStartVal = String(data.get("weekStart")) as "sunday" | "monday";
     const timezoneVal = String(data.get("timezone") || "UTC");
 
     setBusy(true);
     try {
-      const updated = await api(
-        path + "/preferences",
-        parsePreferences,
-        {
-          method: "PATCH",
-          csrf,
-          body: {
-            theme: themeVal,
-            density: densityVal,
-            weekStart: weekStartVal,
-            timezone: timezoneVal,
-          },
+      const updated = await api(path + "/preferences", parsePreferences, {
+        method: "PATCH",
+        csrf,
+        body: {
+          theme: themeVal,
+          density: densityVal,
+          weekStart: weekStartVal,
+          timezone: timezoneVal,
         },
-      );
+      });
       setPreferences(updated);
       document.documentElement.dataset.theme =
         themeVal === "light" ? "light" : "dark";
@@ -429,9 +526,7 @@ export default function WorkspaceSettings({
       URL.revokeObjectURL(url);
       showToast("Workspace exported successfully.");
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Export failed.",
-      );
+      setMessage(error instanceof Error ? error.message : "Export failed.");
     } finally {
       setBusy(false);
     }
@@ -463,7 +558,9 @@ export default function WorkspaceSettings({
       await loadQuota();
     } catch (error) {
       setMessage(
-        error instanceof Error ? error.message : "Import failed. Provide valid JSON records array.",
+        error instanceof Error
+          ? error.message
+          : "Import failed. Provide valid JSON records array.",
       );
     } finally {
       setBusy(false);
@@ -474,17 +571,15 @@ export default function WorkspaceSettings({
     if (!isManager) return;
     setBusy(true);
     try {
-      const updated = await api(
-        path + "/enterprise-policy",
-        parsePolicy,
-        {
-          method: "PUT",
-          csrf,
-          body: { dlpEnabled: enabled },
-        },
-      );
+      const updated = await api(path + "/enterprise-policy", parsePolicy, {
+        method: "PUT",
+        csrf,
+        body: { dlpEnabled: enabled },
+      });
       setPolicy(updated);
-      showToast(enabled ? "Enterprise DLP enabled." : "Enterprise DLP disabled.");
+      showToast(
+        enabled ? "Enterprise DLP enabled." : "Enterprise DLP disabled.",
+      );
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Policy update failed.",
@@ -497,15 +592,11 @@ export default function WorkspaceSettings({
   async function triggerAuditExport() {
     setBusy(true);
     try {
-      await api(
-        path + "/audit-exports",
-        (v) => v,
-        {
-          method: "POST",
-          csrf,
-          body: { format: "ndjson" },
-        },
-      );
+      await api(path + "/audit-exports", (v) => v, {
+        method: "POST",
+        csrf,
+        body: { format: "ndjson" },
+      });
       showToast("Audit export scheduled.");
     } catch (error) {
       setMessage(
@@ -519,11 +610,10 @@ export default function WorkspaceSettings({
   async function disconnectGoogle() {
     setBusy(true);
     try {
-      await api(
-        path + "/providers/google/disconnect",
-        acknowledgment,
-        { method: "POST", csrf },
-      );
+      await api(path + "/providers/google/disconnect", acknowledgment, {
+        method: "POST",
+        csrf,
+      });
       showToast("Google Workspace disconnected.");
     } catch (error) {
       setMessage(
@@ -565,6 +655,8 @@ export default function WorkspaceSettings({
     { id: "connections", label: "Connected Apps", icon: "external" },
   ];
 
+  const emojiChoices = ["⚡", "🚀", "💡", "🎯", "📚", "🏢", "🛠️", "🌐"];
+
   return (
     <section className="grid gap-6">
       {toast && (
@@ -583,16 +675,18 @@ export default function WorkspaceSettings({
       <header className="border-b border-[#e4e6ef] pb-4 dark:border-[#303034]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-violet-500/10 text-base font-semibold text-violet-600 dark:bg-violet-400/15 dark:text-violet-300">
-              {workspace.name.slice(0, 1).toUpperCase()}
+            <span className="grid size-10 place-items-center rounded-xl bg-violet-500/10 text-xl font-semibold text-violet-600 dark:bg-violet-400/15 dark:text-violet-300">
+              {workspaceEmoji}
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className={`${headingClass} text-[22px]`}>{workspace.name}</h1>
+                <h1 className={`${headingClass} text-[22px]`}>
+                  {workspace.name}
+                </h1>
                 <Badge tone="violet">{workspace.role}</Badge>
               </div>
               <p className={`text-[11px] ${mutedClass}`}>
-                Workspace Settings &amp; Member Access
+                Workspace Settings, People &amp; Permissions
               </p>
             </div>
           </div>
@@ -631,12 +725,32 @@ export default function WorkspaceSettings({
         <div className="grid gap-6">
           <section className={`${panelClass} p-6`}>
             <header className="mb-4">
-              <h2 className={`${headingClass} text-[16px]`}>Workspace Profile</h2>
+              <h2 className={`${headingClass} text-[16px]`}>
+                Workspace Profile
+              </h2>
               <p className={`text-[11px] ${mutedClass}`}>
-                Change the name and basic metadata of your workspace.
+                Change the name and icon branding of your workspace.
               </p>
             </header>
             <form onSubmit={saveWorkspaceName} className="grid max-w-lg gap-4">
+              <Field label="Workspace Icon">
+                <div className="flex flex-wrap items-center gap-2">
+                  {emojiChoices.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => setWorkspaceEmoji(emoji)}
+                      className={`grid size-9 place-items-center rounded-lg border text-lg transition-transform hover:scale-110 ${
+                        workspaceEmoji === emoji
+                          ? "border-violet-500 bg-violet-50 dark:border-violet-400 dark:bg-violet-950/40"
+                          : "border-[#e4e6ef] dark:border-[#303034]"
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </Field>
               <Field label="Workspace Name">
                 <input
                   name="name"
@@ -661,9 +775,13 @@ export default function WorkspaceSettings({
 
           <section className={`${panelClass} p-6`}>
             <header className="mb-4">
-              <h2 className={`${headingClass} text-[16px]`}>Membership Overview</h2>
+              <h2 className={`${headingClass} text-[16px]`}>
+                Membership Overview
+              </h2>
               <p className={`text-[11px] ${mutedClass}`}>
-                You are currently a <span className="font-semibold">{workspace.role}</span> in this workspace.
+                You are currently a{" "}
+                <span className="font-semibold">{workspace.role}</span> in this
+                workspace.
               </p>
             </header>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -733,7 +851,8 @@ export default function WorkspaceSettings({
                 <Badge tone="violet">Full</Badge>
               </div>
               <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
-                Full workspace authority, deletion custody, and ownership management.
+                Full workspace custody, ownership transfer, and member
+                administration.
               </p>
             </div>
             <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
@@ -744,7 +863,8 @@ export default function WorkspaceSettings({
                 <Badge>Admin</Badge>
               </div>
               <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
-                Invite members, manage roles, adjust security policies, and integrations.
+                Invite members, manage roles, adjust security policies and
+                integrations.
               </p>
             </div>
             <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
@@ -755,7 +875,8 @@ export default function WorkspaceSettings({
                 <Badge tone="neutral">Standard</Badge>
               </div>
               <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
-                Create, organize, and edit all workspace tasks, pages, and projects.
+                Create, organize, and edit all workspace tasks, pages, and
+                projects.
               </p>
             </div>
             <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
@@ -766,7 +887,8 @@ export default function WorkspaceSettings({
                 <Badge tone="neutral">Scoped</Badge>
               </div>
               <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
-                External collaborator. Restricted exclusively to designated record ID.
+                External collaborator. Restricted exclusively to the designated
+                record ID.
               </p>
             </div>
           </section>
@@ -802,13 +924,21 @@ export default function WorkspaceSettings({
                           name="role"
                           aria-label="Role"
                           value={selectedInviteRole}
-                          onChange={(e) => setSelectedInviteRole(e.target.value)}
+                          onChange={(e) =>
+                            setSelectedInviteRole(e.target.value)
+                          }
                           className={inputClass}
                         >
-                          <option value="member">Member (Workspace wide)</option>
-                          <option value="guest">Guest (Single record only)</option>
+                          <option value="member">
+                            Member (Workspace wide)
+                          </option>
+                          <option value="guest">
+                            Guest (Single record only)
+                          </option>
                           {isOwner && (
-                            <option value="admin">Administrator (Settings + Members)</option>
+                            <option value="admin">
+                              Administrator (Settings + Members)
+                            </option>
                           )}
                         </select>
                       </Field>
@@ -825,24 +955,64 @@ export default function WorkspaceSettings({
                     </div>
 
                     {selectedInviteRole === "guest" && (
-                      <Field
-                        label={
-                          <span>
-                            Target Record ID{" "}
-                            <span className="text-[10px] text-rose-500">
-                              (Required for guest isolation)
-                            </span>
-                          </span>
-                        }
-                      >
-                        <input
-                          name="recordId"
-                          required
-                          placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
-                          pattern="[0-9a-f-]{36}"
-                          className={inputClass}
-                        />
-                      </Field>
+                      <div className="grid gap-2">
+                        {!manualRecordId ? (
+                          <Field
+                            label={
+                              <div className="flex items-center justify-between">
+                                <span>Target Record</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setManualRecordId(true)}
+                                  className="text-[10px] text-violet-600 underline dark:text-violet-400"
+                                >
+                                  Enter UUID manually
+                                </button>
+                              </div>
+                            }
+                          >
+                            <select
+                              value={selectedRecordId}
+                              onChange={(e) =>
+                                setSelectedRecordId(e.target.value)
+                              }
+                              className={inputClass}
+                            >
+                              <option value="">
+                                Choose a record to share...
+                              </option>
+                              {recordOptions.map((rec) => (
+                                <option key={rec.id} value={rec.id}>
+                                  [{rec.kind.toUpperCase()}]{" "}
+                                  {rec.title || "Untitled"}
+                                </option>
+                              ))}
+                            </select>
+                          </Field>
+                        ) : (
+                          <Field
+                            label={
+                              <div className="flex items-center justify-between">
+                                <span>Record UUID</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setManualRecordId(false)}
+                                  className="text-[10px] text-violet-600 underline dark:text-violet-400"
+                                >
+                                  Pick from list
+                                </button>
+                              </div>
+                            }
+                          >
+                            <input
+                              name="manualRecordId"
+                              placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+                              pattern="[0-9a-f-]{36}"
+                              className={inputClass}
+                            />
+                          </Field>
+                        )}
+                      </div>
                     )}
 
                     <div className="border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
@@ -873,7 +1043,9 @@ export default function WorkspaceSettings({
                           <Button
                             variant="primary"
                             size="sm"
-                            onClick={() => void copyLink(inviteLink, "Invite link")}
+                            onClick={() =>
+                              void copyLink(inviteLink, "Invite link")
+                            }
                           >
                             <Icon name="check" className="size-3.5" />
                             Copy Link
@@ -911,7 +1083,8 @@ export default function WorkspaceSettings({
               </header>
               <div className="p-5 sm:p-6">
                 <p className={`mb-4 text-[11px] leading-relaxed ${mutedClass}`}>
-                  Have an invitation token for this account? Paste the token below to join this workspace.
+                  Have an invitation token for this account? Paste the token
+                  below to join this workspace.
                 </p>
                 <form onSubmit={join} className="grid gap-4">
                   <Field label="Invitation Token">
@@ -935,11 +1108,55 @@ export default function WorkspaceSettings({
             </section>
           </div>
 
+          {isManager && pendingInvites.length > 0 && (
+            <section className={`${panelClass} overflow-hidden`}>
+              <header className="flex items-center justify-between border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
+                <div className="flex items-center gap-2">
+                  <Icon name="clock" className="size-4 text-amber-500" />
+                  <h3 className="text-[13px] font-medium">
+                    Pending Invitations
+                  </h3>
+                </div>
+                <Badge tone="neutral">{pendingInvites.length} pending</Badge>
+              </header>
+              <ul className="divide-y divide-[#e6e9f1] dark:divide-[#2e2e32]">
+                {pendingInvites.map((inv) => (
+                  <li
+                    key={inv.id}
+                    className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5"
+                  >
+                    <div>
+                      <span className="text-[12px] font-medium">
+                        {inv.email}
+                      </span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge tone="violet">{inv.role}</Badge>
+                        <span className={`text-[10px] ${mutedClass}`}>
+                          Permission: {inv.permission}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={busy}
+                      onClick={() => void revokeInvitation(inv.id)}
+                    >
+                      Revoke
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {isManager && (
             <section className={`${panelClass} overflow-hidden`}>
               <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-[13px] font-medium">Workspace Directory</h2>
+                  <h2 className="text-[13px] font-medium">
+                    Workspace Directory
+                  </h2>
                   <Badge tone="neutral">{members.length} members</Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
@@ -997,16 +1214,21 @@ export default function WorkspaceSettings({
                         {isOwner && item.role !== "owner" ? (
                           <select
                             value={item.role}
-                            onChange={(e) => void updateMemberRole(item.id, e.target.value)}
+                            onChange={(e) =>
+                              void updateMemberRole(item.id, e.target.value)
+                            }
                             aria-label={`Role for ${item.name}`}
                             className="rounded-md border border-[#e4e6ef] bg-transparent px-2 py-1 text-[11px] outline-none dark:border-[#303034]"
                           >
                             <option value="admin">Administrator</option>
                             <option value="member">Member</option>
                             <option value="guest">Guest</option>
+                            <option value="owner">Transfer Ownership</option>
                           </select>
                         ) : (
-                          <Badge tone={item.role === "owner" ? "violet" : "neutral"}>
+                          <Badge
+                            tone={item.role === "owner" ? "violet" : "neutral"}
+                          >
                             {item.role}
                           </Badge>
                         )}
@@ -1111,11 +1333,14 @@ export default function WorkspaceSettings({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
-                <span className={`block text-[10px] font-semibold uppercase ${mutedClass}`}>
+                <span
+                  className={`block text-[10px] font-semibold uppercase ${mutedClass}`}
+                >
                   Storage Used
                 </span>
                 <span className="text-sm font-semibold text-slate-800 dark:text-zinc-100">
-                  {formatBytes(quota?.storageBytesUsed ?? 0)} / {formatBytes(quota?.storageBytesLimit ?? 104857600)}
+                  {formatBytes(quota?.storageBytesUsed ?? 0)} /{" "}
+                  {formatBytes(quota?.storageBytesLimit ?? 104857600)}
                 </span>
                 <div className="mt-2.5 h-1.5 w-full rounded-full bg-slate-100 dark:bg-zinc-800">
                   <div
@@ -1135,7 +1360,9 @@ export default function WorkspaceSettings({
               </div>
 
               <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
-                <span className={`block text-[10px] font-semibold uppercase ${mutedClass}`}>
+                <span
+                  className={`block text-[10px] font-semibold uppercase ${mutedClass}`}
+                >
                   Record Limit
                 </span>
                 <span className="text-sm font-semibold text-slate-800 dark:text-zinc-100">
@@ -1159,11 +1386,14 @@ export default function WorkspaceSettings({
               </div>
 
               <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
-                <span className={`block text-[10px] font-semibold uppercase ${mutedClass}`}>
+                <span
+                  className={`block text-[10px] font-semibold uppercase ${mutedClass}`}
+                >
                   Automations Today
                 </span>
                 <span className="text-sm font-semibold text-slate-800 dark:text-zinc-100">
-                  {quota?.automationRunsToday ?? 0} / {quota?.automationLimitDaily ?? 500} runs
+                  {quota?.automationRunsToday ?? 0} /{" "}
+                  {quota?.automationLimitDaily ?? 500} runs
                 </span>
                 <div className="mt-2.5 h-1.5 w-full rounded-full bg-slate-100 dark:bg-zinc-800">
                   <div
@@ -1190,26 +1420,37 @@ export default function WorkspaceSettings({
                 Data Portability (Export &amp; Import)
               </h2>
               <p className={`text-[11px] ${mutedClass}`}>
-                Export your workspace in structured JSON or import records in bulk.
+                Export your workspace in structured JSON or import records in
+                bulk.
               </p>
             </header>
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
-                <h3 className="mb-1 text-[13px] font-semibold">Export Workspace</h3>
+                <h3 className="mb-1 text-[13px] font-semibold">
+                  Export Workspace
+                </h3>
                 <p className={`mb-4 text-[11px] ${mutedClass}`}>
-                  Download all tasks, pages, and projects in a compliant JSON package.
+                  Download all tasks, pages, and projects in a compliant JSON
+                  package.
                 </p>
-                <Button variant="secondary" disabled={busy} onClick={() => void exportWorkspace()}>
+                <Button
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() => void exportWorkspace()}
+                >
                   <Icon name="download" className="size-3.5" />
                   Export Workspace JSON
                 </Button>
               </div>
 
               <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
-                <h3 className="mb-1 text-[13px] font-semibold">Import Records</h3>
+                <h3 className="mb-1 text-[13px] font-semibold">
+                  Import Records
+                </h3>
                 <p className={`mb-3 text-[11px] ${mutedClass}`}>
-                  Paste JSON containing an array of records to create in this workspace.
+                  Paste JSON containing an array of records to create in this
+                  workspace.
                 </p>
                 <form onSubmit={importRecords} className="grid gap-3">
                   <textarea
@@ -1220,7 +1461,11 @@ export default function WorkspaceSettings({
                     className={`${inputClass} font-mono text-[11px]`}
                   />
                   <div>
-                    <Button type="submit" size="sm" disabled={busy || !importContent.trim()}>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={busy || !importContent.trim()}
+                    >
                       <Icon name="plus" className="size-3.5" />
                       Import Records
                     </Button>
@@ -1239,7 +1484,8 @@ export default function WorkspaceSettings({
               Enterprise Governance &amp; DLP
             </h2>
             <p className={`text-[11px] ${mutedClass}`}>
-              Automated Data Loss Prevention (DLP) scans text content for PII and secrets.
+              Automated Data Loss Prevention (DLP) scans text content for PII
+              and secrets.
             </p>
           </header>
 
@@ -1250,7 +1496,8 @@ export default function WorkspaceSettings({
                   Automated DLP Inspection
                 </strong>
                 <span className={`block text-[11px] ${mutedClass}`}>
-                  Detect and redact SSNs, API tokens, and payment card patterns.
+                  Detect and redact SSNs, API tokens, and payment card
+                  patterns.
                 </span>
               </div>
               <Button

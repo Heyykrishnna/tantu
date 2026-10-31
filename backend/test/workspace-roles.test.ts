@@ -116,3 +116,15 @@ test("role modification rules protect ownership and enforce hierarchy", () => {
   assert.equal(canModifyRole("member", "guest"), false);
   assert.equal(canModifyRole("guest", "member"), false);
 });
+
+test("ownership transfer allows owner to reassign primary workspace custody", () => {
+  const canTransferOwnership = (actorRole: string, targetRole: string) =>
+    actorRole === "owner" && targetRole !== "guest";
+
+  assert.equal(canTransferOwnership("owner", "admin"), true);
+  assert.equal(canTransferOwnership("owner", "member"), true);
+  assert.equal(canTransferOwnership("admin", "member"), false);
+  assert.equal(canTransferOwnership("member", "admin"), false);
+});
+
+

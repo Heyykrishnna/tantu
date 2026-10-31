@@ -347,8 +347,10 @@ export default function WorkspaceApp({
         (value) => string(record(value).id),
         { method: "POST", csrf, body: { name: String(data.get("name")) } },
       );
+      const spaceName = String(data.get("name") || "workspace");
       setWorkspaces(await api("/workspaces", items(workspace)));
       navigate("tasks", created);
+      setNotice(`Workspace “${spaceName}” created successfully.`);
     } catch (error) {
       handleError(error);
     } finally {

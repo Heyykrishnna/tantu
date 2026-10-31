@@ -76,6 +76,22 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
     });
     return reply.code(201).send({ token, expiresInSeconds: 259200 });
   });
+  app.get<{ Params: { workspaceId: string } }>("/api/v1/workspaces/:workspaceId/invitations", { schema: { params: workspaceParams } }, async (request) => {
+    const scope = await identity.scope(request, request.params.workspaceId);
+    return db.transaction(scope, async (client) => {
+      await identity.requireManager(client, scope);
+      const result = await client.query("SELECT token_hash AS id, email, role, record_id AS \"recordId\", permission, expires_at AS \"expiresAt\" FROM tantu.invitations WHERE workspace_id=$1 AND accepted_at IS NULL AND expires_at>now() ORDER BY expires_at DESC LIMIT 50", [scope.workspaceId]);
+      return { items: result.rows };
+    });
+  });
+  app.delete<{ Params: { workspaceId: string; tokenHash: string } }>("/api/v1/workspaces/:workspaceId/invitations/:tokenHash", { schema: { params: object({ workspaceId: uuid, tokenHash: text(64) }) } }, async (request) => {
+    const scope = await identity.scope(request, request.params.workspaceId, true);
+    await db.transaction(scope, async (client) => {
+      await identity.requireManager(client, scope);
+      await client.query("DELETE FROM tantu.invitations WHERE workspace_id=$1 AND token_hash=$2 AND accepted_at IS NULL", [scope.workspaceId, request.params.tokenHash]);
+    });
+    return { revoked: true };
+  });
   app.post<{ Body: { token: string; name?: string; password?: string } }>("/api/v1/invitations/accept", { schema: { body: object({ token: text(100), name: text(100), password }, ["token"]) } }, async (request, reply) => {
     identity.requireOrigin(request);
     const authenticated = cookies(request).has("tantu_session") ? await identity.session(request, true) : undefined;
@@ -100,13 +116,19 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
     });
     return { workspaceId: accepted.workspaceId, ...await identity.issueSession(accepted.userId, reply, cookies(request).get("tantu_session")) };
   });
-  app.patch<{ Params: { workspaceId: string; userId: string }; Body: { role: "admin" | "member" | "guest" } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }), body: object({ role: { enum: ["admin", "member", "guest"] } }, ["role"]) } }, async (request) => {
+  app.patch<{ Params: { workspaceId: string; userId: string }; Body: { role: "owner" | "admin" | "member" | "guest" } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }), body: object({ role: { enum: ["owner", "admin", "member", "guest"] } }, ["role"]) } }, async (request) => {
     const scope = await identity.scope(request, request.params.workspaceId, true);
     return db.transaction(scope, async (client) => {
       await identity.requireManager(client, scope, true);
       const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active", [scope.workspaceId, request.params.userId]);
       if (!member.rows[0]) throw new Failure(404, "NOT_FOUND", "Member not found.");
-      if (member.rows[0].role === "owner") throw new Failure(409, "OWNER_PROTECTED", "Owner role cannot be changed.");
+      if (request.body.role === "owner") {
+        if (request.params.userId === scope.userId) return { updated: true, role: "owner" };
+        await client.query("UPDATE tantu.memberships SET role='admin' WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, scope.userId]);
+        await client.query("UPDATE tantu.memberships SET role='owner' WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, request.params.userId]);
+        return { updated: true, role: "owner", transferred: true };
+      }
+      if (member.rows[0].role === "owner") throw new Failure(409, "OWNER_PROTECTED", "Owner role cannot be changed directly. Transfer ownership instead.");
       await client.query("UPDATE tantu.memberships SET role=$1 WHERE workspace_id=$2 AND user_id=$3", [request.body.role, scope.workspaceId, request.params.userId]);
       return { updated: true, role: request.body.role };
     });
