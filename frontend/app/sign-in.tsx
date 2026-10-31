@@ -26,16 +26,39 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
       ""
     );
   });
-  const [mode, setMode] = useState<"signin" | "register">("signin");
+  const [mode, setMode] = useState<"signin" | "register" | "verify">("signin");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [infoNotice, setInfoNotice] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+
+  async function resendCode() {
+    setBusy(true);
+    setMessage("");
+    try {
+      await api("/auth/signup/resend", record, {
+        method: "POST",
+        body: { email: pendingEmail },
+      });
+      setInfoNotice(`A fresh 6-character code was sent to ${pendingEmail}`);
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Failed to resend code.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setMessage("");
+    setInfoNotice("");
     const data = new FormData(event.currentTarget);
     try {
-      if (invitation)
+      if (invitation) {
         await api("/invitations/accept", record, {
           method: "POST",
           body: {
@@ -44,16 +67,33 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             password: String(data.get("password")),
           },
         });
-      else if (mode === "register")
-        await api("/auth/register", (value) => string(record(value).csrf), {
+        onSignedIn();
+      } else if (mode === "register") {
+        const emailVal = String(data.get("email")).toLowerCase().trim();
+        const nameVal = String(data.get("name")).trim();
+        const passVal = String(data.get("password"));
+        await api("/auth/signup/start", record, {
           method: "POST",
-          body: {
-            email: String(data.get("email")),
-            name: String(data.get("name")),
-            password: String(data.get("password")),
-          },
+          body: { email: emailVal, name: nameVal, password: passVal },
         });
-      else
+        setPendingEmail(emailVal);
+        setVerificationCode("");
+        setMode("verify");
+        setInfoNotice(`We sent a 6-character verification code to ${emailVal}`);
+      } else if (mode === "verify") {
+        await api(
+          "/auth/signup/verify",
+          (value) => string(record(value).csrf),
+          {
+            method: "POST",
+            body: {
+              email: pendingEmail,
+              code: verificationCode.toUpperCase().trim(),
+            },
+          },
+        );
+        onSignedIn();
+      } else {
         await api("/auth/login", (value) => string(record(value).csrf), {
           method: "POST",
           body: {
@@ -61,7 +101,8 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             password: String(data.get("password")),
           },
         });
-      onSignedIn();
+        onSignedIn();
+      }
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Authentication failed.",
@@ -154,7 +195,13 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           <span className="mb-6 inline-flex size-11 items-center justify-center rounded-xl border border-[#e5e2f4] bg-[#f4f2fc] text-[#9990d5] dark:border-[#42394e] dark:bg-[#30283b]">
             <Icon
               name={
-                invitation ? "users" : mode === "register" ? "users" : "lock"
+                invitation
+                  ? "users"
+                  : mode === "verify"
+                    ? "mail"
+                    : mode === "register"
+                      ? "users"
+                      : "lock"
               }
               className="size-5"
             />
@@ -162,85 +209,142 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           <h2 className={`${headingClass} mb-3 text-[27px]`}>
             {invitation
               ? "You’re invited."
-              : mode === "register"
-                ? "Create your account."
-                : "Welcome back."}
+              : mode === "verify"
+                ? "Check your email."
+                : mode === "register"
+                  ? "Create your account."
+                  : "Welcome back."}
           </h2>
           <p className={`mb-8 text-[12px] leading-relaxed ${mutedClass}`}>
             {invitation
               ? "Create your account and join your workspace."
-              : mode === "register"
-                ? "Get started with your private workspace in seconds."
-                : "Sign in to your workspace. Pick up where you left off."}
+              : mode === "verify"
+                ? `Enter the 6-character code sent to ${pendingEmail} to activate your account.`
+                : mode === "register"
+                  ? "We'll send a 6-character verification code to your email."
+                  : "Sign in to your workspace. Pick up where you left off."}
           </p>
           <form onSubmit={submit} className="grid gap-4">
-            {(invitation || mode === "register") && (
-              <Field label="Your name">
-                <input
-                  name="name"
-                  required
-                  autoComplete="name"
-                  maxLength={100}
-                  placeholder="Your full name"
-                  className={inputClass}
-                />
-              </Field>
-            )}
-            {!invitation && (
-              <Field label="Email address">
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="username"
-                  maxLength={254}
-                  placeholder="you@example.com"
-                  className={inputClass}
-                />
-              </Field>
-            )}
-            <Field label="Password">
-              <input
-                name="password"
-                type="password"
-                required
-                minLength={invitation || mode === "register" ? 12 : 1}
-                autoComplete={
-                  invitation || mode === "register"
-                    ? "new-password"
-                    : "current-password"
-                }
-                maxLength={256}
-                placeholder={
-                  invitation || mode === "register"
-                    ? "At least 12 characters"
-                    : "Enter your password"
-                }
-                className={inputClass}
-              />
-            </Field>
-            <Field
-              label={
-                <span>
-                  Invitation token{" "}
-                  <span
-                    className={`ml-1 text-[10px] font-normal ${mutedClass}`}
+            {mode === "verify" ? (
+              <>
+                <Field label="6-Character Verification Code">
+                  <input
+                    name="code"
+                    type="text"
+                    required
+                    maxLength={6}
+                    autoFocus
+                    autoComplete="one-time-code"
+                    value={verificationCode}
+                    onChange={(event) =>
+                      setVerificationCode(
+                        event.target.value
+                          .toUpperCase()
+                          .replace(/[^A-Z0-9]/g, ""),
+                      )
+                    }
+                    placeholder="e.g. K7N2P4"
+                    className={`${inputClass} font-mono text-center tracking-[0.25em] text-lg font-bold uppercase`}
+                  />
+                </Field>
+                <div className="flex items-center justify-between text-[11px]">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void resendCode()}
+                    className="font-medium text-violet-600 hover:underline dark:text-violet-400"
                   >
-                    optional
-                  </span>
-                </span>
-              }
-            >
-              <input
-                name="invitation"
-                value={invitation}
-                onChange={(event) => setInvitation(event.target.value)}
-                autoComplete="off"
-                maxLength={100}
-                placeholder="Have an invitation? Paste it here"
-                className={inputClass}
-              />
-            </Field>
+                    Didn’t receive code? Resend
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMessage("");
+                      setInfoNotice("");
+                      setMode("register");
+                    }}
+                    className="text-slate-500 hover:underline dark:text-zinc-400"
+                  >
+                    Change email
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                {(invitation || mode === "register") && (
+                  <Field label="Your name">
+                    <input
+                      name="name"
+                      required
+                      autoComplete="name"
+                      maxLength={100}
+                      placeholder="Your full name"
+                      className={inputClass}
+                    />
+                  </Field>
+                )}
+                {!invitation && (
+                  <Field label="Email address">
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      autoComplete="username"
+                      maxLength={254}
+                      placeholder="you@example.com"
+                      className={inputClass}
+                    />
+                  </Field>
+                )}
+                <Field label="Password">
+                  <input
+                    name="password"
+                    type="password"
+                    required
+                    minLength={invitation || mode === "register" ? 12 : 1}
+                    autoComplete={
+                      invitation || mode === "register"
+                        ? "new-password"
+                        : "current-password"
+                    }
+                    maxLength={256}
+                    placeholder={
+                      invitation || mode === "register"
+                        ? "At least 12 characters"
+                        : "Enter your password"
+                    }
+                    className={inputClass}
+                  />
+                </Field>
+                <Field
+                  label={
+                    <span>
+                      Invitation token{" "}
+                      <span
+                        className={`ml-1 text-[10px] font-normal ${mutedClass}`}
+                      >
+                        optional
+                      </span>
+                    </span>
+                  }
+                >
+                  <input
+                    name="invitation"
+                    value={invitation}
+                    onChange={(event) => setInvitation(event.target.value)}
+                    autoComplete="off"
+                    maxLength={100}
+                    placeholder="Have an invitation? Paste it here"
+                    className={inputClass}
+                  />
+                </Field>
+              </>
+            )}
+            {infoNotice && (
+              <Notice tone="neutral" role="status">
+                {infoNotice}
+              </Notice>
+            )}
             <Notice tone="error" role="alert">
               {message}
             </Notice>
@@ -254,23 +358,26 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                 ? "Please wait…"
                 : invitation
                   ? "Create account & join"
-                  : mode === "register"
-                    ? "Create account"
-                    : "Sign in"}
+                  : mode === "verify"
+                    ? "Verify & Create Workspace"
+                    : mode === "register"
+                      ? "Send Verification Code"
+                      : "Sign in"}
               <Icon name="arrow" className="size-4" />
             </Button>
-            {!invitation && (
+            {!invitation && mode !== "verify" && (
               <div className="mt-2 text-center">
                 <button
                   type="button"
                   onClick={() => {
                     setMessage("");
+                    setInfoNotice("");
                     setMode(mode === "signin" ? "register" : "signin");
                   }}
                   className="text-[12px] font-medium text-violet-600 hover:underline dark:text-violet-400"
                 >
                   {mode === "signin"
-                    ? "Don't have an account? Create one"
+                    ? "Don’t have an account? Create one"
                     : "Already have an account? Sign in"}
                 </button>
               </div>

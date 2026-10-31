@@ -34,7 +34,7 @@ function capture(options: RouteOptions) {
   }
 }
 const database = new Database({ max: 1 });
-createApp(readEnvironment({ NODE_ENV: "test" }), { database, settings: { origin: "http://localhost:3000", secureCookies: false, storagePath: "/tmp/tantu-contract-export-unused", signingSecret: "unused-contract-export-no-server-started", scannerHost: "127.0.0.1", scannerPort: 3310 } }, capture);
+createApp(readEnvironment({ NODE_ENV: "test" }), { database, settings: { origin: "http://localhost:3000", secureCookies: false, storagePath: "/tmp/tantu-contract-export-unused", signingSecret: "unused-contract-export-no-server-started", scannerHost: "127.0.0.1", scannerPort: 3310, smtp: { host: "127.0.0.1", port: 587, user: "", pass: "", fromName: "tantu", fromEmail: "support@dradix.dev" } } }, capture);
 await database.close();
 if (Object.keys(paths).length < 15) throw new Error("Application routes were not captured.");
 const output = JSON.stringify({ openapi: "3.1.0", info: { title: "tantu local foundation and connected-work API", version: "1.1.0", description: "Generated from registered request schemas and implemented canonical responses. No provider or production certification is implied. Some auxiliary responses intentionally remain described rather than falsely specified." }, components: { securitySchemes: { sessionCookie: { type: "apiKey", in: "cookie", name: "tantu_session" } } }, paths }, null, 2) + "\n";

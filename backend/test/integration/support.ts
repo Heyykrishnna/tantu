@@ -12,7 +12,22 @@ import { initializeJobs } from "../../src/workers/queue.js";
 import { Providers } from "../../src/modules/providers/service.js";
 import type { RuntimeSettings } from "../../src/config/runtime.js";
 
-export const settings = { origin: "http://localhost:3000", secureCookies: false, storagePath: "/private/tmp/tantu-l1a-test", signingSecret: "local-synthetic-qualification-secret-32", scannerHost: "127.0.0.1", scannerPort: 3310 };
+export const settings = {
+  origin: "http://localhost:3000",
+  secureCookies: false,
+  storagePath: "/private/tmp/tantu-l1a-test",
+  signingSecret: "local-synthetic-qualification-secret-32",
+  scannerHost: "127.0.0.1",
+  scannerPort: 3310,
+  smtp: {
+    host: "127.0.0.1",
+    port: 587,
+    user: "",
+    pass: "",
+    fromName: "tantu",
+    fromEmail: "support@dradix.dev",
+  },
+};
 export const testPassword = "synthetic test password only";
 
 export async function fixture(overrides: Partial<RuntimeSettings> = {}, providerFactory?: (database: Database, settings: RuntimeSettings) => Providers) {

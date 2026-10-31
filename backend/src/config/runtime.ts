@@ -1,6 +1,15 @@
 import { isAbsolute } from "node:path";
 import type { ServerConfig } from "./environment.js";
 
+export interface SmtpSettings {
+  readonly host: string;
+  readonly port: number;
+  readonly user: string;
+  readonly pass: string;
+  readonly fromName: string;
+  readonly fromEmail: string;
+}
+
 export interface RuntimeSettings {
   readonly origin: string;
   readonly secureCookies: boolean;
@@ -8,6 +17,7 @@ export interface RuntimeSettings {
   readonly signingSecret: string;
   readonly scannerHost: string;
   readonly scannerPort: number;
+  readonly smtp: SmtpSettings;
 }
 
 export function readRuntimeSettings(config: ServerConfig, environment = process.env): RuntimeSettings {
@@ -21,5 +31,19 @@ export function readRuntimeSettings(config: ServerConfig, environment = process.
   const scannerHost = environment.SCANNER_HOST ?? "127.0.0.1";
   const scannerPort = Number(environment.SCANNER_PORT ?? "3310");
   if (!scannerHost || !Number.isInteger(scannerPort) || scannerPort < 1 || scannerPort > 65535) throw new Error("Scanner host/port are invalid.");
-  return { origin: origin.origin, secureCookies: origin.protocol === "https:", storagePath, signingSecret, scannerHost, scannerPort };
+  const smtpHost = environment.SMTP_HOST ?? "smtp.gmail.com";
+  const smtpPort = Number(environment.SMTP_PORT ?? "587");
+  const smtpUser = environment.SMTP_USER ?? environment.SMTP_USERNAME ?? "";
+  const smtpPass = (environment.SMTP_PASS ?? environment.SMTP_PASSWORD ?? "").replace(/^["']|["']$/g, "");
+  const smtpFromName = environment.SMTP_FROM_NAME ?? "tantu";
+  const smtpFromEmail = environment.SMTP_FROM_EMAIL ?? environment.SENDER_EMAIL ?? "support@dradix.dev";
+  const smtp: SmtpSettings = {
+    host: smtpHost,
+    port: Number.isInteger(smtpPort) && smtpPort >= 1 && smtpPort <= 65535 ? smtpPort : 587,
+    user: smtpUser,
+    pass: smtpPass,
+    fromName: smtpFromName,
+    fromEmail: smtpFromEmail,
+  };
+  return { origin: origin.origin, secureCookies: origin.protocol === "https:", storagePath, signingSecret, scannerHost, scannerPort, smtp };
 }

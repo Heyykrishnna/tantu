@@ -452,7 +452,6 @@ export default function WorkspaceApp({
           className={`flex items-center justify-center gap-2 text-[12px] ${mutedClass}`}
         >
           <Icon name="refresh" className="size-3.5 motion-safe:animate-spin" />
-          Opening your workspace…
         </div>
       </main>
     );

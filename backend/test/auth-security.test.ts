@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { FastifyRequest } from "fastify";
+import type { SmtpSettings } from "../src/config/runtime.js";
 import { digest, hashPassword, secret, validatePassword, verifyPassword } from "../src/modules/workspace-access/credentials.js";
 import { cookies } from "../src/modules/workspace-access/service.js";
+import { generateVerificationCode, normalizeVerificationCode, buildVerificationEmail } from "../src/modules/mail/verification.js";
+import { sendMail, testOutbox } from "../src/modules/mail/smtp.js";
 import { Failure } from "../src/platform/failure.js";
 
 test("password policy validates minimum length, maximum byte length and character boundaries", () => {
@@ -150,4 +153,68 @@ test("origin verification enforces strict equality with configured origin", () =
   assert.equal(checkOrigin(undefined), false);
   assert.equal(checkOrigin("https://tantu.example.test:8080"), false);
   assert.equal(checkOrigin("https://tantu.example.test/subpath"), false);
+});
+
+test("email verification code generates 6-character random alphanumeric tokens", () => {
+  const codeOne = generateVerificationCode();
+  const codeTwo = generateVerificationCode();
+
+  assert.equal(codeOne.length, 6);
+  assert.equal(codeTwo.length, 6);
+  assert.match(codeOne, /^[A-Z0-9]{6}$/);
+  assert.match(codeTwo, /^[A-Z0-9]{6}$/);
+  assert.notEqual(codeOne, codeTwo);
+});
+
+test("verification code normalizer enforces 6-character alphanumeric bounds and trims casing", () => {
+  assert.equal(normalizeVerificationCode("  abc123  "), "ABC123");
+  assert.equal(normalizeVerificationCode("xy9z8w"), "XY9Z8W");
+
+  assert.throws(() => normalizeVerificationCode("12345"), (err) => err instanceof Failure && err.statusCode === 400 && err.code === "INVALID_CODE");
+  assert.throws(() => normalizeVerificationCode("1234567"), (err) => err instanceof Failure && err.statusCode === 400 && err.code === "INVALID_CODE");
+  assert.throws(() => normalizeVerificationCode(""), (err) => err instanceof Failure && err.statusCode === 400);
+  assert.throws(() => normalizeVerificationCode("!@#$%^"), (err) => err instanceof Failure && err.statusCode === 400);
+});
+
+test("buildVerificationEmail produces plaintext and html representations containing code", () => {
+  const email = buildVerificationEmail("Test User", "K9P4M2");
+  assert.ok(email.subject.includes("K9P4M2"));
+  assert.ok(email.text.includes("K9P4M2"));
+  assert.ok(email.text.includes("Test User"));
+  assert.ok(email.text.includes("15 minutes"));
+  assert.ok(email.html.includes("K9P4M2"));
+  assert.ok(email.html.includes("Test User"));
+  assert.ok(email.html.includes("tantu"));
+});
+
+test("sendMail captures delivered messages in testOutbox during test execution", async () => {
+  const previousEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "test";
+  try {
+    testOutbox.length = 0;
+    const dummySettings: SmtpSettings = {
+      host: "smtp.example.test",
+      port: 587,
+      user: "user@example.test",
+      pass: "secret",
+      fromEmail: "support@example.test",
+      fromName: "Tantu Test",
+    };
+
+    const message = {
+      to: "recipient@example.test",
+      subject: "Test Verification",
+      text: "Code: 123456",
+      html: "<p>Code: 123456</p>",
+    };
+
+    await sendMail(dummySettings, message);
+
+    assert.equal(testOutbox.length, 1);
+    assert.equal(testOutbox[0]?.to, "recipient@example.test");
+    assert.equal(testOutbox[0]?.subject, "Test Verification");
+    assert.equal(testOutbox[0]?.text, "Code: 123456");
+  } finally {
+    process.env.NODE_ENV = previousEnv;
+  }
 });
