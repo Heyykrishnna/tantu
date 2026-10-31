@@ -79,3 +79,4 @@ const server = createServer((socket) => {
 server.listen(port, host, () => {
   process.stdout.write(`Scanner service listening on ${host}:${port}\n`);
 });
+
