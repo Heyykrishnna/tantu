@@ -1,28 +1,6 @@
 import WorkspaceApp from "../workspace-app";
-import type { WorkspaceView } from "../workspace-navigation";
-
-const workspaceViews: readonly WorkspaceView[] = [
-  "tasks",
-  "pages",
-  "capture",
-  "promises",
-  "decisions",
-  "graph",
-  "planning",
-  "kits",
-  "meetings",
-  "integrations",
-  "enterprise",
-  "discovery",
-  "projects",
-  "calendar",
-  "mail",
-  "collections",
-  "rules",
-  "activity",
-  "settings",
-  "operations",
-];
+import { notFound } from "next/navigation";
+import { resolveView, workspaceViews } from "../../lib/navigation";
 
 export function generateStaticParams() {
   return workspaceViews.map((view) => ({ view }));
@@ -34,6 +12,7 @@ export default async function ViewPage({
   params: Promise<{ view: string }>;
 }) {
   const { view } = await params;
-  const initialView = workspaceViews.find((v) => v === view) ?? "tasks";
+  const initialView = resolveView(view);
+  if (!initialView) notFound();
   return <WorkspaceApp initialView={initialView} />;
 }

@@ -37,7 +37,8 @@ import RecordEditor from "./record-editor";
 import WorkspaceSettings from "./workspace-settings";
 import ActivityPanel from "./activity-panel";
 import WorkspaceNavigation from "./workspace-navigation";
-import type { WorkspaceView } from "./workspace-navigation";
+import { resolveView } from "../lib/navigation";
+import type { WorkspaceView } from "../lib/navigation";
 import WorkActions from "./work-actions";
 import RecordList, { RecordOverview } from "./record-list";
 import { Icon } from "../components/icon";
@@ -53,36 +54,6 @@ import {
 } from "../components/ui";
 
 type View = WorkspaceView;
-const WORKSPACE_VIEWS: readonly WorkspaceView[] = [
-  "tasks",
-  "pages",
-  "capture",
-  "promises",
-  "decisions",
-  "graph",
-  "planning",
-  "kits",
-  "meetings",
-  "integrations",
-  "enterprise",
-  "discovery",
-  "projects",
-  "calendar",
-  "mail",
-  "collections",
-  "rules",
-  "activity",
-  "settings",
-  "operations",
-];
-
-function resolveView(
-  candidate: string | null | undefined,
-): WorkspaceView | null {
-  if (!candidate) return null;
-  return WORKSPACE_VIEWS.find((v) => v === candidate) ?? null;
-}
-
 function forgetDrafts() {
   for (const key of Object.keys(sessionStorage))
     if (key.startsWith("tantu-draft:")) sessionStorage.removeItem(key);

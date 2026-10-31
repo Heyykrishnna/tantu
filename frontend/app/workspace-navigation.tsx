@@ -4,27 +4,7 @@ import type { User, Workspace } from "../lib/api";
 import { Icon } from "../components/icon";
 import { Brand, Button, Field, inputClass } from "../components/ui";
 
-export type WorkspaceView =
-  | "tasks"
-  | "pages"
-  | "capture"
-  | "promises"
-  | "decisions"
-  | "graph"
-  | "planning"
-  | "kits"
-  | "meetings"
-  | "integrations"
-  | "enterprise"
-  | "discovery"
-  | "projects"
-  | "calendar"
-  | "mail"
-  | "collections"
-  | "rules"
-  | "activity"
-  | "settings"
-  | "operations";
+import type { WorkspaceView } from "../lib/navigation";
 
 interface NavigationProps {
   user: User;

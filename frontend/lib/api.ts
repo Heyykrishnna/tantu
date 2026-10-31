@@ -1,4 +1,5 @@
 import type { CanonicalRecord, Document } from "./contracts";
+import { apiPath } from "./paths";
 
 export class ApiError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message); }
@@ -58,7 +59,7 @@ export function acknowledgment(value: unknown): void { record(value); }
 
 export async function api<T>(path: string, parser: (value: unknown) => T, options: { method?: string; csrf?: string; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
   let response: Response;
-  const endpoint = path.startsWith("/api/v1") ? path : `/api/v1${path.startsWith("/") ? path : `/${path}`}`;
+  const endpoint = apiPath(path);
   try {
     response = await fetch(endpoint, { method: options.method ?? "GET", credentials: "same-origin", cache: "no-store", headers: { ...(options.body === undefined ? {} : { "content-type": "application/json" }), ...(options.csrf ? { "x-csrf-token": options.csrf } : {}) }, ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }), ...(options.signal ? { signal: options.signal } : {}) });
   } catch (error) {
