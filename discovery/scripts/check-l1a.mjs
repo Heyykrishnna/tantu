@@ -22,12 +22,13 @@ for (const [name, executable, ...args] of stages) {
   const startedAt = Date.now();
   process.stdout.write(`Checking ${name}…\n`);
   const result = spawnSync(executable, args, { cwd: root, encoding: "utf8", timeout: 600_000, maxBuffer: 8 * 1024 * 1024, env: process.env });
-  await writeFile(new URL(name + ".log", artifacts), (result.stdout ?? "") + (result.stderr ?? "") + (result.error ? "\n" + result.error.message : ""));
+  const output = (result.stdout ?? "") + (result.stderr ?? "") + (result.error ? "\n" + result.error.message : "");
+  await writeFile(new URL(name + ".log", artifacts), output);
   const passed = result.status === 0 && !result.error;
   report.stages.push({ name, command: [executable, ...args], exitCode: result.status, result: passed ? "passed" : "failed", milliseconds: Date.now() - startedAt });
   report.result = passed ? "running" : "failed";
   await writeFile(new URL("report.json", artifacts), JSON.stringify(report, null, 2) + "\n");
-  if (!passed) { process.stderr.write(`Failed ${name}; inspect discovery/.artifacts/${phase}/${name}.log.\n`); process.exitCode = 1; break; }
+  if (!passed) { process.stderr.write(output.slice(-20_000) + `\nFailed ${name}; inspect discovery/.artifacts/${phase}/${name}.log.\n`); process.exitCode = 1; break; }
 }
 if (report.stages.length === stages.length && report.stages.every((stage) => stage.result === "passed")) report.result = "passed";
 await writeFile(new URL("report.json", artifacts), JSON.stringify(report, null, 2) + "\n");

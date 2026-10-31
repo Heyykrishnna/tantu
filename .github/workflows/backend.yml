@@ -45,8 +45,21 @@ jobs:
         run: npm --prefix backend run typecheck
       - name: Verify OpenAPI contract synchronization
         run: npm --prefix backend run contracts:check
-      - name: Run backend unit and integration test suite
+      - name: Run backend unit test suite
         run: npm --prefix backend run test
+      - name: Resolve installed PostgreSQL binaries
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          candidates = sorted(Path('/usr/lib/postgresql').glob('*/bin'), key=lambda path: int(path.parent.name))
+          if not candidates:
+              raise SystemExit('PostgreSQL command-line tools are required.')
+          with open(os.environ['GITHUB_ENV'], 'a') as target:
+              target.write('PG_BIN=' + str(candidates[-1]) + '\n')
+          PY
+      - name: Run backend PostgreSQL integration test suite
+        run: npm --prefix backend run test:integration
       - name: Build backend production distribution
         run: npm --prefix backend run build
 

@@ -64,4 +64,5 @@ jobs:
         with:
           name: playwright-artifacts
           path: discovery/.artifacts/
+          include-hidden-files: true
           if-no-files-found: ignore
