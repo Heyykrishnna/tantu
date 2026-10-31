@@ -35,20 +35,21 @@ ENV HOST=0.0.0.0
 RUN addgroup --system --gid 1001 nodejs && \
   adduser --system --uid 1001 tantu
 
-RUN mkdir -p /data/files && \
-  chown -R tantu:nodejs /data/files && \
+RUN mkdir -p /data/files /app/frontend/.next && \
+  chown -R tantu:nodejs /data/files /app && \
   chmod 700 /data/files
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/backend/package.json ./backend/
-COPY --from=builder /app/backend/dist ./backend/dist
-COPY --from=builder /app/backend/node_modules ./backend/node_modules
-COPY --from=builder /app/backend/migrations ./backend/migrations
-COPY --from=builder /app/backend/scripts ./backend/scripts
-COPY --from=builder /app/frontend/.next ./frontend/.next
-COPY --from=builder /app/frontend/public ./frontend/public
-COPY --from=builder /app/frontend/node_modules ./frontend/node_modules
-COPY --from=builder /app/frontend/package.json ./frontend/package.json
+COPY --chown=tantu:nodejs --from=builder /app/package.json ./
+COPY --chown=tantu:nodejs --from=builder /app/backend/package.json ./backend/
+COPY --chown=tantu:nodejs --from=builder /app/backend/dist ./backend/dist
+COPY --chown=tantu:nodejs --from=builder /app/backend/node_modules ./backend/node_modules
+COPY --chown=tantu:nodejs --from=builder /app/backend/migrations ./backend/migrations
+COPY --chown=tantu:nodejs --from=builder /app/backend/scripts ./backend/scripts
+COPY --chown=tantu:nodejs --from=builder /app/frontend/.next ./frontend/.next
+COPY --chown=tantu:nodejs --from=builder /app/frontend/public ./frontend/public
+COPY --chown=tantu:nodejs --from=builder /app/frontend/node_modules ./frontend/node_modules
+COPY --chown=tantu:nodejs --from=builder /app/frontend/package.json ./frontend/package.json
+COPY --chown=tantu:nodejs --from=builder /app/tooling ./tooling
 
 USER tantu
 

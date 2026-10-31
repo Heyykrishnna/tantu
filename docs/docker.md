@@ -74,6 +74,8 @@ The containerized stack consists of six coordinated services:
 ### 4. Backend (`tantu-backend`)
 
 - Fastify server listening on loopback and container network interfaces.
+- Runs with live reload (`tsx watch`) monitoring `backend/src/server.ts`.
+- Host source mounted from `./backend` with container `node_modules` isolated in an anonymous volume.
 - Runs as unprivileged `tantu` user (UID 1001).
 - Connects using `tantu_runtime` role. Verifies non-superuser and non-table-owner status.
 - Shared private storage volume `file_storage` mounted at `/data/files` with mode `0700`.
@@ -81,14 +83,16 @@ The containerized stack consists of six coordinated services:
 
 ### 5. Worker (`tantu-worker`)
 
-- Background worker executing `backend/dist/workers/server.js`.
+- Background worker executing `backend/src/workers/server.ts` with live reload (`tsx watch`).
+- Host source mounted from `./backend` with container `node_modules` isolated in an anonymous volume.
 - Processes asynchronous outbox events, file scan jobs, and provider synchronizations.
 - Mounts shared `file_storage` volume.
 - Synchronized startup dependent on `tantu-backend` health.
 
 ### 6. Frontend (`tantu-frontend`)
 
-- Next.js production build listening on port 3000.
+- Next.js development server listening on port 3000 with Hot Module Replacement (Fast Refresh).
+- Host source mounted from `./frontend` with container `node_modules` and `.next` build caches isolated in anonymous volumes.
 - Rewrites `/api/v1/*` requests to `http://backend:4000/api/v1/*`.
 - Healthcheck: HTTP root query at `http://127.0.0.1:3000`.
 

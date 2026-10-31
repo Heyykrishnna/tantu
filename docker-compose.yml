@@ -63,7 +63,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: tantu-backend
-    command: ["node", "backend/dist/server.js"]
+    command: ["node", "backend/node_modules/tsx/dist/cli.mjs", "watch", "--clear-screen=false", "backend/src/server.ts"]
     environment:
       NODE_ENV: development
       HOST: 0.0.0.0
@@ -75,8 +75,12 @@ services:
       FILE_SIGNING_SECRET: ${FILE_SIGNING_SECRET:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
       SCANNER_HOST: scanner
       SCANNER_PORT: 3310
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
     volumes:
       - file_storage:/data/files
+      - ./backend:/app/backend
+      - /app/backend/node_modules
     ports:
       - "${BACKEND_PORT:-4000}:4000"
     depends_on:
@@ -91,7 +95,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 5s
+      start_period: 15s
     restart: unless-stopped
     networks:
       - tantu_network
@@ -101,7 +105,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: tantu-worker
-    command: ["node", "backend/dist/workers/server.js"]
+    command: ["node", "backend/node_modules/tsx/dist/cli.mjs", "watch", "--clear-screen=false", "backend/src/workers/server.ts"]
     healthcheck:
       disable: true
     environment:
@@ -112,8 +116,11 @@ services:
       FILE_SIGNING_SECRET: ${FILE_SIGNING_SECRET:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
       SCANNER_HOST: scanner
       SCANNER_PORT: 3310
+      CHOKIDAR_USEPOLLING: "true"
     volumes:
       - file_storage:/data/files
+      - ./backend:/app/backend
+      - /app/backend/node_modules
     depends_on:
       backend:
         condition: service_healthy
@@ -126,12 +133,18 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: tantu-frontend
-    command: ["node", "frontend/node_modules/next/dist/bin/next", "start", "frontend"]
+    command: ["node", "frontend/node_modules/next/dist/bin/next", "dev", "frontend", "-H", "0.0.0.0", "-p", "3000"]
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       PORT: 3000
       HOST: 0.0.0.0
       BACKEND_ORIGIN: http://backend:4000
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+      - /app/frontend/.next
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
@@ -142,7 +155,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 5s
+      start_period: 15s
     restart: unless-stopped
     networks:
       - tantu_network
