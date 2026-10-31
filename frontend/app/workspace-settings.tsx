@@ -404,7 +404,9 @@ export default function WorkspaceSettings({
       onJoined();
     } catch (error) {
       setMessage(
-        error instanceof Error ? error.message : "Invitation acceptance failed.",
+        error instanceof Error
+          ? error.message
+          : "Invitation acceptance failed.",
       );
     } finally {
       setBusy(false);
@@ -434,7 +436,9 @@ export default function WorkspaceSettings({
       );
       await refreshMembers();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Role update failed.");
+      setMessage(
+        error instanceof Error ? error.message : "Role update failed.",
+      );
     } finally {
       setBusy(false);
     }
@@ -472,9 +476,7 @@ export default function WorkspaceSettings({
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const themeVal = String(data.get("theme")) as "system" | "light" | "dark";
-    const densityVal = String(data.get("density")) as
-      | "comfortable"
-      | "compact";
+    const densityVal = String(data.get("density")) as "comfortable" | "compact";
     const weekStartVal = String(data.get("weekStart")) as "sunday" | "monday";
     const timezoneVal = String(data.get("timezone") || "UTC");
 
@@ -904,7 +906,9 @@ export default function WorkspaceSettings({
                   <Badge>72-hour validity</Badge>
                 </header>
                 <div className="p-5 sm:p-6">
-                  <p className={`mb-5 text-[11px] leading-relaxed ${mutedClass}`}>
+                  <p
+                    className={`mb-5 text-[11px] leading-relaxed ${mutedClass}`}
+                  >
                     Create a direct invitation link with role-based permissions.
                   </p>
                   <form onSubmit={invite} className="grid gap-4">
@@ -1079,7 +1083,9 @@ export default function WorkspaceSettings({
             <section className={panelClass}>
               <header className="flex items-center gap-2 border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
                 <Icon name="mail" className="size-4 text-violet-500" />
-                <h2 className="text-[13px] font-medium">Accept an Invitation</h2>
+                <h2 className="text-[13px] font-medium">
+                  Accept an Invitation
+                </h2>
               </header>
               <div className="p-5 sm:p-6">
                 <p className={`mb-4 text-[11px] leading-relaxed ${mutedClass}`}>
@@ -1496,8 +1502,7 @@ export default function WorkspaceSettings({
                   Automated DLP Inspection
                 </strong>
                 <span className={`block text-[11px] ${mutedClass}`}>
-                  Detect and redact SSNs, API tokens, and payment card
-                  patterns.
+                  Detect and redact SSNs, API tokens, and payment card patterns.
                 </span>
               </div>
               <Button

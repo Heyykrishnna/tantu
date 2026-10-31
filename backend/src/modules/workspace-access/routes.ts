@@ -116,33 +116,33 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
     });
     return { workspaceId: accepted.workspaceId, ...await identity.issueSession(accepted.userId, reply, cookies(request).get("tantu_session")) };
   });
-  app.patch<{ Params: { workspaceId: string; userId: string }; Body: { role: "owner" | "admin" | "member" | "guest" } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }), body: object({ role: { enum: ["owner", "admin", "member", "guest"] } }, ["role"]) } }, async (request) => {
-    const scope = await identity.scope(request, request.params.workspaceId, true);
-    return db.transaction(scope, async (client) => {
-      await identity.requireManager(client, scope, true);
-      const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active", [scope.workspaceId, request.params.userId]);
-      if (!member.rows[0]) throw new Failure(404, "NOT_FOUND", "Member not found.");
-      if (request.body.role === "owner") {
-        if (request.params.userId === scope.userId) return { updated: true, role: "owner" };
-        await client.query("UPDATE tantu.memberships SET role='admin' WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, scope.userId]);
-        await client.query("UPDATE tantu.memberships SET role='owner' WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, request.params.userId]);
-        return { updated: true, role: "owner", transferred: true };
-      }
-      if (member.rows[0].role === "owner") throw new Failure(409, "OWNER_PROTECTED", "Owner role cannot be changed directly. Transfer ownership instead.");
-      await client.query("UPDATE tantu.memberships SET role=$1 WHERE workspace_id=$2 AND user_id=$3", [request.body.role, scope.workspaceId, request.params.userId]);
-      return { updated: true, role: request.body.role };
+    app.patch<{ Params: { workspaceId: string; userId: string }; Body: { role: "owner" | "admin" | "member" | "guest" } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }), body: object({ role: { enum: ["owner", "admin", "member", "guest"] } }, ["role"]) } }, async (request) => {
+      const scope = await identity.scope(request, request.params.workspaceId, true);
+      return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope, true);
+        const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active", [scope.workspaceId, request.params.userId]);
+        if (!member.rows[0]) throw new Failure(404, "NOT_FOUND", "Member not found.");
+        if (request.body.role === "owner") {
+          if (request.params.userId === scope.userId) return { updated: true, role: "owner" };
+          await client.query("UPDATE tantu.memberships SET role='admin' WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, scope.userId]);
+          await client.query("UPDATE tantu.memberships SET role='owner' WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, request.params.userId]);
+          return { updated: true, role: "owner", transferred: true };
+        }
+        if (member.rows[0].role === "owner") throw new Failure(409, "OWNER_PROTECTED", "Owner role cannot be changed directly. Transfer ownership instead.");
+        await client.query("UPDATE tantu.memberships SET role=$1 WHERE workspace_id=$2 AND user_id=$3", [request.body.role, scope.workspaceId, request.params.userId]);
+        return { updated: true, role: request.body.role };
+      });
     });
-  });
-  app.delete<{ Params: { workspaceId: string; userId: string } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }) } }, async (request) => {
-    const scope = await identity.scope(request, request.params.workspaceId, true);
-    await db.transaction(scope, async (client) => {
-      await client.query("SELECT id FROM tantu.workspaces WHERE id=$1 FOR UPDATE", [scope.workspaceId]);
-      if (request.params.userId !== scope.userId) await identity.requireManager(client, scope);
-      const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active", [scope.workspaceId, request.params.userId]);
-      if (member.rows[0]?.role === "owner") throw new Failure(409, "OWNER_PROTECTED", "An owner cannot be removed through this endpoint.");
-      if (member.rows[0]?.role === "admin" && request.params.userId !== scope.userId) await identity.requireManager(client, scope, true);
-      await client.query("UPDATE tantu.memberships SET active=false WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, request.params.userId]);
+    app.delete<{ Params: { workspaceId: string; userId: string } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }) } }, async (request) => {
+      const scope = await identity.scope(request, request.params.workspaceId, true);
+      await db.transaction(scope, async (client) => {
+        await client.query("SELECT id FROM tantu.workspaces WHERE id=$1 FOR UPDATE", [scope.workspaceId]);
+        if (request.params.userId !== scope.userId) await identity.requireManager(client, scope);
+        const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active", [scope.workspaceId, request.params.userId]);
+        if (member.rows[0]?.role === "owner") throw new Failure(409, "OWNER_PROTECTED", "An owner cannot be removed through this endpoint.");
+        if (member.rows[0]?.role === "admin" && request.params.userId !== scope.userId) await identity.requireManager(client, scope, true);
+        await client.query("UPDATE tantu.memberships SET active=false WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, request.params.userId]);
+      });
+      return { removed: true };
     });
-    return { removed: true };
-  });
-}
+  }
