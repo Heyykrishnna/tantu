@@ -16,11 +16,11 @@ ALTER TABLE l0.records FORCE ROW LEVEL SECURITY;
 CREATE POLICY current_scope ON l0.records USING (
   tenant = current_setting('l0.tenant', true)
   AND NOT deleted
-  AND EXISTS (SELECT 1 FROM l0.memberships m WHERE m.tenant = records.tenant AND m.actor = current_setting('l0.actor', true) AND m.active)
+  AND EXISTS (SELECT 1 FROM l0.memberships m WHERE m.tenant = current_setting('l0.tenant', true) AND m.actor = current_setting('l0.actor', true) AND m.active)
   AND (
     owner = current_setting('l0.actor', true)
     OR EXISTS (SELECT 1 FROM l0.grants g WHERE g.record_id = records.id AND g.actor = current_setting('l0.actor', true))
-    OR (visibility = 'shared' AND EXISTS (SELECT 1 FROM l0.memberships m WHERE m.tenant = records.tenant AND m.actor = current_setting('l0.actor', true) AND m.role <> 'guest'))
+    OR (visibility = 'shared' AND EXISTS (SELECT 1 FROM l0.memberships m WHERE m.tenant = current_setting('l0.tenant', true) AND m.actor = current_setting('l0.actor', true) AND m.role <> 'guest'))
   )
 );
 GRANT USAGE ON SCHEMA l0 TO l0_reader;
