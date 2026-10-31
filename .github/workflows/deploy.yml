@@ -16,6 +16,11 @@ on:
         required: false
         default: ''
         type: string
+      validation_only:
+        description: 'Validate build readiness without deploying to an environment'
+        required: true
+        default: true
+        type: boolean
   release:
     types: [published]
 
@@ -50,8 +55,12 @@ jobs:
         run: |
           echo "Production deployment aborted: confirmation string must be 'DEPLOY'."
           exit 1
+      - name: Summarize deployment validation
+        if: github.event_name == 'workflow_dispatch' && inputs.validation_only
+        run: echo 'Production builds verified. Validation-only mode does not deploy an application or perform a remote health check.' >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
+    if: github.event_name == 'release' || !inputs.validation_only
     needs: pre-deploy-validation
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -59,10 +68,8 @@ jobs:
       name: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy application artifacts
+      - name: Require a configured deployment adapter
         run: |
-          echo "Deploying to target environment: ${{ github.event.inputs.environment || 'production' }}"
-      - name: Health check verification
-        run: |
-          echo "Running post-deployment health check on /health/ready probe..."
+          echo '::error::No hosting deployment adapter is configured. Configure artifact transfer, service activation, and an actual /health/ready request before enabling deployment.'
+          exit 1
 

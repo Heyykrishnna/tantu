@@ -7,6 +7,7 @@ on:
       - 'contracts/**'
       - 'package.json'
       - '.nvmrc'
+      - 'tooling/**'
       - '.github/workflows/backend.yml'
   pull_request:
     paths:
@@ -14,6 +15,7 @@ on:
       - 'contracts/**'
       - 'package.json'
       - '.nvmrc'
+      - 'tooling/**'
       - '.github/workflows/backend.yml'
   workflow_dispatch:
 

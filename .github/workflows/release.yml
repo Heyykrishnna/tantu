@@ -8,8 +8,13 @@ on:
     inputs:
       tag_name:
         description: 'Release tag name (e.g. v1.2.0)'
-        required: true
+        required: false
         type: string
+      publish:
+        description: 'Publish a release after validating an existing version tag'
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -25,6 +30,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+      - name: Validate release tag before publication
+        if: github.event_name == 'push' || inputs.publish
+        env:
+          RELEASE_TAG: ${{ inputs.tag_name || github.ref_name }}
+        run: |
+          node -e 'if (!/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(process.env.RELEASE_TAG)) throw new Error("A semantic version tag is required for publication.")'
+          test "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
       - name: Build release archives
         run: |
           npm run setup
@@ -33,7 +45,18 @@ jobs:
         run: |
           tar -czf tantu-release.tar.gz backend/dist frontend/.next package.json
           sha256sum tantu-release.tar.gz > tantu-release.tar.gz.sha256
+          sha256sum -c tantu-release.tar.gz.sha256
+      - name: Preserve verified release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate-${{ github.sha }}
+          path: |
+            tantu-release.tar.gz
+            tantu-release.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
       - name: Create GitHub Release
+        if: github.event_name == 'push' || inputs.publish
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
@@ -44,4 +67,7 @@ jobs:
           files: |
             tantu-release.tar.gz
             tantu-release.tar.gz.sha256
+      - name: Summarize validation mode
+        if: github.event_name == 'workflow_dispatch' && !inputs.publish
+        run: echo 'Release candidate built and checksum verified. No tag or public release was created.' >> "$GITHUB_STEP_SUMMARY"
 

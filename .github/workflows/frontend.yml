@@ -6,12 +6,14 @@ on:
       - 'frontend/**'
       - 'package.json'
       - '.nvmrc'
+      - 'tooling/**'
       - '.github/workflows/frontend.yml'
   pull_request:
     paths:
       - 'frontend/**'
       - 'package.json'
       - '.nvmrc'
+      - 'tooling/**'
       - '.github/workflows/frontend.yml'
   workflow_dispatch:
 
@@ -39,6 +41,8 @@ jobs:
         run: npm --prefix frontend run lint
       - name: Run strict TypeScript check
         run: npm --prefix frontend run typecheck
+      - name: Run frontend route regression tests
+        run: npm --prefix frontend test
       - name: Build Next.js production bundle
         run: npm --prefix frontend run build
       - uses: actions/upload-artifact@v4
