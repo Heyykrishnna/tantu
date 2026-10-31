@@ -16,7 +16,7 @@
     "build": "tsc --project tsconfig.build.json",
     "start": "node --env-file-if-exists=.env dist/server.js",
     "migrate": "node --env-file-if-exists=.env.operator --import tsx scripts/migrate.ts",
-    "test:integration": "node --import tsx --test test/integration/*.test.ts",
+    "test:integration": "node --test-concurrency=1 --import tsx --test test/integration/*.test.ts",
     "bootstrap": "node --env-file-if-exists=.env.operator --import tsx scripts/bootstrap.ts",
     "worker": "node --env-file-if-exists=.env --import tsx src/workers/server.ts",
     "start:worker": "node --env-file-if-exists=.env dist/workers/server.js",

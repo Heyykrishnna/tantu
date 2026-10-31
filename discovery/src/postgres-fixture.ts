@@ -29,10 +29,11 @@ export async function startPostgresFixture() {
   const data = join(directory, "data");
   const socket = join(directory, "socket");
   let running = false;
-  const configuration = { host: socket, port: 55432, user: "l0_owner", database: "postgres" };
+  const port = 54000 + Math.floor(Math.random() * 5000);
+  const configuration = { host: socket, port, user: "l0_owner", database: "postgres" };
 
   async function startServer(): Promise<void> {
-    await execute(control, ["-D", data, "-l", join(directory, "postgres.log"), "-o", `-k ${socket} -p 55432 -c listen_addresses='' -c fsync=on -c shared_buffers=32MB -c max_connections=24`, "-w", "start"]);
+    await execute(control, ["-D", data, "-l", join(directory, "postgres.log"), "-o", `-k ${socket} -p ${port} -c listen_addresses='' -c fsync=on -c shared_buffers=32MB -c max_connections=24`, "-w", "start"]);
     running = true;
   }
 
