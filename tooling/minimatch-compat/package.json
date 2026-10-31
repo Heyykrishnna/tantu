@@ -1,0 +1,17 @@
+{
+  "name": "@tantu/minimatch-compat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Legacy callable and modern named APIs backed by patched minimatch.",
+  "main": "index.cjs",
+  "exports": {
+    ".": {
+      "require": "./index.cjs",
+      "import": "./index.mjs"
+    }
+  },
+  "files": ["index.cjs", "index.mjs"],
+  "dependencies": {
+    "minimatch-engine": "npm:minimatch@11.0.3"
+  }
+}

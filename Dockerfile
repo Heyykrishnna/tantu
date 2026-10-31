@@ -4,6 +4,10 @@ WORKDIR /app
 
 RUN apk add --no-cache libc6-compat python3 make g++
 
+COPY tooling/minimatch-compat ./tooling/minimatch-compat
+COPY frontend/.npmrc ./frontend/.npmrc
+COPY backend/.npmrc ./backend/.npmrc
+
 COPY package.json package-lock.json* ./
 COPY frontend/package.json frontend/package-lock.json* ./frontend/
 COPY backend/package.json backend/package-lock.json* ./backend/

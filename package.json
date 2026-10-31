@@ -14,7 +14,7 @@
     "dev:backend": "npm --prefix backend run dev",
     "lint": "npm --prefix frontend run lint && npm --prefix backend run lint && npm --prefix discovery run lint",
     "typecheck": "npm --prefix frontend run typecheck && npm --prefix backend run typecheck && npm --prefix discovery run typecheck",
-    "test": "npm --prefix frontend test && npm --prefix backend run test && npm --prefix discovery test",
+    "test": "npm run test:tooling && npm --prefix frontend test && npm --prefix backend run test && npm --prefix discovery test",
     "build": "npm --prefix frontend run build && npm --prefix backend run build",
     "start:frontend": "npm --prefix frontend run start",
     "start:backend": "npm --prefix backend run start",
@@ -28,6 +28,7 @@
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f"
+    "docker:logs": "docker compose logs -f",
+    "test:tooling": "node --test tooling/minimatch-compat/test/*.test.mjs"
   }
 }
