@@ -3,6 +3,7 @@ import process from "node:process";
 import { setTimeout } from "node:timers/promises";
 import { URL } from "node:url";
 import { Pool } from "pg";
+import { databaseConfiguration } from "../dist/platform/database/connection.js";
 import { migrate } from "../dist/platform/database/migrate.js";
 import { initializeJobs } from "../dist/workers/queue.js";
 import { Database } from "../dist/platform/database/database.js";
@@ -21,7 +22,7 @@ let retries = 30;
 let lastError = null;
 
 while (retries > 0 && !connected) {
-  const testPool = new Pool({ connectionString: migrationUrl, connectionTimeoutMillis: 2000 });
+  const testPool = new Pool(databaseConfiguration({ connectionString: migrationUrl, max: 1 }, true));
   try {
     await testPool.query("SELECT 1");
     connected = true;
@@ -39,7 +40,7 @@ if (!connected) {
   process.exit(1);
 }
 
-const migrationPool = new Pool({ connectionString: migrationUrl, max: 1 });
+const migrationPool = new Pool(databaseConfiguration({ connectionString: migrationUrl, max: 1 }, true));
 try {
   await migrate(migrationPool);
   await initializeJobs(migrationPool);

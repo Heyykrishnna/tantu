@@ -2,6 +2,8 @@
 
 This document describes the containerized architecture for tantu, including service synchronization, security boundaries, and local orchestration using Docker Compose.
 
+For hosted PostgreSQL, set `DATABASE_URL` and `MIGRATION_DATABASE_URL` in the ignored root `.env`. The API and worker share the runtime URL; the migrator uses the separate owner URL. See the [Neon connection and migration guide](neon.md). The local PostgreSQL volume remains available as a fallback, and file storage stays in the existing shared volume.
+
 ## Architecture
 
 The containerized stack consists of six coordinated services:

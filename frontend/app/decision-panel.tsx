@@ -75,7 +75,7 @@ export default function DecisionPanel({
   useEffect(() => {
     const controller = new AbortController();
     api<{ decisions: DecisionItem[] }>(
-      `/api/v1/workspaces/${workspaceId}/decisions`,
+      `/workspaces/${workspaceId}/decisions`,
       (v) => v as { decisions: DecisionItem[] },
       { signal: controller.signal },
     )
@@ -98,7 +98,7 @@ export default function DecisionPanel({
   function loadDecisions() {
     setBusy(true);
     api<{ decisions: DecisionItem[] }>(
-      `/api/v1/workspaces/${workspaceId}/decisions`,
+      `/workspaces/${workspaceId}/decisions`,
       (v) => v as { decisions: DecisionItem[] },
     )
       .then((res) => {
@@ -120,16 +120,16 @@ export default function DecisionPanel({
     setBusy(true);
     setError("");
     api<{ decision: DecisionItem }>(
-      `/api/v1/workspaces/${workspaceId}/decisions`,
+      `/workspaces/${workspaceId}/decisions`,
       (v) => v as { decision: DecisionItem },
       {
         method: "POST",
         csrf,
-        body: JSON.stringify({
+        body: {
           title: newTitle.trim(),
           rationale: newRationale.trim(),
           decisionDate: newDate,
-        }),
+        },
       },
     )
       .then((res) => {
@@ -160,15 +160,15 @@ export default function DecisionPanel({
     setBusy(true);
     setError("");
     api<{ decision: DecisionItem }>(
-      `/api/v1/workspaces/${workspaceId}/decisions/${supersedeTarget.id}/supersede`,
+      `/workspaces/${workspaceId}/decisions/${supersedeTarget.id}/supersede`,
       (v) => v as { decision: DecisionItem },
       {
         method: "POST",
         csrf,
-        body: JSON.stringify({
+        body: {
           title: supersedeTitle.trim(),
           rationale: supersedeRationale.trim(),
-        }),
+        },
       },
     )
       .then(() => {
@@ -190,7 +190,7 @@ export default function DecisionPanel({
     setSelectedDecision(decision);
     setShowHistory(true);
     api<{ revisions: DecisionRevision[] }>(
-      `/api/v1/workspaces/${workspaceId}/decisions/${decision.id}/revisions`,
+      `/workspaces/${workspaceId}/decisions/${decision.id}/revisions`,
       (v) => v as { revisions: DecisionRevision[] },
     )
       .then((res) => {

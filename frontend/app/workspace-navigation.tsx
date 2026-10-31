@@ -87,7 +87,7 @@ export default function WorkspaceNavigation({
           <select
             aria-label="Switch workspace"
             value={workspaceId}
-            onChange={(event) => onNavigate("tasks", event.target.value)}
+            onChange={(event) => onNavigate(view, event.target.value)}
             className="w-full cursor-pointer appearance-none bg-transparent pr-5 text-[12px] font-medium text-[#344056] outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-violet-400 dark:text-[#ededf2] dark:scheme-dark"
           >
             <option value="" disabled>
@@ -138,9 +138,13 @@ export default function WorkspaceNavigation({
               ["activity", "Activity"],
             ] as const
           ).map(([target, label]) => (
-            <button
+            <Link
               key={target}
-              onClick={() => onNavigate(target)}
+              href={workspaceId ? `/${target}?w=${workspaceId}` : `/${target}`}
+              onClick={(event) => {
+                event.preventDefault();
+                onNavigate(target);
+              }}
               aria-current={view === target ? "page" : undefined}
               className={`flex h-9 items-center gap-2.5 rounded-lg px-3 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-violet-400 motion-reduce:transition-none ${view === target ? "bg-white font-medium text-[#424b73] shadow-xs dark:bg-[#2c2c30] dark:text-[#eeeef4] dark:shadow-none" : "hover:bg-white/60 hover:text-[#35405b] dark:hover:bg-[#222225] dark:hover:text-[#dddde5]"}`}
             >
@@ -172,7 +176,7 @@ export default function WorkspaceNavigation({
                   className="ml-auto size-1.5 rounded-full bg-[#9490e8]"
                 />
               )}
-            </button>
+            </Link>
           ))}
         </nav>
         <p className="mb-2 mt-7 px-3 text-[10px] font-medium tracking-[0.08em] text-[#69758b] dark:text-[#8b8b96]">
@@ -189,9 +193,13 @@ export default function WorkspaceNavigation({
               ...(manager ? [["operations", "Operations"] as const] : []),
             ] as const
           ).map(([target, label]) => (
-            <button
+            <Link
               key={target}
-              onClick={() => onNavigate(target)}
+              href={workspaceId ? `/${target}?w=${workspaceId}` : `/${target}`}
+              onClick={(event) => {
+                event.preventDefault();
+                onNavigate(target);
+              }}
               aria-current={view === target ? "page" : undefined}
               className={`flex min-h-9 items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ${view === target ? "bg-white font-medium text-[#424b73] shadow-xs dark:bg-[#2c2c30] dark:text-[#eeeef4] dark:shadow-none" : "hover:bg-white/60 dark:hover:bg-[#222225] dark:hover:text-[#dddde5]"}`}
             >
@@ -209,7 +217,7 @@ export default function WorkspaceNavigation({
                 }
               />
               {label}
-            </button>
+            </Link>
           ))}
         </nav>
         <details className="mt-4 rounded-lg px-3 py-2 text-[11px] open:bg-white/50 dark:open:bg-[#202023]">

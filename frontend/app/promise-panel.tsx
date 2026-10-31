@@ -81,12 +81,12 @@ export default function PromisePanel({
 
     Promise.all([
       api<{ promises: PromiseItem[] }>(
-        `/api/v1/workspaces/${workspaceId}/promises${queryStr}`,
+        `/workspaces/${workspaceId}/promises${queryStr}`,
         (v) => v as { promises: PromiseItem[] },
         { signal: controller.signal },
       ),
       api<{ members: { user: { id: string; name: string } }[] }>(
-        `/api/v1/workspaces/${workspaceId}/members`,
+        `/workspaces/${workspaceId}/members`,
         (v) => v as { members: { user: { id: string; name: string } }[] },
         { signal: controller.signal },
       ),
@@ -128,7 +128,7 @@ export default function PromisePanel({
       setBusy(true);
       setError("");
       const res = await api<{ promise: PromiseItem }>(
-        `/api/v1/workspaces/${workspaceId}/promises`,
+        `/workspaces/${workspaceId}/promises`,
         (v) => v as { promise: PromiseItem },
         {
           method: "POST",
@@ -164,7 +164,7 @@ export default function PromisePanel({
       setError("");
       const operationId = crypto.randomUUID();
       const res = await api<{ promise: PromiseItem }>(
-        `/api/v1/workspaces/${workspaceId}/promises/${promise.id}/confirm`,
+        `/workspaces/${workspaceId}/promises/${promise.id}/confirm`,
         (v) => v as { promise: PromiseItem },
         {
           method: "POST",
@@ -191,7 +191,7 @@ export default function PromisePanel({
       setBusy(true);
       setError("");
       const res = await api<{ promise: PromiseItem }>(
-        `/api/v1/workspaces/${workspaceId}/promises/${outcomeModal.id}`,
+        `/workspaces/${workspaceId}/promises/${outcomeModal.id}`,
         (v) => v as { promise: PromiseItem },
         {
           method: "PATCH",

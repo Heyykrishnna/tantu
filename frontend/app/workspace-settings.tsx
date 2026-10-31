@@ -365,7 +365,7 @@ export default function WorkspaceSettings({
               try {
                 setBusy(true);
                 const res = await api<{ job: { payload: unknown } }>(
-                  `/api/v1/workspaces/${workspace.id}/export`,
+                  `/workspaces/${workspace.id}/export`,
                   (v) => v as { job: { payload: unknown } },
                   { method: "POST", csrf }
                 );
@@ -439,7 +439,7 @@ export default function WorkspaceSettings({
               try {
                 setBusy(true);
                 await api(
-                  `/api/v1/workspaces/${workspace.id}/providers/google/disconnect`,
+                  `/workspaces/${workspace.id}/providers/google/disconnect`,
                   (v) => v,
                   { method: "POST", csrf }
                 );

@@ -82,7 +82,7 @@ export default function RulesPanel({
   useEffect(() => {
     const controller = new AbortController();
     api<{ rules: AutomationRule[] }>(
-      `/api/v1/workspaces/${workspaceId}/rules`,
+      `/workspaces/${workspaceId}/rules`,
       (v) => v as { rules: AutomationRule[] },
       { signal: controller.signal }
     )
@@ -107,7 +107,7 @@ export default function RulesPanel({
       const conditions: RuleCondition[] = conditionVal ? [{ field: conditionField, operator: conditionOp, value: conditionVal }] : [];
       const actions: RuleAction[] = [{ type: actionType, value: actionValue }];
       const res = await api<{ rule: AutomationRule }>(
-        `/api/v1/workspaces/${workspaceId}/rules`,
+        `/workspaces/${workspaceId}/rules`,
         (v) => v as { rule: AutomationRule },
         {
           method: "POST",
@@ -136,7 +136,7 @@ export default function RulesPanel({
     try {
       setBusy(true);
       const res = await api<{ rule: AutomationRule }>(
-        `/api/v1/workspaces/${workspaceId}/rules/${rule.id}`,
+        `/workspaces/${workspaceId}/rules/${rule.id}`,
         (v) => v as { rule: AutomationRule },
         {
           method: "PATCH",
@@ -160,7 +160,7 @@ export default function RulesPanel({
     try {
       setBusy(true);
       await api(
-        `/api/v1/workspaces/${workspaceId}/rules/${ruleId}`,
+        `/workspaces/${workspaceId}/rules/${ruleId}`,
         (v) => v,
         {
           method: "DELETE",
@@ -182,7 +182,7 @@ export default function RulesPanel({
     try {
       setBusy(true);
       const res = await api<{ runs: AutomationRun[] }>(
-        `/api/v1/workspaces/${workspaceId}/rules/${rule.id}/runs`,
+        `/workspaces/${workspaceId}/rules/${rule.id}/runs`,
         (v) => v as { runs: AutomationRun[] }
       );
       setSelectedRuleRuns({ rule, runs: res.runs });

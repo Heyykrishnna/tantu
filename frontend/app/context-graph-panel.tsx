@@ -65,7 +65,7 @@ export default function ContextGraphPanel({
   useEffect(() => {
     const controller = new AbortController();
     api<{ nodes: ContextNodeItem[]; edges: ContextEdgeItem[] }>(
-      `/api/v1/workspaces/${workspaceId}/context-graph`,
+      `/workspaces/${workspaceId}/context-graph`,
       (v) => v as { nodes: ContextNodeItem[]; edges: ContextEdgeItem[] },
       { signal: controller.signal },
     )
@@ -91,7 +91,7 @@ export default function ContextGraphPanel({
   function loadGraph() {
     setBusy(true);
     api<{ nodes: ContextNodeItem[]; edges: ContextEdgeItem[] }>(
-      `/api/v1/workspaces/${workspaceId}/context-graph`,
+      `/workspaces/${workspaceId}/context-graph`,
       (v) => v as { nodes: ContextNodeItem[]; edges: ContextEdgeItem[] },
     )
       .then((res) => {
@@ -123,12 +123,12 @@ export default function ContextGraphPanel({
     setBusy(true);
     setError("");
     api<{ edge: ContextEdgeItem }>(
-      `/api/v1/workspaces/${workspaceId}/context-graph/edges`,
+      `/workspaces/${workspaceId}/context-graph/edges`,
       (v) => v as { edge: ContextEdgeItem },
       {
         method: "POST",
         csrf,
-        body: JSON.stringify({
+        body: {
           source: {
             entityType: sNode.entityType,
             entityId: sNode.entityId,
@@ -140,7 +140,7 @@ export default function ContextGraphPanel({
             title: tNode.title,
           },
           relationshipType: relType,
-        }),
+        },
       },
     )
       .then(() => {

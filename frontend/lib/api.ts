@@ -58,8 +58,9 @@ export function acknowledgment(value: unknown): void { record(value); }
 
 export async function api<T>(path: string, parser: (value: unknown) => T, options: { method?: string; csrf?: string; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
   let response: Response;
+  const endpoint = path.startsWith("/api/v1") ? path : `/api/v1${path.startsWith("/") ? path : `/${path}`}`;
   try {
-    response = await fetch("/api/v1" + path, { method: options.method ?? "GET", credentials: "same-origin", cache: "no-store", headers: { ...(options.body === undefined ? {} : { "content-type": "application/json" }), ...(options.csrf ? { "x-csrf-token": options.csrf } : {}) }, ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }), ...(options.signal ? { signal: options.signal } : {}) });
+    response = await fetch(endpoint, { method: options.method ?? "GET", credentials: "same-origin", cache: "no-store", headers: { ...(options.body === undefined ? {} : { "content-type": "application/json" }), ...(options.csrf ? { "x-csrf-token": options.csrf } : {}) }, ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }), ...(options.signal ? { signal: options.signal } : {}) });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") throw error;
     throw new ApiError(0, "CONNECTION_LOST", "Could not confirm the request. Retry without changing your edit to reuse its operation key.");

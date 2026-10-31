@@ -81,7 +81,7 @@ export default function CapturePanel({
   useEffect(() => {
     const controller = new AbortController();
     api<{ items: CaptureItem[] }>(
-      `/api/v1/workspaces/${workspaceId}/capture?status=inbox`,
+      `/workspaces/${workspaceId}/capture?status=inbox`,
       (v) => v as { items: CaptureItem[] },
       { signal: controller.signal },
     )
@@ -106,7 +106,7 @@ export default function CapturePanel({
       setBusy(true);
       setError("");
       const res = await api<{ item: CaptureItem }>(
-        `/api/v1/workspaces/${workspaceId}/capture`,
+        `/workspaces/${workspaceId}/capture`,
         (v) => v as { item: CaptureItem },
         {
           method: "POST",
@@ -131,7 +131,7 @@ export default function CapturePanel({
       setBusy(true);
       setError("");
       const data = await api<ReviewData>(
-        `/api/v1/workspaces/${workspaceId}/capture/${item.id}/review`,
+        `/workspaces/${workspaceId}/capture/${item.id}/review`,
         (v) => v as ReviewData,
       );
       setReviewing(data);
@@ -160,7 +160,7 @@ export default function CapturePanel({
       setError("");
       const operationId = crypto.randomUUID();
       const res = await api<{ task: { id: string }; capture: CaptureItem }>(
-        `/api/v1/workspaces/${workspaceId}/capture/${reviewing.capture.id}/convert`,
+        `/workspaces/${workspaceId}/capture/${reviewing.capture.id}/convert`,
         (v) => v as { task: { id: string }; capture: CaptureItem },
         {
           method: "POST",
@@ -195,7 +195,7 @@ export default function CapturePanel({
     try {
       setBusy(true);
       await api(
-        `/api/v1/workspaces/${workspaceId}/capture/${itemId}`,
+        `/workspaces/${workspaceId}/capture/${itemId}`,
         (v) => v,
         {
           method: "DELETE",

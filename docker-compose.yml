@@ -46,8 +46,8 @@ services:
     container_name: tantu-migrator
     command: ["node", "backend/scripts/docker-migrate.mjs"]
     environment:
-      MIGRATION_DATABASE_URL: postgresql://tantu_migrator:${MIGRATOR_PASSWORD:-migrator_dev_password}@postgres:5432/tantu
-      DATABASE_URL: postgresql://tantu_runtime:${RUNTIME_PASSWORD:-runtime_dev_password}@postgres:5432/tantu
+      MIGRATION_DATABASE_URL: ${MIGRATION_DATABASE_URL:-postgresql://tantu_migrator:${MIGRATOR_PASSWORD:-migrator_dev_password}@postgres:5432/tantu}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://tantu_runtime:${RUNTIME_PASSWORD:-runtime_dev_password}@postgres:5432/tantu}
       BOOTSTRAP_EMAIL: ${BOOTSTRAP_EMAIL:-admin@tantu.local}
       BOOTSTRAP_NAME: ${BOOTSTRAP_NAME:-Admin}
       BOOTSTRAP_PASSWORD: ${BOOTSTRAP_PASSWORD:-AdminPassword123!}
@@ -69,7 +69,7 @@ services:
       HOST: 0.0.0.0
       PORT: 4000
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      DATABASE_URL: postgresql://tantu_runtime:${RUNTIME_PASSWORD:-runtime_dev_password}@postgres:5432/tantu
+      DATABASE_URL: ${DATABASE_URL:-postgresql://tantu_runtime:${RUNTIME_PASSWORD:-runtime_dev_password}@postgres:5432/tantu}
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
       FILE_STORAGE_PATH: /data/files
       FILE_SIGNING_SECRET: ${FILE_SIGNING_SECRET:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
@@ -106,7 +106,7 @@ services:
       disable: true
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://tantu_runtime:${RUNTIME_PASSWORD:-runtime_dev_password}@postgres:5432/tantu
+      DATABASE_URL: ${DATABASE_URL:-postgresql://tantu_runtime:${RUNTIME_PASSWORD:-runtime_dev_password}@postgres:5432/tantu}
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
       FILE_STORAGE_PATH: /data/files
       FILE_SIGNING_SECRET: ${FILE_SIGNING_SECRET:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}

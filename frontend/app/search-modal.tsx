@@ -57,7 +57,7 @@ export default function SearchModal({
       setError("");
       const typeParam = typeFilter !== "all" ? `&type=${typeFilter}` : "";
       api<{ results: SearchResultItem[] }>(
-        `/api/v1/workspaces/${workspaceId}/search?q=${encodeURIComponent(query.trim())}${typeParam}`,
+        `/workspaces/${workspaceId}/search?q=${encodeURIComponent(query.trim())}${typeParam}`,
         (v) => v as { results: SearchResultItem[] },
         { signal: controller.signal }
       )

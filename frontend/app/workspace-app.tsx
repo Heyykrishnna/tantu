@@ -7,7 +7,6 @@ import {
   api,
   ApiError,
   canonical,
-  choice,
   items,
   page,
   record,
@@ -54,17 +53,62 @@ import {
 } from "../components/ui";
 
 type View = WorkspaceView;
+const WORKSPACE_VIEWS: readonly WorkspaceView[] = [
+  "tasks",
+  "pages",
+  "capture",
+  "promises",
+  "decisions",
+  "graph",
+  "planning",
+  "kits",
+  "meetings",
+  "integrations",
+  "enterprise",
+  "discovery",
+  "projects",
+  "calendar",
+  "mail",
+  "collections",
+  "rules",
+  "activity",
+  "settings",
+  "operations",
+];
+
+function resolveView(
+  candidate: string | null | undefined,
+): WorkspaceView | null {
+  if (!candidate) return null;
+  return WORKSPACE_VIEWS.find((v) => v === candidate) ?? null;
+}
+
 function forgetDrafts() {
   for (const key of Object.keys(sessionStorage))
     if (key.startsWith("tantu-draft:")) sessionStorage.removeItem(key);
 }
 
-export default function WorkspaceApp() {
+export default function WorkspaceApp({
+  initialView: initialViewProp,
+}: {
+  initialView?: WorkspaceView;
+} = {}) {
   const [user, setUser] = useState<User | null>(null);
   const [csrf, setCsrf] = useState("");
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [workspaceId, setWorkspaceId] = useState("");
-  const [view, setView] = useState<View>("tasks");
+  const [view, setView] = useState<View>(() => {
+    if (typeof window !== "undefined") {
+      const url = new URLSearchParams(window.location.search);
+      const queryView = resolveView(url.get("view"));
+      if (queryView) return queryView;
+      const pathView = resolveView(
+        window.location.pathname.replace(/^\//, "").split("/")[0],
+      );
+      if (pathView) return pathView;
+    }
+    return initialViewProp ?? "tasks";
+  });
   const [entries, setEntries] = useState<CanonicalRecord[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [selected, setSelected] = useState<CanonicalRecord | null>(null);
@@ -119,42 +163,17 @@ export default function WorkspaceApp() {
           spaces[0]?.id ??
           "",
       );
-      const initialView = url.get("view");
-      if (
-        initialView &&
-        [
-          "tasks",
-          "pages",
-          "capture",
-          "promises",
-          "rules",
-          "activity",
-          "settings",
-          "operations",
-          "projects",
-          "calendar",
-          "mail",
-          "collections",
-        ].includes(initialView)
-      )
-        setView(
-          choice(initialView, [
-            "tasks",
-            "pages",
-            "capture",
-            "promises",
-            "rules",
-            "activity",
-            "settings",
-            "operations",
-            "projects",
-            "calendar",
-            "mail",
-            "collections",
-          ]),
-        );
+      const pathView =
+        typeof window !== "undefined"
+          ? resolveView(
+              window.location.pathname.replace(/^\//, "").split("/")[0],
+            )
+          : null;
+      const targetView =
+        resolveView(url.get("view")) ?? pathView ?? initialViewProp;
+      if (targetView) setView(targetView);
     },
-    [],
+    [initialViewProp],
   );
   const authenticationFailure = useCallback(
     (error: unknown) => {
@@ -195,8 +214,22 @@ export default function WorkspaceApp() {
         setSearchModalOpen(true);
       }
     };
-    const back = () => window.location.reload();
-    window.addEventListener("popstate", back);
+    const handlePopState = () => {
+      const url = new URLSearchParams(window.location.search);
+      const pathView = resolveView(
+        window.location.pathname.replace(/^\//, "").split("/")[0],
+      );
+      const targetView = resolveView(url.get("view")) ?? pathView;
+      if (targetView) setView(targetView);
+      const targetSpace = url.get("w");
+      if (targetSpace) setWorkspaceId(targetSpace);
+      const recordId = url.get("r");
+      if (!recordId) {
+        setSelected(null);
+        setEditorOpen(false);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
     try {
       document.documentElement.dataset.theme =
         localStorage.getItem("tantu-theme") === "light" ? "light" : "dark";
@@ -206,7 +239,7 @@ export default function WorkspaceApp() {
     document.addEventListener("keydown", keyboard);
     return () => {
       document.removeEventListener("keydown", keyboard);
-      window.removeEventListener("popstate", back);
+      window.removeEventListener("popstate", handlePopState);
     };
   }, []);
 
@@ -224,11 +257,10 @@ export default function WorkspaceApp() {
         setEditorOpen(true);
         setEditorVersion((value) => value + 1);
         setMessage("");
-        window.history.pushState(
-          null,
-          "",
-          `/?w=${workspaceId}&view=${targetView}&r=${entry.id}`,
-        );
+        const url = workspaceId
+          ? `/${targetView}?w=${workspaceId}&r=${entry.id}`
+          : `/${targetView}?r=${entry.id}`;
+        window.history.pushState(null, "", url);
       } catch (error) {
         handleError(error);
       }
@@ -324,11 +356,8 @@ export default function WorkspaceApp() {
     setQuery("");
     setMessage("");
     setNotice("");
-    window.history.pushState(
-      null,
-      "",
-      space ? `/?w=${space}&view=${target}` : "/",
-    );
+    const url = space ? `/${target}?w=${space}` : `/${target}`;
+    window.history.pushState(null, "", url);
     dialog.current?.close();
     drawer.current?.close();
   }
@@ -386,11 +415,10 @@ export default function WorkspaceApp() {
     setEditorVersion((value) => value + 1);
     setListVersion((value) => value + 1);
     setNotice(entry ? "Saved. Your changes are stored." : "Record deleted.");
-    window.history.replaceState(
-      null,
-      "",
-      `/?w=${workspaceId}&view=${view}${entry ? "&r=" + entry.id : ""}`,
-    );
+    const url = workspaceId
+      ? `/${view}?w=${workspaceId}${entry ? "&r=" + entry.id : ""}`
+      : `/${view}${entry ? "?r=" + entry.id : ""}`;
+    window.history.replaceState(null, "", url);
   }
 
   const viewTitle = {
@@ -761,11 +789,10 @@ export default function WorkspaceApp() {
                       setSelected(null);
                       setEditorOpen(true);
                       setEditorVersion((value) => value + 1);
-                      window.history.replaceState(
-                        null,
-                        "",
-                        `/?w=${workspaceId}&view=${view}&new=1`,
-                      );
+                      const url = workspaceId
+                        ? `/${view}?w=${workspaceId}&new=1`
+                        : `/${view}?new=1`;
+                      window.history.replaceState(null, "", url);
                     }}
                   >
                     <Icon name="plus" className="size-4" />

@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 import type { PoolClient, PoolConfig } from "pg";
+import { databaseConfiguration } from "./connection.js";
 
 export interface Scope {
   readonly userId: string;
@@ -10,7 +11,7 @@ export class Database {
   readonly pool: Pool;
 
   constructor(configuration: PoolConfig) {
-    this.pool = new Pool({ max: 12, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 5000, statement_timeout: 10_000, ...configuration });
+    this.pool = new Pool({ max: 12, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 5000, statement_timeout: 10_000, ...databaseConfiguration(configuration) });
     this.pool.on("error", () => process.stderr.write("Database connection failed.\n"));
   }
 

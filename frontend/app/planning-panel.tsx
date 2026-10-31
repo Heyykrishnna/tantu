@@ -75,12 +75,12 @@ export default function PlanningPanel({
     const controller = new AbortController();
     Promise.all([
       api<{ plan: DailyPlanItem | null }>(
-        `/api/v1/workspaces/${workspaceId}/planning/daily-plan?date=${selectedDate}`,
+        `/workspaces/${workspaceId}/planning/daily-plan?date=${selectedDate}`,
         (v) => v as { plan: DailyPlanItem | null },
         { signal: controller.signal }
       ),
       api<{ weather: WorkloadWeatherItem }>(
-        `/api/v1/workspaces/${workspaceId}/planning/workload-weather?horizon=${weatherHorizon}`,
+        `/workspaces/${workspaceId}/planning/workload-weather?horizon=${weatherHorizon}`,
         (v) => v as { weather: WorkloadWeatherItem },
         { signal: controller.signal }
       ),
@@ -105,15 +105,15 @@ export default function PlanningPanel({
     setBusy(true);
     setError("");
     api<{ plan: DailyPlanItem }>(
-      `/api/v1/workspaces/${workspaceId}/planning/daily-plan`,
+      `/workspaces/${workspaceId}/planning/daily-plan`,
       (v) => v as { plan: DailyPlanItem },
       {
         method: "POST",
         csrf,
-        body: JSON.stringify({
+        body: {
           date: selectedDate,
           targetHours: Number(targetHours),
-        }),
+        },
       }
     )
       .then((res) => {
@@ -132,15 +132,15 @@ export default function PlanningPanel({
     setBusy(true);
     setError("");
     api<{ plan: DailyPlanItem }>(
-      `/api/v1/workspaces/${workspaceId}/planning/daily-plan/apply`,
+      `/workspaces/${workspaceId}/planning/daily-plan/apply`,
       (v) => v as { plan: DailyPlanItem },
       {
         method: "POST",
         csrf,
-        body: JSON.stringify({
+        body: {
           planId: plan.id,
           version: plan.version,
-        }),
+        },
       }
     )
       .then((res) => {

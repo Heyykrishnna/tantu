@@ -79,7 +79,7 @@ export default function KitsPanel({
   useEffect(() => {
     const controller = new AbortController();
     api<{ kits: KitItem[] }>(
-      `/api/v1/workspaces/${workspaceId}/kits`,
+      `/workspaces/${workspaceId}/kits`,
       (v) => v as { kits: KitItem[] },
       { signal: controller.signal }
     )
@@ -100,7 +100,7 @@ export default function KitsPanel({
   function loadKits() {
     setBusy(true);
     api<{ kits: KitItem[] }>(
-      `/api/v1/workspaces/${workspaceId}/kits`,
+      `/workspaces/${workspaceId}/kits`,
       (v) => v as { kits: KitItem[] }
     )
       .then((res) => {
@@ -140,17 +140,17 @@ export default function KitsPanel({
     };
 
     api<{ kit: KitItem }>(
-      `/api/v1/workspaces/${workspaceId}/kits`,
+      `/workspaces/${workspaceId}/kits`,
       (v) => v as { kit: KitItem },
       {
         method: "POST",
         csrf,
-        body: JSON.stringify({
+        body: {
           name: kitName.trim(),
           description: kitDesc.trim(),
           version: kitVersion.trim(),
           manifest,
-        }),
+        },
       }
     )
       .then((res) => {
@@ -172,7 +172,7 @@ export default function KitsPanel({
     setBusy(true);
     setError("");
     api<{ preview: PreviewData }>(
-      `/api/v1/workspaces/${workspaceId}/kits/${kitId}/preview`,
+      `/workspaces/${workspaceId}/kits/${kitId}/preview`,
       (v) => v as { preview: PreviewData }
     )
       .then((res) => {
@@ -195,12 +195,12 @@ export default function KitsPanel({
     setBusy(true);
     setError("");
     api<{ installed: boolean; appliedCount: number }>(
-      `/api/v1/workspaces/${workspaceId}/kits/${previewKit.kitId}/install`,
+      `/workspaces/${workspaceId}/kits/${previewKit.kitId}/install`,
       (v) => v as { installed: boolean; appliedCount: number },
       {
         method: "POST",
         csrf,
-        body: JSON.stringify({ choices }),
+        body: { choices },
       }
     )
       .then((res) => {
@@ -222,12 +222,12 @@ export default function KitsPanel({
     setFormulaResult(null);
 
     api<{ evaluation: { result: unknown; error: string | null; evaluatedType: string } }>(
-      `/api/v1/workspaces/${workspaceId}/formulas/evaluate`,
+      `/workspaces/${workspaceId}/formulas/evaluate`,
       (v) => v as { evaluation: { result: unknown; error: string | null; evaluatedType: string } },
       {
         method: "POST",
         csrf,
-        body: JSON.stringify({ expression: formulaExpr.trim() }),
+        body: { expression: formulaExpr.trim() },
       }
     )
       .then((res) => {

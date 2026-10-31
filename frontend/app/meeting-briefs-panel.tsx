@@ -81,12 +81,12 @@ export default function MeetingBriefsPanel({
     const controller = new AbortController();
     Promise.all([
       api<{ briefs: MeetingBriefItem[] }>(
-        `/api/v1/workspaces/${workspaceId}/meetings/briefs`,
+        `/workspaces/${workspaceId}/meetings/briefs`,
         (v) => v as { briefs: MeetingBriefItem[] },
         { signal: controller.signal }
       ),
       api<{ settings: AiSettingsItem }>(
-        `/api/v1/workspaces/${workspaceId}/ai/settings`,
+        `/workspaces/${workspaceId}/ai/settings`,
         (v) => v as { settings: AiSettingsItem },
         { signal: controller.signal }
       ),
@@ -114,15 +114,15 @@ export default function MeetingBriefsPanel({
     setBusy(true);
     setError("");
     api<{ settings: AiSettingsItem }>(
-      `/api/v1/workspaces/${workspaceId}/ai/settings`,
+      `/workspaces/${workspaceId}/ai/settings`,
       (v) => v as { settings: AiSettingsItem },
       {
         method: "PUT",
         csrf,
-        body: JSON.stringify({
+        body: {
           isEnabled: enabled,
           provider: settings.provider,
-        }),
+        },
       }
     )
       .then((res) => {
@@ -148,16 +148,16 @@ export default function MeetingBriefsPanel({
       : [];
 
     api<{ brief: MeetingBriefItem }>(
-      `/api/v1/workspaces/${workspaceId}/meetings/${eventId}/brief`,
+      `/workspaces/${workspaceId}/meetings/${eventId}/brief`,
       (v) => v as { brief: MeetingBriefItem },
       {
         method: "POST",
         csrf,
-        body: JSON.stringify({
+        body: {
           title: eventTitle.trim(),
           meetingDate,
           attendees,
-        }),
+        },
       }
     )
       .then((res) => {
