@@ -20,7 +20,7 @@ export function cookies(request: FastifyRequest): Map<string, string> {
 }
 
 export class Identity {
-  constructor(readonly database: Database, readonly settings: RuntimeSettings) {}
+  constructor(readonly database: Database, readonly settings: RuntimeSettings) { }
 
   requireOrigin(request: FastifyRequest): void {
     if (request.headers.origin !== this.settings.origin) throw new Failure(403, "ORIGIN_REJECTED", "Open the application at its configured address.");
@@ -77,12 +77,80 @@ export class Identity {
     if (!user || !valid) throw new Failure(401, "INVALID_CREDENTIALS", "Email or password is incorrect.");
     return user.id;
   }
+
+  async register(email: string, name: string, password: string, ip: string): Promise<{ userId: string; workspaceId: string }> {
+    const counts = await this.database.pool.query<{ attempts: number }>(
+      "INSERT INTO tantu.login_limits(key,attempts,reset_at) VALUES($1,1,now()+interval '15 minutes') ON CONFLICT(key) DO UPDATE SET attempts=CASE WHEN tantu.login_limits.reset_at<now() THEN 1 ELSE tantu.login_limits.attempts+1 END,reset_at=CASE WHEN tantu.login_limits.reset_at<now() THEN now()+interval '15 minutes' ELSE tantu.login_limits.reset_at END RETURNING attempts",
+      [digest("register:" + ip)],
+    );
+    if ((counts.rows[0]?.attempts ?? 31) > 30) throw new Failure(429, "RATE_LIMITED", "Too many account registrations from this network. Try again later.");
+    return this.database.transaction(undefined, async (client) => {
+      const existing = await client.query("SELECT id FROM tantu.users WHERE email=$1", [email.toLowerCase()]);
+      if (existing.rowCount) throw new Failure(409, "ACCOUNT_EXISTS", "An account with this email address already exists.");
+      const userId = await createAccount(client, email, name, password);
+      const workspaceName = `${name.trim()}'s Workspace`;
+      const workspace = await client.query<{ id: string }>("INSERT INTO tantu.workspaces(name) VALUES($1) RETURNING id", [workspaceName]);
+      const workspaceId = workspace.rows[0]?.id;
+      if (!workspaceId) throw new Error("Workspace creation failed.");
+      await client.query("INSERT INTO tantu.memberships(workspace_id,user_id,role) VALUES($1,$2,'owner')", [workspaceId, userId]);
+      return { userId, workspaceId };
+    });
+  }
+
+  async changePassword(userId: string, current: string, next: string, currentSessionToken: string): Promise<void> {
+    if (current === next) throw new Failure(400, "PASSWORD_REUSED", "New password must be different from current password.");
+    const user = await this.database.pool.query<{ password_hash: string }>("SELECT password_hash FROM tantu.users WHERE id=$1", [userId]);
+    const currentHash = user.rows[0]?.password_hash;
+    if (!currentHash || !(await verifyPassword(current, currentHash))) {
+      throw new Failure(401, "INVALID_CREDENTIALS", "Current password is incorrect.");
+    }
+    const nextHash = await hashPassword(next);
+    await this.database.transaction(undefined, async (client) => {
+      await client.query("UPDATE tantu.users SET password_hash=$1 WHERE id=$2", [nextHash, userId]);
+      await client.query("UPDATE tantu.sessions SET revoked_at=now() WHERE user_id=$1 AND token_hash<>$2 AND revoked_at IS NULL", [userId, digest(currentSessionToken)]);
+    });
+  }
+
+  async listSessions(userId: string, currentToken: string): Promise<Array<{ id: string; createdAt: string; expiresAt: string; current: boolean }>> {
+    const currentHash = digest(currentToken);
+    const result = await this.database.pool.query<{ token_hash: string; created_at: string; expires_at: string }>(
+      "SELECT token_hash,created_at,expires_at FROM tantu.sessions WHERE user_id=$1 AND revoked_at IS NULL AND expires_at>now() ORDER BY created_at DESC LIMIT 50",
+      [userId],
+    );
+    return result.rows.map((row) => ({
+      id: row.token_hash.slice(0, 16),
+      createdAt: row.created_at,
+      expiresAt: row.expires_at,
+      current: row.token_hash === currentHash,
+    }));
+  }
+
+  async revokeSession(userId: string, sessionPrefix: string): Promise<boolean> {
+    const cleanPrefix = sessionPrefix.replace(/[^a-f0-9]/gi, "");
+    if (cleanPrefix.length < 8) throw new Failure(400, "INVALID_SESSION_ID", "Session identifier is invalid.");
+    const result = await this.database.pool.query(
+      "UPDATE tantu.sessions SET revoked_at=now() WHERE user_id=$1 AND token_hash LIKE $2 || '%' AND revoked_at IS NULL",
+      [userId, cleanPrefix],
+    );
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async logoutAll(userId: string): Promise<void> {
+    await this.database.pool.query("UPDATE tantu.sessions SET revoked_at=now() WHERE user_id=$1 AND revoked_at IS NULL", [userId]);
+  }
 }
 
 export async function createAccount(client: PoolClient, email: string, name: string, password: string): Promise<string> {
   const passwordHash = await hashPassword(password);
-  const user = await client.query<{ id: string }>("INSERT INTO tantu.users(email,display_name,password_hash) VALUES($1,$2,$3) RETURNING id", [email.toLowerCase(), name, passwordHash]);
-  const id = user.rows[0]?.id;
-  if (!id) throw new Error("Account was not created.");
-  return id;
+  try {
+    const user = await client.query<{ id: string }>("INSERT INTO tantu.users(email,display_name,password_hash) VALUES($1,$2,$3) RETURNING id", [email.toLowerCase(), name, passwordHash]);
+    const id = user.rows[0]?.id;
+    if (!id) throw new Error("Account was not created.");
+    return id;
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code: string }).code === "23505") {
+      throw new Failure(409, "ACCOUNT_EXISTS", "An account with this email address already exists.");
+    }
+    throw error;
+  }
 }

@@ -65,6 +65,23 @@ interface EnterprisePolicy {
   retentionDays: number;
 }
 
+interface UserSession {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  current: boolean;
+}
+
+function parseSession(value: unknown): UserSession {
+  const r = record(value);
+  return {
+    id: string(r.id),
+    createdAt: string(r.createdAt),
+    expiresAt: string(r.expiresAt),
+    current: Boolean(r.current),
+  };
+}
+
 type SettingsTab =
   | "general"
   | "members"
@@ -202,6 +219,13 @@ export default function WorkspaceSettings({
     );
   });
   const [importContent, setImportContent] = useState("");
+  const [userSessions, setUserSessions] = useState<UserSession[]>([]);
+  const [currentPasswordInput, setCurrentPasswordInput] = useState("");
+  const [newPasswordInput, setNewPasswordInput] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordTone, setPasswordTone] = useState<
+    "neutral" | "positive" | "error"
+  >("neutral");
 
   const [message, setMessage] = useState("");
   const [toast, setToast] = useState<{
@@ -304,8 +328,97 @@ export default function WorkspaceSettings({
     api(path + "/preferences", parsePreferences, { signal: controller.signal })
       .then(setPreferences)
       .catch(() => {});
+    api("/auth/sessions", items(parseSession), { signal: controller.signal })
+      .then(setUserSessions)
+      .catch(() => {});
     return () => controller.abort();
   }, [path, isManager]);
+
+  const refreshSessions = useCallback(async () => {
+    try {
+      setUserSessions(await api("/auth/sessions", items(parseSession)));
+    } catch {
+      setUserSessions([]);
+    }
+  }, []);
+
+  async function revokeSession(sessionId: string) {
+    setBusy(true);
+    try {
+      await api("/auth/sessions/" + encodeURIComponent(sessionId), record, {
+        method: "DELETE",
+        csrf,
+      });
+      showToast("Session revoked.");
+      await refreshSessions();
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Failed to revoke session.",
+        "error",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function logoutAllDevices() {
+    if (
+      !confirm(
+        "Are you sure you want to terminate all active sessions across all devices?",
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      await api("/auth/logout-all", record, { method: "POST", csrf });
+      window.location.reload();
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Failed to log out all devices.",
+        "error",
+      );
+      setBusy(false);
+    }
+  }
+
+  async function handlePasswordChange(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPasswordMessage("");
+    setPasswordTone("neutral");
+    if (newPasswordInput.length < 12) {
+      setPasswordMessage("New password must be at least 12 characters long.");
+      setPasswordTone("error");
+      return;
+    }
+    setBusy(true);
+    try {
+      await api("/auth/change-password", record, {
+        method: "POST",
+        csrf,
+        body: {
+          currentPassword: currentPasswordInput,
+          newPassword: newPasswordInput,
+        },
+      });
+      setCurrentPasswordInput("");
+      setNewPasswordInput("");
+      setPasswordMessage(
+        "Password changed successfully. Other active sessions have been revoked.",
+      );
+      setPasswordTone("positive");
+      showToast("Password updated.");
+      await refreshSessions();
+    } catch (error) {
+      setPasswordMessage(
+        error instanceof Error ? error.message : "Failed to change password.",
+      );
+      setPasswordTone("error");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function saveWorkspaceName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1484,80 +1597,215 @@ export default function WorkspaceSettings({
       )}
 
       {activeTab === "security" && (
-        <section className={`${panelClass} p-6`}>
-          <header className="mb-5">
-            <h2 className={`${headingClass} text-[16px]`}>
-              Enterprise Governance &amp; DLP
-            </h2>
-            <p className={`text-[11px] ${mutedClass}`}>
-              Automated Data Loss Prevention (DLP) scans text content for PII
-              and secrets.
-            </p>
-          </header>
-
-          <div className="grid max-w-xl gap-5">
-            <div className="flex items-center justify-between rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+        <div className="grid gap-6">
+          <section className={`${panelClass} p-6`}>
+            <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <strong className="block text-[13px] font-medium">
-                  Automated DLP Inspection
-                </strong>
-                <span className={`block text-[11px] ${mutedClass}`}>
-                  Detect and redact SSNs, API tokens, and payment card patterns.
-                </span>
-              </div>
-              <Button
-                variant={policy?.dlpEnabled ? "primary" : "secondary"}
-                disabled={!isManager || busy}
-                onClick={() => void toggleDlp(!policy?.dlpEnabled)}
-              >
-                {policy?.dlpEnabled ? "Active (Redacting)" : "Disabled"}
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-between rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
-              <div>
-                <strong className="block text-[13px] font-medium">
-                  Audit Log Export
-                </strong>
-                <span className={`block text-[11px] ${mutedClass}`}>
-                  Export structured NDJSON audit records for compliance reviews.
-                </span>
+                <h2 className={`${headingClass} text-[16px]`}>
+                  Active Sessions &amp; Device Management
+                </h2>
+                <p className={`text-[11px] ${mutedClass}`}>
+                  Review and terminate authenticated browser sessions for your
+                  account.
+                </p>
               </div>
               <Button
                 variant="secondary"
-                disabled={!isManager || busy}
-                onClick={() => void triggerAuditExport()}
+                size="sm"
+                disabled={busy}
+                onClick={() => void logoutAllDevices()}
               >
-                <Icon name="file" className="size-3.5" />
-                Trigger Audit Export
+                <Icon name="trash" className="size-3.5 text-rose-500" />
+                Log Out All Devices
               </Button>
-            </div>
+            </header>
 
-            <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
-              <h3 className="mb-2 text-[12px] font-semibold text-slate-700 dark:text-zinc-300">
-                Security Architecture
-              </h3>
-              <ul className={`grid gap-1.5 text-[11px] ${mutedClass}`}>
-                <li className="flex items-center gap-2">
-                  <Icon name="check" className="size-3 text-emerald-500" />
-                  Double-submit CSRF cookie protection on all mutating routes
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="check" className="size-3 text-emerald-500" />
-                  HMAC-SHA256 session token hashing and isolation
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="check" className="size-3 text-emerald-500" />
-                  ClamAV antivirus background scanning for uploaded files
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="check" className="size-3 text-emerald-500" />
-                  Strict JSON schema parameter and body verification
-                </li>
-              </ul>
+            <div className="grid gap-3">
+              {userSessions.length === 0 ? (
+                <p className={`text-[12px] ${mutedClass}`}>
+                  No other active sessions found.
+                </p>
+              ) : (
+                userSessions.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e4e6ef] p-3.5 dark:border-[#303034]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="grid size-8 place-items-center rounded-lg bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        <Icon name="panel" className="size-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[12px] font-semibold text-slate-800 dark:text-zinc-200">
+                            {s.id}…
+                          </span>
+                          {s.current ? (
+                            <Badge tone="green">This Device</Badge>
+                          ) : (
+                            <Badge tone="neutral">Remote Session</Badge>
+                          )}
+                        </div>
+                        <div className={`mt-0.5 text-[10px] ${mutedClass}`}>
+                          Created {new Date(s.createdAt).toLocaleDateString()}{" "}
+                          {new Date(s.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}{" "}
+                          &bull; Expires{" "}
+                          {new Date(s.expiresAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    {!s.current && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={busy}
+                        onClick={() => void revokeSession(s.id)}
+                      >
+                        <Icon name="close" className="size-3 text-rose-500" />
+                        Revoke
+                      </Button>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
-          </div>
-        </section>
+          </section>
+
+          <section className={`${panelClass} p-6`}>
+            <header className="mb-5">
+              <h2 className={`${headingClass} text-[16px]`}>
+                Password &amp; Credentials
+              </h2>
+              <p className={`text-[11px] ${mutedClass}`}>
+                Update your account password. Requires at least 12 characters.
+              </p>
+            </header>
+
+            <form
+              onSubmit={handlePasswordChange}
+              className="grid max-w-xl gap-4"
+            >
+              <Field label="Current password">
+                <input
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  value={currentPasswordInput}
+                  onChange={(e) => setCurrentPasswordInput(e.target.value)}
+                  placeholder="Enter current password"
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="New password">
+                <input
+                  type="password"
+                  required
+                  minLength={12}
+                  maxLength={256}
+                  autoComplete="new-password"
+                  value={newPasswordInput}
+                  onChange={(e) => setNewPasswordInput(e.target.value)}
+                  placeholder="At least 12 characters"
+                  className={inputClass}
+                />
+              </Field>
+              {passwordMessage && (
+                <Notice
+                  tone={passwordTone === "positive" ? "neutral" : "error"}
+                  role="alert"
+                >
+                  {passwordMessage}
+                </Notice>
+              )}
+              <div>
+                <Button type="submit" variant="primary" disabled={busy}>
+                  <Icon name="check" className="size-3.5" />
+                  Update Password
+                </Button>
+              </div>
+            </form>
+          </section>
+
+          <section className={`${panelClass} p-6`}>
+            <header className="mb-5">
+              <h2 className={`${headingClass} text-[16px]`}>
+                Enterprise Governance &amp; DLP
+              </h2>
+              <p className={`text-[11px] ${mutedClass}`}>
+                Automated Data Loss Prevention (DLP) scans text content for PII
+                and secrets.
+              </p>
+            </header>
+
+            <div className="grid max-w-xl gap-5">
+              <div className="flex items-center justify-between rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <div>
+                  <strong className="block text-[13px] font-medium">
+                    Automated DLP Inspection
+                  </strong>
+                  <span className={`block text-[11px] ${mutedClass}`}>
+                    Detect and redact SSNs, API tokens, and payment card
+                    patterns.
+                  </span>
+                </div>
+                <Button
+                  variant={policy?.dlpEnabled ? "primary" : "secondary"}
+                  disabled={!isManager || busy}
+                  onClick={() => void toggleDlp(!policy?.dlpEnabled)}
+                >
+                  {policy?.dlpEnabled ? "Active (Redacting)" : "Disabled"}
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <div>
+                  <strong className="block text-[13px] font-medium">
+                    Audit Log Export
+                  </strong>
+                  <span className={`block text-[11px] ${mutedClass}`}>
+                    Export structured NDJSON audit records for compliance
+                    reviews.
+                  </span>
+                </div>
+                <Button
+                  variant="secondary"
+                  disabled={!isManager || busy}
+                  onClick={() => void triggerAuditExport()}
+                >
+                  <Icon name="file" className="size-3.5" />
+                  Trigger Audit Export
+                </Button>
+              </div>
+
+              <div className="rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
+                <h3 className="mb-2 text-[12px] font-semibold text-slate-700 dark:text-zinc-300">
+                  Security Architecture
+                </h3>
+                <ul className={`grid gap-1.5 text-[11px] ${mutedClass}`}>
+                  <li className="flex items-center gap-2">
+                    <Icon name="check" className="size-3 text-emerald-500" />
+                    Double-submit CSRF cookie protection on all mutating routes
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="check" className="size-3 text-emerald-500" />
+                    HMAC-SHA256 session token hashing and isolation
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="check" className="size-3 text-emerald-500" />
+                    ClamAV antivirus background scanning for uploaded files
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="check" className="size-3 text-emerald-500" />
+                    Strict JSON schema parameter and body verification
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </div>
       )}
 
       {activeTab === "connections" && (

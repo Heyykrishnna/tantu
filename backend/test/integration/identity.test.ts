@@ -44,3 +44,119 @@ test("failed login limits are durable and do not reveal account existence", { ti
     }
   } finally { await f.close(); }
 });
+
+test("registration, session listing, remote session revocation, password rotation and logout-all", { timeout: 30_000 }, async () => {
+  const f = await fixture();
+  try {
+    const email = "self-registered@example.test";
+    const regRes = await f.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/register",
+      headers: { origin: settings.origin },
+      payload: { email, name: "Self Registered", password: testPassword },
+    });
+    assert.equal(regRes.statusCode, 201);
+    const regBody = regRes.json<{ user: { id: string; email: string }; workspaceId: string; csrf: string }>();
+    assert.ok(regBody.workspaceId);
+    assert.equal(regBody.user.email, email);
+
+    const dupRes = await f.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/register",
+      headers: { origin: settings.origin },
+      payload: { email, name: "Duplicate", password: testPassword },
+    });
+    assert.equal(dupRes.statusCode, 409);
+
+    const headers = {
+      cookie: regRes.cookies.map((c) => `${c.name}=${c.value}`).join("; "),
+      origin: settings.origin,
+      "x-csrf-token": regBody.csrf,
+    };
+
+    const meRes = await f.app.inject({ url: "/api/v1/auth/me", headers });
+    assert.equal(meRes.statusCode, 200);
+    assert.equal(meRes.json<{ user: { id: string } }>().user.id, regBody.user.id);
+
+    const sessionsFirst = await f.app.inject({ url: "/api/v1/auth/sessions", headers });
+    assert.equal(sessionsFirst.statusCode, 200);
+    const firstItems = sessionsFirst.json<{ items: Array<{ id: string; current: boolean }> }>().items;
+    assert.equal(firstItems.length, 1);
+    assert.equal(firstItems[0]?.current, true);
+
+    const loginSecond = await f.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      headers: { origin: settings.origin },
+      payload: { email, password: testPassword },
+    });
+    assert.equal(loginSecond.statusCode, 200);
+
+    const sessionsSecond = await f.app.inject({ url: "/api/v1/auth/sessions", headers });
+    assert.equal(sessionsSecond.statusCode, 200);
+    const secondItems = sessionsSecond.json<{ items: Array<{ id: string; current: boolean }> }>().items;
+    assert.equal(secondItems.length, 2);
+
+    const remote = secondItems.find((s) => !s.current);
+    assert.ok(remote);
+    const revokeRes = await f.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/sessions/${remote.id}`,
+      headers,
+    });
+    assert.equal(revokeRes.statusCode, 200);
+    assert.equal(revokeRes.json<{ revoked: boolean }>().revoked, true);
+
+    const wrongPass = await f.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/change-password",
+      headers,
+      payload: { currentPassword: "wrong-current-password", newPassword: testPassword + "-new123" },
+    });
+    assert.equal(wrongPass.statusCode, 401);
+
+    const samePass = await f.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/change-password",
+      headers,
+      payload: { currentPassword: testPassword, newPassword: testPassword },
+    });
+    assert.equal(samePass.statusCode, 400);
+
+    const changeRes = await f.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/change-password",
+      headers,
+      payload: { currentPassword: testPassword, newPassword: testPassword + "-new123" },
+    });
+    assert.equal(changeRes.statusCode, 200);
+    assert.equal(changeRes.json<{ updated: boolean }>().updated, true);
+
+    const oldLogin = await f.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      headers: { origin: settings.origin },
+      payload: { email, password: testPassword },
+    });
+    assert.equal(oldLogin.statusCode, 401);
+
+    const newLogin = await f.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      headers: { origin: settings.origin },
+      payload: { email, password: testPassword + "-new123" },
+    });
+    assert.equal(newLogin.statusCode, 200);
+
+    const logoutAllRes = await f.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/logout-all",
+      headers,
+    });
+    assert.equal(logoutAllRes.statusCode, 200);
+    assert.equal(logoutAllRes.json<{ revokedAll: boolean }>().revokedAll, true);
+
+    const sessionAfter = await f.app.inject({ url: "/api/v1/auth/session", headers });
+    assert.equal(sessionAfter.statusCode, 401);
+  } finally { await f.close(); }
+});

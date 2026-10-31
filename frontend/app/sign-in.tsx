@@ -26,6 +26,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
       ""
     );
   });
+  const [mode, setMode] = useState<"signin" | "register">("signin");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -43,6 +44,15 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             password: String(data.get("password")),
           },
         });
+      else if (mode === "register")
+        await api("/auth/register", (value) => string(record(value).csrf), {
+          method: "POST",
+          body: {
+            email: String(data.get("email")),
+            name: String(data.get("name")),
+            password: String(data.get("password")),
+          },
+        });
       else
         await api("/auth/login", (value) => string(record(value).csrf), {
           method: "POST",
@@ -53,7 +63,9 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         });
       onSignedIn();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Sign-in failed.");
+      setMessage(
+        error instanceof Error ? error.message : "Authentication failed.",
+      );
     } finally {
       setBusy(false);
     }
@@ -140,18 +152,29 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             <Brand />
           </Link>
           <span className="mb-6 inline-flex size-11 items-center justify-center rounded-xl border border-[#e5e2f4] bg-[#f4f2fc] text-[#9990d5] dark:border-[#42394e] dark:bg-[#30283b]">
-            <Icon name={invitation ? "users" : "lock"} className="size-5" />
+            <Icon
+              name={
+                invitation ? "users" : mode === "register" ? "users" : "lock"
+              }
+              className="size-5"
+            />
           </span>
           <h2 className={`${headingClass} mb-3 text-[27px]`}>
-            {invitation ? "You’re invited." : "Welcome back."}
+            {invitation
+              ? "You’re invited."
+              : mode === "register"
+                ? "Create your account."
+                : "Welcome back."}
           </h2>
           <p className={`mb-8 text-[12px] leading-relaxed ${mutedClass}`}>
             {invitation
               ? "Create your account and join your workspace."
-              : "Sign in to your workspace. Pick up where you left off."}
+              : mode === "register"
+                ? "Get started with your private workspace in seconds."
+                : "Sign in to your workspace. Pick up where you left off."}
           </p>
           <form onSubmit={submit} className="grid gap-4">
-            {invitation ? (
+            {(invitation || mode === "register") && (
               <Field label="Your name">
                 <input
                   name="name"
@@ -162,7 +185,8 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                   className={inputClass}
                 />
               </Field>
-            ) : (
+            )}
+            {!invitation && (
               <Field label="Email address">
                 <input
                   name="email"
@@ -180,11 +204,17 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                 name="password"
                 type="password"
                 required
-                minLength={invitation ? 12 : 1}
-                autoComplete={invitation ? "new-password" : "current-password"}
+                minLength={invitation || mode === "register" ? 12 : 1}
+                autoComplete={
+                  invitation || mode === "register"
+                    ? "new-password"
+                    : "current-password"
+                }
                 maxLength={256}
                 placeholder={
-                  invitation ? "At least 12 characters" : "Enter your password"
+                  invitation || mode === "register"
+                    ? "At least 12 characters"
+                    : "Enter your password"
                 }
                 className={inputClass}
               />
@@ -224,9 +254,27 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                 ? "Please wait…"
                 : invitation
                   ? "Create account & join"
-                  : "Sign in"}
+                  : mode === "register"
+                    ? "Create account"
+                    : "Sign in"}
               <Icon name="arrow" className="size-4" />
             </Button>
+            {!invitation && (
+              <div className="mt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMessage("");
+                    setMode(mode === "signin" ? "register" : "signin");
+                  }}
+                  className="text-[12px] font-medium text-violet-600 hover:underline dark:text-violet-400"
+                >
+                  {mode === "signin"
+                    ? "Don't have an account? Create one"
+                    : "Already have an account? Sign in"}
+                </button>
+              </div>
+            )}
           </form>
           <div className="mt-7 border-t border-[#e7e9f1] pt-5 dark:border-[#303034]">
             <p className={`text-[10px] leading-6 ${mutedClass}`}>

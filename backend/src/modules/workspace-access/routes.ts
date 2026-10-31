@@ -15,17 +15,56 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
     const userId = await identity.login(request.body.email.toLowerCase(), request.body.password, request.ip);
     return identity.issueSession(userId, reply, cookies(request).get("tantu_session"));
   });
+  app.post<{ Body: { email: string; name: string; password: string } }>("/api/v1/auth/register", { schema: { body: object({ email, name: text(100), password }) } }, async (request, reply) => {
+    identity.requireOrigin(request);
+    const result = await identity.register(request.body.email.toLowerCase(), request.body.name, request.body.password, request.ip);
+    const session = await identity.issueSession(result.userId, reply, cookies(request).get("tantu_session"));
+    return reply.code(201).send({
+      user: { id: result.userId, email: request.body.email.toLowerCase(), name: request.body.name },
+      workspaceId: result.workspaceId,
+      ...session,
+    });
+  });
   app.get("/api/v1/auth/session", async (request) => {
     const session = await identity.session(request);
     const csrf = cookies(request).get("tantu_csrf") ?? "";
     if (digest(csrf) !== session.csrfHash) throw new Failure(401, "SESSION_EXPIRED", "Sign in to continue.");
     return { user: { id: session.userId, email: session.email, name: session.name }, csrf };
   });
+  app.get("/api/v1/auth/me", async (request) => {
+    const session = await identity.session(request);
+    return { user: { id: session.userId, email: session.email, name: session.name } };
+  });
+  app.post<{ Body: { currentPassword: string; newPassword: string } }>("/api/v1/auth/change-password", { schema: { body: object({ currentPassword: text(256), newPassword: password }) } }, async (request) => {
+    const session = await identity.session(request, true);
+    await identity.changePassword(session.userId, request.body.currentPassword, request.body.newPassword, cookies(request).get("tantu_session") ?? "");
+    return { updated: true };
+  });
+  app.get("/api/v1/auth/sessions", async (request) => {
+    const session = await identity.session(request);
+    const items = await identity.listSessions(session.userId, cookies(request).get("tantu_session") ?? "");
+    return { items };
+  });
+  app.delete<{ Params: { sessionId: string } }>("/api/v1/auth/sessions/:sessionId", { schema: { params: object({ sessionId: text(64) }) } }, async (request, reply) => {
+    const session = await identity.session(request, true);
+    const revoked = await identity.revokeSession(session.userId, request.params.sessionId);
+    const currentToken = cookies(request).get("tantu_session") ?? "";
+    if (digest(currentToken).startsWith(request.params.sessionId)) {
+      reply.header("set-cookie", ["tantu_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0", "tantu_csrf=; Path=/; SameSite=Strict; Max-Age=0"]);
+    }
+    return { revoked };
+  });
   app.post("/api/v1/auth/logout", async (request, reply) => {
     await identity.session(request, true);
     await db.pool.query("UPDATE tantu.sessions SET revoked_at=now() WHERE token_hash=$1", [digest(cookies(request).get("tantu_session") ?? "")]);
     reply.header("set-cookie", ["tantu_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0", "tantu_csrf=; Path=/; SameSite=Strict; Max-Age=0"]);
     return { signedOut: true };
+  });
+  app.post("/api/v1/auth/logout-all", async (request, reply) => {
+    const session = await identity.session(request, true);
+    await identity.logoutAll(session.userId);
+    reply.header("set-cookie", ["tantu_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0", "tantu_csrf=; Path=/; SameSite=Strict; Max-Age=0"]);
+    return { signedOut: true, revokedAll: true };
   });
   app.get("/api/v1/workspaces", async (request) => {
     const session = await identity.session(request);
@@ -132,17 +171,17 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
         await client.query("UPDATE tantu.memberships SET role=$1 WHERE workspace_id=$2 AND user_id=$3", [request.body.role, scope.workspaceId, request.params.userId]);
         return { updated: true, role: request.body.role };
       });
-    });
-    app.delete<{ Params: { workspaceId: string; userId: string } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }) } }, async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId, true);
-      await db.transaction(scope, async (client) => {
-        await client.query("SELECT id FROM tantu.workspaces WHERE id=$1 FOR UPDATE", [scope.workspaceId]);
-        if (request.params.userId !== scope.userId) await identity.requireManager(client, scope);
-        const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active", [scope.workspaceId, request.params.userId]);
-        if (member.rows[0]?.role === "owner") throw new Failure(409, "OWNER_PROTECTED", "An owner cannot be removed through this endpoint.");
-        if (member.rows[0]?.role === "admin" && request.params.userId !== scope.userId) await identity.requireManager(client, scope, true);
-        await client.query("UPDATE tantu.memberships SET active=false WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, request.params.userId]);
       });
-      return { removed: true };
+      app.delete<{ Params: { workspaceId: string; userId: string } }>("/api/v1/workspaces/:workspaceId/members/:userId", { schema: { params: object({ workspaceId: uuid, userId: uuid }) } }, async (request) => {
+        const scope = await identity.scope(request, request.params.workspaceId, true);
+        await db.transaction(scope, async (client) => {
+          await client.query("SELECT id FROM tantu.workspaces WHERE id=$1 FOR UPDATE", [scope.workspaceId]);
+          if (request.params.userId !== scope.userId) await identity.requireManager(client, scope);
+          const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active", [scope.workspaceId, request.params.userId]);
+          if (member.rows[0]?.role === "owner") throw new Failure(409, "OWNER_PROTECTED", "An owner cannot be removed through this endpoint.");
+          if (member.rows[0]?.role === "admin" && request.params.userId !== scope.userId) await identity.requireManager(client, scope, true);
+          await client.query("UPDATE tantu.memberships SET active=false WHERE workspace_id=$1 AND user_id=$2", [scope.workspaceId, request.params.userId]);
+        });
+    return { removed: true };
     });
   }
