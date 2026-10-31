@@ -1,4 +1,7 @@
 import { readFile } from "node:fs/promises";
+import process from "node:process";
+import { setTimeout } from "node:timers/promises";
+import { URL } from "node:url";
 import { Pool } from "pg";
 import { migrate } from "../dist/platform/database/migrate.js";
 import { initializeJobs } from "../dist/workers/queue.js";
@@ -25,7 +28,7 @@ while (retries > 0 && !connected) {
   } catch (error) {
     lastError = error;
     retries -= 1;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await setTimeout(1000);
   } finally {
     await testPool.end();
   }
