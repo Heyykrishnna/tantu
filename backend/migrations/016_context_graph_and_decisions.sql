@@ -1,3 +1,8 @@
+CREATE OR REPLACE VIEW tantu.workspace_members AS
+  SELECT workspace_id, user_id, role, active
+  FROM tantu.memberships
+  WHERE active = true;
+
 CREATE TABLE tantu.decisions(
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id uuid NOT NULL REFERENCES tantu.workspaces,

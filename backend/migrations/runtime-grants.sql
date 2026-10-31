@@ -43,3 +43,4 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.ai_workspace_settings,tantu.meeting_b
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.developer_api_keys,tantu.webhooks,tantu.webhook_deliveries TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.enterprise_policies,tantu.dlp_redaction_logs,tantu.enterprise_audit_exports TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.sharing_exposure_previews,tantu.handover_packs,tantu.knowledge_freshness_reviews,tantu.scenario_plans,tantu.attention_budgets TO tantu_runtime;
+GRANT SELECT ON tantu.workspace_members TO tantu_runtime;

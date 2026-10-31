@@ -57,7 +57,7 @@ DO $$ DECLARE t text; BEGIN
   FOREACH t IN ARRAY ARRAY['archive_manifests','archive_tombstones'] LOOP
     EXECUTE format('ALTER TABLE tantu.%I ENABLE ROW LEVEL SECURITY',t);
     EXECUTE format('ALTER TABLE tantu.%I FORCE ROW LEVEL SECURITY',t);
-    EXECUTE format('CREATE POLICY %I_admin ON tantu.%I FOR ALL USING(workspace_id=tantu.tenant() AND tantu.member_role(workspace_id) IN (\'owner\',\'admin\')) WITH CHECK(workspace_id=tantu.tenant() AND tantu.member_role(workspace_id) IN (\'owner\',\'admin\'))',t,t);
+    EXECUTE format('CREATE POLICY %I_admin ON tantu.%I FOR ALL USING(workspace_id=tantu.tenant() AND tantu.member_role(workspace_id) IN (''owner'',''admin'')) WITH CHECK(workspace_id=tantu.tenant() AND tantu.member_role(workspace_id) IN (''owner'',''admin''))',t,t);
   END LOOP;
 END $$;
 

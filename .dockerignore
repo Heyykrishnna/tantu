@@ -10,7 +10,10 @@ dist
 */.artifacts
 local-docs
 phases
+local-data
+*/local-data
+.env
+.env.*
 *.md
 *.log
 .DS_Store
-

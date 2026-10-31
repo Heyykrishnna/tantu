@@ -1,0 +1,156 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tantu-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_dev_password}
+      POSTGRES_DB: postgres
+      MIGRATOR_PASSWORD: ${MIGRATOR_PASSWORD:-migrator_dev_password}
+      RUNTIME_PASSWORD: ${RUNTIME_PASSWORD:-runtime_dev_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-roles.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - tantu_network
+
+  scanner:
+    build:
+      context: ./docker/scanner
+    container_name: tantu-scanner
+    ports:
+      - "${SCANNER_PORT:-3310}:3310"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 3310 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 2s
+    restart: unless-stopped
+    networks:
+      - tantu_network
+
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tantu-migrator
+    command: ["node", "backend/scripts/docker-migrate.mjs"]
+    environment:
+      MIGRATION_DATABASE_URL: postgresql://tantu_migrator:${MIGRATOR_PASSWORD:-migrator_dev_password}@postgres:5432/tantu
+      DATABASE_URL: postgresql://tantu_runtime:${RUNTIME_PASSWORD:-runtime_dev_password}@postgres:5432/tantu
+      BOOTSTRAP_EMAIL: ${BOOTSTRAP_EMAIL:-admin@tantu.local}
+      BOOTSTRAP_NAME: ${BOOTSTRAP_NAME:-Admin}
+      BOOTSTRAP_PASSWORD: ${BOOTSTRAP_PASSWORD:-AdminPassword123!}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - tantu_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tantu-backend
+    command: ["node", "backend/dist/server.js"]
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 4000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgresql://tantu_runtime:${RUNTIME_PASSWORD:-runtime_dev_password}@postgres:5432/tantu
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
+      FILE_STORAGE_PATH: /data/files
+      FILE_SIGNING_SECRET: ${FILE_SIGNING_SECRET:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      SCANNER_HOST: scanner
+      SCANNER_PORT: 3310
+    volumes:
+      - file_storage:/data/files
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      scanner:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:4000/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - tantu_network
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tantu-worker
+    command: ["node", "backend/dist/workers/server.js"]
+    healthcheck:
+      disable: true
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://tantu_runtime:${RUNTIME_PASSWORD:-runtime_dev_password}@postgres:5432/tantu
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
+      FILE_STORAGE_PATH: /data/files
+      FILE_SIGNING_SECRET: ${FILE_SIGNING_SECRET:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      SCANNER_HOST: scanner
+      SCANNER_PORT: 3310
+    volumes:
+      - file_storage:/data/files
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - tantu_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tantu-frontend
+    command: ["npm", "--prefix", "frontend", "run", "start"]
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      BACKEND_ORIGIN: http://backend:4000
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - tantu_network
+
+volumes:
+  postgres_data:
+  file_storage:
+
+networks:
+  tantu_network:
+    driver: bridge
