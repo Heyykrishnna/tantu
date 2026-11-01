@@ -28,12 +28,13 @@ export function contextDecisionRoutes(app: FastifyInstance, identity: Identity):
         params: workspaceParams,
         querystring: object({
           status: { type: "string", enum: ["draft", "confirmed", "superseded", "revoked"] }
-        })
+        }, [])
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        if (request.method !== "GET") await identity.requireContributor(client, scope);
         const decisions = await listDecisions(client, scope.workspaceId, request.query.status);
         return { decisions };
       });
@@ -67,8 +68,9 @@ export function contextDecisionRoutes(app: FastifyInstance, identity: Identity):
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        if (request.method !== "GET") await identity.requireContributor(client, scope);
         const decision = await createDecision(client, scope.workspaceId, scope.userId, request.body);
         return { decision };
       });
@@ -88,8 +90,9 @@ export function contextDecisionRoutes(app: FastifyInstance, identity: Identity):
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        if (request.method !== "GET") await identity.requireContributor(client, scope);
         const decision = await getDecision(client, scope.workspaceId, request.params.decisionId);
         if (!decision) {
           throw new Failure(404, "NOT_FOUND", "Decision not found.");
@@ -127,8 +130,9 @@ export function contextDecisionRoutes(app: FastifyInstance, identity: Identity):
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        if (request.method !== "GET") await identity.requireContributor(client, scope);
         const decision = await supersedeDecision(
           client,
           scope.workspaceId,
@@ -154,8 +158,9 @@ export function contextDecisionRoutes(app: FastifyInstance, identity: Identity):
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        if (request.method !== "GET") await identity.requireContributor(client, scope);
         const revisions = await getDecisionRevisions(client, request.params.decisionId);
         return { revisions };
       });
@@ -173,13 +178,14 @@ export function contextDecisionRoutes(app: FastifyInstance, identity: Identity):
         querystring: object({
           rootEntityId: { type: "string", format: "uuid" },
           depth: { type: "string", pattern: "^[0-9]+$" }
-        })
+        }, [])
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       const depth = request.query.depth ? parseInt(request.query.depth, 10) : 2;
       return db.transaction(scope, async (client) => {
+        if (request.method !== "GET") await identity.requireContributor(client, scope);
         const graph = await queryContextGraph(client, scope.workspaceId, request.query.rootEntityId, depth);
         return graph;
       });
@@ -228,8 +234,9 @@ export function contextDecisionRoutes(app: FastifyInstance, identity: Identity):
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        if (request.method !== "GET") await identity.requireContributor(client, scope);
         const sourceNode = await upsertContextNode(
           client,
           scope.workspaceId,

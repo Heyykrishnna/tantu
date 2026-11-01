@@ -20,7 +20,7 @@ export function aiMeetingRoutes(app: FastifyInstance, identity: Identity): void 
     root + "/ai/settings",
     { schema: { params: workspaceParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
         const settings = await getAiSettings(client, scope.workspaceId);
         return { settings };
@@ -53,8 +53,9 @@ export function aiMeetingRoutes(app: FastifyInstance, identity: Identity): void 
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const settings = await updateAiSettings(client, scope.workspaceId, scope.userId, request.body);
         return { settings };
       });
@@ -67,7 +68,7 @@ export function aiMeetingRoutes(app: FastifyInstance, identity: Identity): void 
     root + "/meetings/briefs",
     { schema: { params: workspaceParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
         const briefs = await listMeetingBriefs(client, scope.workspaceId);
         return { briefs };
@@ -88,7 +89,7 @@ export function aiMeetingRoutes(app: FastifyInstance, identity: Identity): void 
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
         const brief = await getMeetingBrief(client, scope.workspaceId, request.params.eventId);
         if (!brief) {
@@ -125,8 +126,9 @@ export function aiMeetingRoutes(app: FastifyInstance, identity: Identity): void 
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireContributor(client, scope);
         const brief = await generateMeetingBrief(
           client,
           scope.workspaceId,

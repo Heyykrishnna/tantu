@@ -29,8 +29,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
     root + "/api-keys",
     { schema: { params: workspaceParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const apiKeys = await listApiKeys(client, scope.workspaceId);
         return { apiKeys };
       });
@@ -60,8 +61,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const result = await createApiKey(
           client,
           scope.workspaceId,
@@ -80,8 +82,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
     root + "/api-keys/:keyId",
     { schema: { params: apiKeyParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const revoked = await revokeApiKey(client, scope.workspaceId, request.params.keyId);
         if (!revoked) {
           throw new Failure(404, "NOT_FOUND", "API key not found or already revoked");
@@ -97,8 +100,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
     root + "/webhooks",
     { schema: { params: workspaceParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const webhooks = await listWebhooks(client, scope.workspaceId);
         return { webhooks };
       });
@@ -126,8 +130,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const result = await createWebhook(
           client,
           scope.workspaceId,
@@ -160,8 +165,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const webhook = await updateWebhook(
           client,
           scope.workspaceId,
@@ -180,8 +186,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
     root + "/webhooks/:webhookId/rotate-secret",
     { schema: { params: webhookParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const result = await rotateWebhookSecret(client, scope.workspaceId, request.params.webhookId);
         return result;
       });
@@ -194,8 +201,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
     root + "/webhooks/:webhookId",
     { schema: { params: webhookParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const deleted = await deleteWebhook(client, scope.workspaceId, request.params.webhookId);
         if (!deleted) {
           throw new Failure(404, "NOT_FOUND", "Webhook not found");
@@ -221,8 +229,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const eventType = request.body?.eventType || "ping";
         const testPayload = {
           event: eventType,
@@ -250,8 +259,9 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
     root + "/webhooks/:webhookId/deliveries",
     { schema: { params: webhookParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const deliveries = await listWebhookDeliveries(client, scope.workspaceId, request.params.webhookId);
         return { deliveries };
       });
@@ -264,7 +274,7 @@ export function integrationsWebhooksRoutes(app: FastifyInstance, identity: Ident
     root + "/integrations/providers",
     { schema: { params: workspaceParams } },
     async (request) => {
-      await identity.scope(request, request.params.workspaceId);
+      await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       const providers = getIntegrationProviders();
       return { providers };
     }

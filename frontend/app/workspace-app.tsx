@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { applyTheme } from "../lib/theme";
+import { applyWorkspacePreferences, parseWorkspacePreferences } from "../lib/appearance";
 import { pollWhileVisible } from "../lib/visible-polling";
 import type { FormEvent } from "react";
 import {
@@ -127,6 +128,7 @@ export default function WorkspaceApp({
   const [listVersion, setListVersion] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null);
   const drawer = useRef<HTMLDialogElement>(null);
+  const appearanceController = useRef<AbortController | null>(null);
   const currentWorkspace = workspaces.find((item) => item.id === workspaceId);
   const manager =
     currentWorkspace?.role === "owner" || currentWorkspace?.role === "admin";
@@ -213,6 +215,16 @@ export default function WorkspaceApp({
       });
     return () => controller.abort();
   }, [acceptIdentity, authenticationFailure]);
+
+  useEffect(() => {
+    if (!workspaceId || !user) return;
+    const controller = new AbortController();
+    appearanceController.current = controller;
+    api(`/workspaces/${workspaceId}/preferences`, parseWorkspacePreferences, { signal: controller.signal })
+      .then(applyWorkspacePreferences)
+      .catch(handleError);
+    return () => controller.abort();
+  }, [workspaceId, user, handleError]);
 
   useEffect(() => {
     const keyboard = (event: KeyboardEvent) => {
@@ -324,8 +336,8 @@ export default function WorkspaceApp({
         const spaces = await api("/workspaces", items(workspace), {
           signal,
         });
+        setWorkspaces(spaces);
         if (!spaces.some((item) => item.id === workspaceId)) {
-          setWorkspaces(spaces);
           setWorkspaceId(spaces[0]?.id ?? "");
           setSelected(null);
           setEditorOpen(false);
@@ -572,7 +584,15 @@ export default function WorkspaceApp({
                 ⌘K
               </kbd>
             </button>
-            <ThemeToggle variant="circle" />
+            <ThemeToggle key={workspaceId} variant="circle" onThemeChange={async theme => {
+              try {
+                const preferences = await api(`/workspaces/${workspaceId}/preferences`, parseWorkspacePreferences, { method: "PATCH", csrf, body: { theme }, signal: appearanceController.current?.signal });
+                applyWorkspacePreferences(preferences);
+              } catch (error) {
+                handleError(error);
+                throw error;
+              }
+            }} />
             <span className="mx-1 h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
             <span
               title={user.name}
@@ -626,11 +646,13 @@ export default function WorkspaceApp({
               workspace={currentWorkspace}
               csrf={csrf}
               currentUser={user}
+              workspaces={workspaces}
+              onSwitchWorkspace={id => navigate("settings", id)}
               onJoined={() => void authenticate()}
-              onWorkspaceRenamed={(newName) => {
+              onWorkspaceRenamed={(newName, icon) => {
                 setWorkspaces((prev) =>
                   prev.map((w) =>
-                    w.id === workspaceId ? { ...w, name: newName } : w,
+                    w.id === workspaceId ? { ...w, name: newName, ...(icon ? { icon } : {}) } : w,
                   ),
                 );
               }}

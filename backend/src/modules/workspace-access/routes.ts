@@ -86,7 +86,7 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
   });
   app.get("/api/v1/workspaces", async (request) => {
     const session = await identity.session(request);
-    const result = await db.pool.query("SELECT w.id,w.name,m.role FROM tantu.workspaces w JOIN tantu.memberships m ON m.workspace_id=w.id WHERE m.user_id=$1 AND m.active ORDER BY w.id LIMIT 100", [session.userId]);
+    const result = await db.pool.query("SELECT w.id,w.name,w.icon,m.role FROM tantu.workspaces w JOIN tantu.memberships m ON m.workspace_id=w.id WHERE m.user_id=$1 AND m.active ORDER BY w.id LIMIT 100", [session.userId]);
     return { items: result.rows };
   });
   app.post<{ Body: { name: string } }>("/api/v1/workspaces", { schema: { body: object({ name: text(100) }) } }, async (request, reply) => {
@@ -95,7 +95,7 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [session.userId]);
       const counts = await client.query<{ count: number }>("SELECT count(*)::int AS count FROM tantu.memberships WHERE user_id=$1 AND active", [session.userId]);
       if ((counts.rows[0]?.count ?? 100) >= 100) throw new Failure(409, "QUOTA_EXCEEDED", "Workspace limit reached.");
-      const result = await client.query<{ id: string; name: string }>("INSERT INTO tantu.workspaces(name) VALUES($1) RETURNING id,name", [request.body.name]);
+      const result = await client.query<{ id: string; name: string }>("INSERT INTO tantu.workspaces(name) VALUES($1) RETURNING id,name,icon", [request.body.name]);
       const row = result.rows[0];
       if (!row) throw new Error("Workspace creation failed.");
       await client.query("INSERT INTO tantu.memberships(workspace_id,user_id,role) VALUES($1,$2,'owner')", [row.id, session.userId]);
@@ -103,11 +103,11 @@ export function identityRoutes(app: FastifyInstance, identity: Identity): void {
     });
     return reply.code(201).send(workspace);
   });
-  app.patch<{ Params: { workspaceId: string }; Body: { name: string } }>("/api/v1/workspaces/:workspaceId", { schema: { params: workspaceParams, body: object({ name: text(100) }, ["name"]) } }, async (request) => {
+  app.patch<{ Params: { workspaceId: string }; Body: { name?: string; icon?: string } }>("/api/v1/workspaces/:workspaceId", { schema: { params: workspaceParams, body: { ...object({ name: { ...text(100), pattern: "\\S" }, icon: { enum: ["⚡", "🚀", "💡", "🎯", "📚", "🏢", "🛠️", "🌐"] } }, []), minProperties: 1 } } }, async (request) => {
     const scope = await identity.scope(request, request.params.workspaceId, true);
     return db.transaction(scope, async (client) => {
       await identity.requireManager(client, scope);
-      const result = await client.query<{ id: string; name: string }>("UPDATE tantu.workspaces SET name=$1 WHERE id=$2 RETURNING id,name", [request.body.name.trim(), scope.workspaceId]);
+      const result = await client.query<{ id: string; name: string }>("UPDATE tantu.workspaces SET name=coalesce($1,name),icon=coalesce($3,icon) WHERE id=$2 RETURNING id,name,icon", [request.body.name?.trim(), scope.workspaceId, request.body.icon]);
       const row = result.rows[0];
       if (!row) throw new Failure(404, "NOT_FOUND", "Workspace not found.");
       return row;

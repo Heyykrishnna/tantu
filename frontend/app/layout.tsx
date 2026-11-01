@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import MotionBoundary from "../components/ui/motion-boundary";
 
 const inter = localFont({
   src: "./fonts/Inter-Variable.woff2",
@@ -30,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${poppins.variable} scheme-light dark:scheme-dark`}
     >
       <body className="min-h-dvh bg-[#f8f9fa] font-[family-name:var(--font-inter)] text-[13px] leading-relaxed text-zinc-900 antialiased selection:bg-zinc-500/20 dark:bg-[#0c0c0e] dark:text-zinc-100">
-        {children}
+        <MotionBoundary>{children}</MotionBoundary>
       </body>
     </html>
   );

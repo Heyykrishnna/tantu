@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import type { OrbState } from "thinking-orbs";
+import { useDecorativeMotionPaused } from "@/lib/use-ui-motion";
 import { cn } from "@/lib/utils";
 
 const ThinkingOrb = dynamic(
@@ -69,6 +70,7 @@ export function Orb({
   onClick,
   onStateChange,
 }: OrbProps) {
+  const pauseMotion = useDecorativeMotionPaused();
   const isControlled = controlledState !== undefined;
   const [internalState, setInternalState] = useState<OrbState>(defaultState);
   const currentState = isControlled ? controlledState : internalState;
@@ -96,7 +98,7 @@ export function Orb({
       size={size}
       theme={theme}
       speed={speed}
-      paused={paused}
+      paused={paused || pauseMotion}
       color={color}
       style={{ width: px, height: px, display: "block" }}
     />

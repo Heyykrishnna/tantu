@@ -38,7 +38,7 @@ const variantStyles: Record<CandyButtonVariant, string> = {
     "bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 shadow-xs hover:bg-zinc-700",
   azure: "bg-sky-600 dark:bg-sky-700 text-white shadow-xs hover:bg-sky-500",
   obsidian:
-    "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border border-zinc-800 dark:border-zinc-200 shadow-xs hover:bg-zinc-800 dark:hover:bg-white",
+    "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border border-zinc-800 dark:border-zinc-200 shadow-xs hover:bg-zinc-800 dark:hover:bg-white [[data-accent=indigo]_&]:border-indigo-600 [[data-accent=indigo]_&]:bg-indigo-600 [[data-accent=indigo]_&]:text-white [[data-accent=sage]_&]:border-emerald-800 [[data-accent=sage]_&]:bg-emerald-800 [[data-accent=sage]_&]:text-white",
   pearl:
     "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-800/80",
 };

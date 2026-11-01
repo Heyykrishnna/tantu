@@ -149,6 +149,8 @@ export async function updateEnterprisePolicy(
     updatedBy?: string;
   }
 ): Promise<EnterprisePolicyRecord> {
+  if (params.ssoEnforced === true || (params.allowedIpRanges?.length ?? 0) > 0 || (params.sessionDurationMinutes !== undefined && params.sessionDurationMinutes !== 480))
+    throw new Failure(409, "IDENTITY_INTEGRATION_REQUIRED", "External identity enforcement is not configured. Existing sign-in and session protections remain active.");
   const current = await getEnterprisePolicy(client, workspaceId);
 
   const ssoEnforced = params.ssoEnforced ?? current.ssoEnforced;
@@ -321,10 +323,10 @@ export async function createAuditExport(
     occurred_at: string;
     actor_id: string | null;
   }>(
-    `SELECT id, action, occurred_at, actor_id
-     FROM tantu.audit
-     ORDER BY occurred_at DESC
-     LIMIT 500`
+    `SELECT id, type AS action, created_at::text AS occurred_at, actor_id
+     FROM tantu.audit WHERE workspace_id=$1
+     ORDER BY created_at DESC
+     LIMIT 500`, [workspaceId]
   );
 
   const records = auditResult.rows;
@@ -361,11 +363,11 @@ export async function createAuditExport(
     created_at: string;
   }>(
     `INSERT INTO tantu.enterprise_audit_exports(
-       workspace_id, export_format, status, download_token, record_count, checksum_sha256, expires_at
+       workspace_id, export_format, status, download_token, record_count, checksum_sha256, expires_at, payload
      )
-     VALUES ($1, $2, 'completed', $3, $4, $5, $6)
+     VALUES ($1, $2, 'completed', $3, $4, $5, $6, $7)
      RETURNING id, workspace_id, export_format, status, download_token, record_count, checksum_sha256, expires_at, created_at`,
-    [workspaceId, format, downloadToken, records.length, checksumSha256, expiresAt]
+    [workspaceId, format, downloadToken, records.length, checksumSha256, expiresAt, payload]
   );
 
   const row = insertResult.rows[0];
@@ -420,4 +422,14 @@ export async function listAuditExports(
     expiresAt: row.expires_at,
     createdAt: row.created_at
   }));
+}
+
+export async function getAuditExportFile(client: PoolClient, workspaceId: string, exportId: string) {
+  const result = await client.query<{ payload: string; export_format: "ndjson" | "csv"; checksum_sha256: string }>(
+    "SELECT payload,export_format,checksum_sha256 FROM tantu.enterprise_audit_exports WHERE id=$1 AND workspace_id=$2 AND status='completed' AND expires_at>now() AND payload IS NOT NULL",
+    [exportId, workspaceId],
+  );
+  const row = result.rows[0];
+  if (!row) throw new Failure(404, "NOT_FOUND", "The export is unavailable or has expired. Create a new export.");
+  return { payload: row.payload, fileName: `audit-${exportId}.${row.export_format === "csv" ? "csv" : "ndjson"}`, mediaType: row.export_format === "csv" ? "text/csv" : "application/x-ndjson", checksumSha256: row.checksum_sha256 };
 }

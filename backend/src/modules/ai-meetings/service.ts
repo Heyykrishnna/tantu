@@ -196,7 +196,7 @@ export async function generateMeetingBrief(
        linked_task_ids, linked_decision_ids, linked_promise_ids,
        key_topics, citations, action_items, generation_mode, version
      ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'deterministic', 1)
-     ON CONFLICT (workspace_id, event_id)
+     ON CONFLICT (workspace_id, event_id, owner_id)
      DO UPDATE SET title = EXCLUDED.title, meeting_date = EXCLUDED.meeting_date,
                    attendees = EXCLUDED.attendees, linked_task_ids = EXCLUDED.linked_task_ids,
                    linked_decision_ids = EXCLUDED.linked_decision_ids, linked_promise_ids = EXCLUDED.linked_promise_ids,

@@ -8,7 +8,7 @@ import {
 export { CandyButton };
 
 export const inputClass =
-  "min-w-0 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-[12px] font-normal text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-zinc-400 hover:border-zinc-300 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-400/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-[#141416] dark:text-zinc-100 dark:placeholder:text-zinc-600 dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)] dark:hover:border-zinc-700 dark:focus:border-zinc-400 dark:focus:ring-zinc-500/25 dark:scheme-dark motion-reduce:transition-none";
+  "min-w-0 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-[12px] font-normal text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-zinc-400 hover:border-zinc-300 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-400/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-[#141416] dark:text-zinc-100 dark:placeholder:text-zinc-600 dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)] dark:hover:border-zinc-700 dark:focus:border-zinc-400 dark:focus:ring-zinc-500/25 dark:scheme-dark motion-reduce:transition-none [[data-density=compact]_&]:py-1.5 [[data-reduce-motion=true]_&]:transition-none";
 export const panelClass =
   "min-w-0 rounded-xl border border-zinc-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)] transition-all dark:border-zinc-800/80 dark:bg-[#141416] dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]";
 export const mutedClass = "text-zinc-500 dark:text-zinc-400";

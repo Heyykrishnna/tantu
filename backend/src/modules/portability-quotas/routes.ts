@@ -63,6 +63,8 @@ export function portabilityQuotaRoutes(app: FastifyInstance, identity: Identity)
       weekStart?: "sunday" | "monday";
       locale?: string;
       defaultCalendar?: string | null;
+      accent?: "neutral" | "indigo" | "sage";
+      reduceMotion?: boolean;
     };
   }>(
     root + "/preferences",
@@ -77,6 +79,8 @@ export function portabilityQuotaRoutes(app: FastifyInstance, identity: Identity)
             weekStart: weekStartEnum,
             locale: { type: "string", maxLength: 10 },
             defaultCalendar: { anyOf: [{ type: "string", maxLength: 100 }, { type: "null" }] },
+            accent: { enum: ["neutral", "indigo", "sage"] },
+            reduceMotion: { type: "boolean" },
           },
           []
         ),

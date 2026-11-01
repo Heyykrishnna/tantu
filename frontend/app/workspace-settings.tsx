@@ -2,11 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { applyTheme } from "../lib/theme";
-import { acknowledgment, api, items, record, string } from "../lib/api";
+import dynamic from "next/dynamic";
+import { applyWorkspacePreferences, parseWorkspacePreferences } from "../lib/appearance";
+import type { WorkspacePreferences } from "../lib/appearance";
+import SettingsNavigation, { settingsSections } from "./settings-navigation";
+import SettingsOverview, { PermissionsSummary } from "./settings-overview";
+import SettingsAppearance from "./settings-appearance";
+import SettingsSpaces from "./settings-spaces";
+
+import { acknowledgment, api, choice, items, record, string } from "../lib/api";
 import type { User, Workspace } from "../lib/api";
 import { Icon } from "../components/icon";
-import type { IconName } from "../components/icon";
+
 import { MorphInvite } from "@/components/ui/morph-invite";
 import { ConfirmMorph } from "@/components/ui/confirm-morph";
 import {
@@ -53,13 +60,7 @@ interface Quota {
   quotaResetAt: string;
 }
 
-interface Preferences {
-  theme: "system" | "light" | "dark";
-  density: "comfortable" | "compact";
-  timezone: string;
-  weekStart: "sunday" | "monday";
-  locale: string;
-}
+type Preferences = WorkspacePreferences;
 
 interface EnterprisePolicy {
   ssoEnforced: boolean;
@@ -85,13 +86,11 @@ function parseSession(value: unknown): UserSession {
   };
 }
 
-type SettingsTab =
-  | "general"
-  | "members"
-  | "preferences"
-  | "quotas"
-  | "security"
-  | "connections";
+const SettingsAi = dynamic(() => import("./settings-ai"));
+const SettingsGovernance = dynamic(() => import("./settings-governance"));
+const ConnectedApps = dynamic(() => import("./mail-panel"));
+const DeveloperTools = dynamic(() => import("./integrations-panel"));
+const AutomationSettings = dynamic(() => import("./rules-panel"));
 
 function parseMember(value: unknown): Member {
   const data = record(value);
@@ -133,23 +132,7 @@ function parseQuota(value: unknown): Quota {
   };
 }
 
-function parsePreferences(value: unknown): Preferences {
-  const root = record(value);
-  const data = record(root.preferences ?? value);
-  return {
-    theme: (data.theme === "light" || data.theme === "dark"
-      ? data.theme
-      : "system") as "system" | "light" | "dark",
-    density: (data.density === "compact" ? "compact" : "comfortable") as
-      | "comfortable"
-      | "compact",
-    timezone: string(data.timezone ?? "UTC"),
-    weekStart: (data.weekStart === "sunday" ? "sunday" : "monday") as
-      | "sunday"
-      | "monday",
-    locale: string(data.locale ?? "en"),
-  };
-}
+const parsePreferences = parseWorkspacePreferences;
 
 function parsePolicy(value: unknown): EnterprisePolicy {
   const root = record(value);
@@ -172,6 +155,8 @@ export default function WorkspaceSettings({
   workspace,
   csrf,
   currentUser,
+  workspaces = [],
+  onSwitchWorkspace,
   onJoined,
   onWorkspaceRenamed,
   onWorkspaceLeft,
@@ -179,18 +164,20 @@ export default function WorkspaceSettings({
   workspace: Workspace;
   csrf: string;
   currentUser?: User | null;
+  workspaces?: Workspace[];
+  onSwitchWorkspace?: (id: string) => void;
   onJoined: () => void;
-  onWorkspaceRenamed?: (newName: string) => void;
+  onWorkspaceRenamed?: (newName: string, icon?: string) => void;
   onWorkspaceLeft?: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
-    if (typeof window === "undefined") return "general";
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window === "undefined") return "overview";
     const search = new URLSearchParams(window.location.search);
     return search.get("invite") ||
       search.get("invitation") ||
       search.get("token")
       ? "members"
-      : "general";
+      : settingsSections.find(section => section.id === search.get("section"))?.id ?? "overview";
   });
 
   const [members, setMembers] = useState<Member[]>([]);
@@ -204,7 +191,7 @@ export default function WorkspaceSettings({
   const [policy, setPolicy] = useState<EnterprisePolicy | null>(null);
 
   const [workspaceName, setWorkspaceName] = useState(workspace.name);
-  const [workspaceEmoji, setWorkspaceEmoji] = useState("⚡");
+  const [workspaceEmoji, setWorkspaceEmoji] = useState(workspace.icon ?? "⚡");
   const [memberSearch, setMemberSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [selectedInviteRole, setSelectedInviteRole] =
@@ -284,58 +271,31 @@ export default function WorkspaceSettings({
 
   useEffect(() => {
     const controller = new AbortController();
-    if (isManager) {
-      api(path + "/members", items(parseMember), { signal: controller.signal })
-        .then(setMembers)
-        .catch(() => {});
-      api(path + "/invitations", items(parsePendingInvitation), {
-        signal: controller.signal,
-      })
-        .then(setPendingInvites)
-        .catch(() => {});
-      api(path + "/enterprise-policy", parsePolicy, {
-        signal: controller.signal,
-      })
-        .then(setPolicy)
-        .catch(() => {});
-      Promise.all([
-        api<{ items: { id: string; title: string }[] }>(
-          path + "/tasks?limit=25",
-          (v) => v as { items: { id: string; title: string }[] },
-          { signal: controller.signal },
-        ).catch(() => ({ items: [] })),
-        api<{ items: { id: string; title: string }[] }>(
-          path + "/pages?limit=25",
-          (v) => v as { items: { id: string; title: string }[] },
-          { signal: controller.signal },
-        ).catch(() => ({ items: [] })),
-      ]).then(([tasksRes, pagesRes]) => {
-        const combined: RecordOption[] = [
-          ...tasksRes.items.map((t) => ({
-            id: t.id,
-            title: t.title,
-            kind: "task" as const,
-          })),
-          ...pagesRes.items.map((p) => ({
-            id: p.id,
-            title: p.title,
-            kind: "page" as const,
-          })),
-        ];
-        setRecordOptions(combined);
-      });
+    const fail = (error: unknown) => {
+      if (!controller.signal.aborted) setMessage(error instanceof Error ? error.message : "Settings could not be loaded.");
+    };
+    const options = { signal: controller.signal };
+    if (isManager && (activeTab === "members" || activeTab === "permissions")) {
+      api(path + "/members", items(parseMember), options).then(setMembers).catch(fail);
+      if (activeTab === "members") {
+        api(path + "/invitations", items(parsePendingInvitation), options).then(setPendingInvites).catch(fail);
+        Promise.all([
+          api(path + "/tasks?limit=25", value => items(value => { const data = record(value); return { id: string(data.id), title: string(data.title) }; })(value), options),
+          api(path + "/pages?limit=25", value => items(value => { const data = record(value); return { id: string(data.id), title: string(data.title) }; })(value), options),
+        ]).then(([tasks, pages]) => setRecordOptions([
+          ...tasks.map(item => ({ ...item, kind: "task" as const })),
+          ...pages.map(item => ({ ...item, kind: "page" as const })),
+        ])).catch(fail);
+      }
     }
-    api(path + "/quotas", parseQuota, { signal: controller.signal })
-      .then(setQuota)
-      .catch(() => {});
-    api(path + "/preferences", parsePreferences, { signal: controller.signal })
-      .then(setPreferences)
-      .catch(() => {});
-    api("/auth/sessions", items(parseSession), { signal: controller.signal })
-      .then(setUserSessions)
-      .catch(() => {});
+    if (activeTab === "overview" || activeTab === "quotas") api(path + "/quotas", parseQuota, options).then(setQuota).catch(fail);
+    if (activeTab === "preferences") api(path + "/preferences", parsePreferences, options).then(setPreferences).catch(fail);
+    if (activeTab === "security") {
+      api("/auth/sessions", items(parseSession), options).then(setUserSessions).catch(fail);
+      if (isManager) api(path + "/enterprise-policy", parsePolicy, options).then(setPolicy).catch(fail);
+    }
     return () => controller.abort();
-  }, [path, isManager]);
+  }, [path, isManager, activeTab]);
 
   const refreshSessions = useCallback(async () => {
     try {
@@ -432,10 +392,10 @@ export default function WorkspaceSettings({
       await api(path, (value) => string(record(value).name), {
         method: "PATCH",
         csrf,
-        body: { name: workspaceName.trim() },
+        body: { name: workspaceName.trim(), icon: workspaceEmoji },
       });
-      onWorkspaceRenamed?.(workspaceName.trim());
-      showToast("Workspace name updated.");
+      onWorkspaceRenamed?.(workspaceName.trim(), workspaceEmoji);
+      showToast("Workspace profile saved.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Rename failed.");
     } finally {
@@ -630,9 +590,9 @@ export default function WorkspaceSettings({
   async function savePreferences(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const themeVal = String(data.get("theme")) as "system" | "light" | "dark";
-    const densityVal = String(data.get("density")) as "comfortable" | "compact";
-    const weekStartVal = String(data.get("weekStart")) as "sunday" | "monday";
+    const themeVal = choice(data.get("theme"), ["system", "light", "dark"]);
+    const densityVal = choice(data.get("density"), ["comfortable", "compact"]);
+    const weekStartVal = choice(data.get("weekStart"), ["sunday", "monday"]);
     const timezoneVal = String(data.get("timezone") || "UTC");
 
     setBusy(true);
@@ -645,10 +605,13 @@ export default function WorkspaceSettings({
           density: densityVal,
           weekStart: weekStartVal,
           timezone: timezoneVal,
+          locale: String(data.get("locale") ?? "en"),
+          accent: choice(data.get("accent"), ["neutral", "indigo", "sage"]),
+          reduceMotion: data.get("reduceMotion") === "on",
         },
       });
       setPreferences(updated);
-      applyTheme(themeVal === "light" ? "light" : "dark");
+      applyWorkspacePreferences(updated);
       try {
         localStorage.setItem("tantu-theme", themeVal);
       } catch {
@@ -766,23 +729,6 @@ export default function WorkspaceSettings({
     }
   }
 
-  async function disconnectGoogle() {
-    setBusy(true);
-    try {
-      await api(path + "/providers/google/disconnect", acknowledgment, {
-        method: "POST",
-        csrf,
-      });
-      showToast("Google Workspace disconnected.");
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Disconnection failed.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
   async function copyLink(content: string, label: string) {
     try {
       await navigator.clipboard.writeText(content);
@@ -805,14 +751,13 @@ export default function WorkspaceSettings({
       ? `${window.location.origin}/?invite=${encodeURIComponent(token)}`
       : "";
 
-  const tabs: { id: SettingsTab; label: string; icon: IconName }[] = [
-    { id: "general", label: "General", icon: "settings" },
-    { id: "members", label: "People & Roles", icon: "users" },
-    { id: "preferences", label: "Preferences", icon: "panel" },
-    { id: "quotas", label: "Data & Quotas", icon: "download" },
-    { id: "security", label: "Security & DLP", icon: "shield" },
-    { id: "connections", label: "Connected Apps", icon: "external" },
-  ];
+  function selectSection(section: string) {
+    setActiveTab(section);
+    setMessage("");
+    const url = new URL(window.location.href);
+    url.searchParams.set("section", section);
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }
 
   const emojiChoices = ["⚡", "🚀", "💡", "🎯", "📚", "🏢", "🛠️", "🌐"];
 
@@ -854,27 +799,12 @@ export default function WorkspaceSettings({
           </div>
         </div>
 
-        <nav className="mt-6 flex flex-wrap gap-1">
-          {tabs.map((tab) => {
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[12px] font-medium transition-colors ${
-                  active
-                    ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-zinc-950"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                }`}
-              >
-                <Icon name={tab.icon} className="size-3.5" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
+
       </header>
+      <div className="grid items-start gap-6 lg:grid-cols-[195px_minmax(0,1fr)]">
+        <SettingsNavigation active={activeTab} manager={isManager} onChange={selectSection} />
+        <div className="min-w-0 space-y-6">
+
 
       <Notice tone="error" role="alert">
         {message}
@@ -898,6 +828,9 @@ export default function WorkspaceSettings({
                     <button
                       key={emoji}
                       type="button"
+                      disabled={!isManager || busy}
+                      aria-label={`Use ${emoji} as workspace icon`}
+                      aria-pressed={workspaceEmoji === emoji}
                       onClick={() => setWorkspaceEmoji(emoji)}
                       className={`grid size-9 place-items-center rounded-lg border text-lg transition-transform hover:scale-110 ${
                         workspaceEmoji === emoji
@@ -1423,71 +1356,7 @@ export default function WorkspaceSettings({
         </div>
       )}
 
-      {activeTab === "preferences" && (
-        <section className={`${panelClass} p-6`}>
-          <header className="mb-5">
-            <h2 className={`${headingClass} text-[16px]`}>
-              Display &amp; Regional Preferences
-            </h2>
-            <p className={`text-[11px] ${mutedClass}`}>
-              Preferences are saved to your account and synced across sessions.
-            </p>
-          </header>
-          <form onSubmit={savePreferences} className="grid max-w-xl gap-5">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Interface Theme">
-                <select
-                  name="theme"
-                  defaultValue={preferences?.theme ?? "dark"}
-                  aria-label="Color theme"
-                  className={inputClass}
-                >
-                  <option value="system">System Default</option>
-                  <option value="dark">Dark Theme</option>
-                  <option value="light">Light Theme</option>
-                </select>
-              </Field>
-              <Field label="Layout Density">
-                <select
-                  name="density"
-                  defaultValue={preferences?.density ?? "comfortable"}
-                  aria-label="Layout density"
-                  className={inputClass}
-                >
-                  <option value="comfortable">Comfortable</option>
-                  <option value="compact">Compact (High Information)</option>
-                </select>
-              </Field>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Week Starts On">
-                <select
-                  name="weekStart"
-                  defaultValue={preferences?.weekStart ?? "monday"}
-                  aria-label="Week start day"
-                  className={inputClass}
-                >
-                  <option value="monday">Monday (ISO Standard)</option>
-                  <option value="sunday">Sunday</option>
-                </select>
-              </Field>
-              <Field label="Timezone">
-                <input
-                  name="timezone"
-                  defaultValue={preferences?.timezone ?? "UTC"}
-                  className={inputClass}
-                />
-              </Field>
-            </div>
-            <div>
-              <Button type="submit" variant="primary" disabled={busy}>
-                <Icon name="check" className="size-3.5" />
-                Save Preferences
-              </Button>
-            </div>
-          </form>
-        </section>
-      )}
+      {activeTab === "preferences" && (preferences ? <SettingsAppearance key={preferences.updatedAt} preferences={preferences} busy={busy} onSave={savePreferences} /> : <p role="status" className={mutedClass}>Loading appearance preferences…</p>)}
 
       {activeTab === "quotas" && (
         <div className="grid gap-6">
@@ -1859,57 +1728,18 @@ export default function WorkspaceSettings({
         </div>
       )}
 
-      {activeTab === "connections" && (
-        <section className={`${panelClass} p-6`}>
-          <header className="mb-5">
-            <h2 className={`${headingClass} text-[16px]`}>
-              Connected Apps &amp; External Providers
-            </h2>
-            <p className={`text-[11px] ${mutedClass}`}>
-              Manage remote calendar, mail, and webhook connections.
-            </p>
-          </header>
+      {activeTab === "overview" && <SettingsOverview workspace={workspace} quota={quota} onSelect={selectSection} />}
+      {activeTab === "spaces" && <SettingsSpaces workspaces={workspaces} currentId={workspace.id} csrf={csrf} onSwitch={id => onSwitchWorkspace?.(id)} onCreated={onJoined} />}
+      {activeTab === "permissions" && <PermissionsSummary role={workspace.role} />}
+      {activeTab === "connections" && <ConnectedApps workspaceId={workspace.id} csrf={csrf} />}
+      {activeTab === "ai" && <SettingsAi workspaceId={workspace.id} csrf={csrf} manager={isManager} />}
+      {activeTab === "governance" && isManager && <SettingsGovernance workspaceId={workspace.id} csrf={csrf} />}
+      {activeTab === "developer" && isManager && <DeveloperTools workspaceId={workspace.id} csrf={csrf} />}
+      {activeTab === "automation" && isManager && <AutomationSettings workspaceId={workspace.id} csrf={csrf} />}
+      {!isManager && ["governance", "developer", "automation"].includes(activeTab) && <Notice>Your current role does not allow workspace administration. Select another settings section.</Notice>}
+        </div>
+      </div>
 
-          <div className="grid max-w-xl gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
-              <div className="flex items-center gap-3">
-                <Icon name="calendar" className="size-5 text-zinc-400" />
-                <div>
-                  <strong className="block text-[13px] font-medium">
-                    Google Workspace
-                  </strong>
-                  <span className={`block text-[11px] ${mutedClass}`}>
-                    Calendar bidirectional event sync &amp; Gmail integration.
-                  </span>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onClick={() => void disconnectGoogle()}
-              >
-                Disconnect
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
-              <div className="flex items-center gap-3">
-                <Icon name="mail" className="size-5 text-sky-500" />
-                <div>
-                  <strong className="block text-[13px] font-medium">
-                    Microsoft 365
-                  </strong>
-                  <span className={`block text-[11px] ${mutedClass}`}>
-                    Outlook calendar and Exchange mail sync.
-                  </span>
-                </div>
-              </div>
-              <Badge tone="neutral">Configured in Integrations</Badge>
-            </div>
-          </div>
-        </section>
-      )}
     </section>
   );
 }

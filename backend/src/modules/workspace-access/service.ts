@@ -50,6 +50,12 @@ export class Identity {
     return { userId: session.userId, workspaceId };
   }
 
+  async requireContributor(client: PoolClient, scope: Scope): Promise<void> {
+    const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active FOR SHARE", [scope.workspaceId, scope.userId]);
+    if (!member.rows[0] || !["owner", "admin", "member"].includes(member.rows[0].role))
+      throw new Failure(403, "FORBIDDEN", "Your workspace role is read-only.");
+  }
+
   async requireManager(client: PoolClient, scope: Scope, ownerOnly = false): Promise<void> {
     const member = await client.query<{ role: string }>("SELECT role FROM tantu.memberships WHERE workspace_id=$1 AND user_id=$2 AND active FOR UPDATE", [scope.workspaceId, scope.userId]);
     if (!member.rows[0] || !(ownerOnly ? ["owner"] : ["owner", "admin"]).includes(member.rows[0].role)) throw new Failure(403, "FORBIDDEN", "Workspace management permission is required.");

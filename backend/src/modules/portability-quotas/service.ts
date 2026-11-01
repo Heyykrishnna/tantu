@@ -21,6 +21,8 @@ export interface UserPreferencesInfo {
   weekStart: "sunday" | "monday";
   locale: string;
   defaultCalendar: string | null;
+  accent: "neutral" | "indigo" | "sage";
+  reduceMotion: boolean;
   updatedAt: string;
 }
 
@@ -114,6 +116,7 @@ export async function getUserPreferences(
         week_start AS "weekStart",
         locale,
         default_calendar AS "defaultCalendar",
+        accent, reduce_motion AS "reduceMotion",
         updated_at::text AS "updatedAt"
       FROM tantu.user_preferences
       WHERE user_id = $1 AND workspace_id = $2`,
@@ -132,6 +135,8 @@ export async function getUserPreferences(
     weekStart: "monday",
     locale: "en",
     defaultCalendar: null,
+    accent: "neutral",
+    reduceMotion: false,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -147,6 +152,8 @@ export async function updateUserPreferences(
     weekStart?: "sunday" | "monday";
     locale?: string;
     defaultCalendar?: string | null;
+    accent?: "neutral" | "indigo" | "sage";
+    reduceMotion?: boolean;
   }
 ): Promise<UserPreferencesInfo> {
   const existing = await getUserPreferences(client, userId, workspaceId);
@@ -156,12 +163,19 @@ export async function updateUserPreferences(
   const timezone = input.timezone ?? existing.timezone;
   const weekStart = input.weekStart ?? existing.weekStart;
   const locale = input.locale ?? existing.locale;
+  try {
+    new Intl.DateTimeFormat(locale, { timeZone: timezone });
+    Intl.getCanonicalLocales(locale);
+  } catch (error) {
+    if (!(error instanceof RangeError)) throw error;
+    throw new Failure(400, "INVALID_PREFERENCES", "Choose a valid IANA timezone and locale, such as Asia/Kolkata and en-IN.");
+  }
   const defaultCalendar = input.defaultCalendar !== undefined ? input.defaultCalendar : existing.defaultCalendar;
 
   const result = await client.query<UserPreferencesInfo>(
     `INSERT INTO tantu.user_preferences(
-      user_id, workspace_id, theme, density, timezone, week_start, locale, default_calendar, updated_at
-    ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, now())
+      user_id, workspace_id, theme, density, timezone, week_start, locale, default_calendar, accent, reduce_motion, updated_at
+    ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now())
     ON CONFLICT(user_id, workspace_id) DO UPDATE SET
       theme = excluded.theme,
       density = excluded.density,
@@ -169,6 +183,8 @@ export async function updateUserPreferences(
       week_start = excluded.week_start,
       locale = excluded.locale,
       default_calendar = excluded.default_calendar,
+      accent = excluded.accent,
+      reduce_motion = excluded.reduce_motion,
       updated_at = now()
     RETURNING
       user_id AS "userId",
@@ -179,8 +195,9 @@ export async function updateUserPreferences(
       week_start AS "weekStart",
       locale,
       default_calendar AS "defaultCalendar",
+      accent, reduce_motion AS "reduceMotion",
       updated_at::text AS "updatedAt"`,
-    [userId, workspaceId, theme, density, timezone, weekStart, locale, defaultCalendar]
+    [userId, workspaceId, theme, density, timezone, weekStart, locale, defaultCalendar, input.accent ?? existing.accent, input.reduceMotion ?? existing.reduceMotion]
   );
 
   const updated = result.rows[0];

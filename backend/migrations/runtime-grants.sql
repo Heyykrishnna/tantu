@@ -45,3 +45,4 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.enterprise_policies,tantu.dlp_redacti
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.sharing_exposure_previews,tantu.handover_packs,tantu.knowledge_freshness_reviews,tantu.scenario_plans,tantu.attention_budgets TO tantu_runtime;
 GRANT SELECT ON tantu.workspace_members TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.email_verifications TO tantu_runtime;
+GRANT EXECUTE ON FUNCTION tantu.can_read_context_source(text,uuid) TO tantu_runtime;

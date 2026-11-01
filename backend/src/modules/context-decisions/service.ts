@@ -177,6 +177,7 @@ export async function supersedeDecision(
   if (!existing) {
     throw new Failure(404, "NOT_FOUND", "Original decision not found.");
   }
+  if (existing.ownerId !== actorId) throw new Failure(403, "FORBIDDEN", "Only the decision owner can supersede it.");
   if (existing.status === "superseded") {
     throw new Failure(409, "CONFLICT", "This decision is already superseded.");
   }

@@ -54,8 +54,8 @@ export function canonical(value: unknown): CanonicalRecord {
   if (typeof data.canEdit !== "boolean") throw new Error("The server returned invalid permissions.");
   return { id: string(data.id), workspaceId: string(data.workspaceId), ownerId: string(data.ownerId), kind: choice(data.kind, ["task", "page"]), title: string(data.title), visibility: choice(data.visibility, ["private", "workspace"]), parentId: nullable(data.parentId), body: document(data.body), status: choice(data.status, ["open", "done"]), priority: choice(data.priority, ["low", "normal", "high", "urgent"]), deadline: nullable(data.deadline), estimateMinutes: data.estimateMinutes === null ? null : number(data.estimateMinutes), version: number(data.version), canEdit: data.canEdit, createdAt: string(data.createdAt), updatedAt: string(data.updatedAt) };
 }
-export interface Workspace { id: string; name: string; role: "owner" | "admin" | "member" | "guest" }
-export function workspace(value: unknown): Workspace { const data = record(value); return { id: string(data.id), name: string(data.name), role: choice(data.role, ["owner", "admin", "member", "guest"]) }; }
+export interface Workspace { id: string; name: string; icon?: string; role: "owner" | "admin" | "member" | "guest" }
+export function workspace(value: unknown): Workspace { const data = record(value); return { id: string(data.id), name: string(data.name), icon: data.icon === undefined ? "⚡" : string(data.icon), role: choice(data.role, ["owner", "admin", "member", "guest"]) }; }
 export interface User { id: string; email: string; name: string }
 export function session(value: unknown) { const data = record(value); const user = record(data.user); return { csrf: string(data.csrf), user: { id: string(user.id), email: string(user.email), name: string(user.name) } }; }
 export interface FileItem { id: string; name: string; state: "pending" | "clean" | "unavailable" | "rejected" | "deleted"; bytes: number }

@@ -175,7 +175,7 @@ export default function RecordList({
                 <button
                   onClick={() => onOpen(entry.id)}
                   aria-pressed={selectedId === entry.id}
-                  className={`grid min-h-14 w-full grid-cols-[minmax(0,1fr)_90px] items-center gap-3 px-4 py-2.5 text-left outline-none transition-all focus-visible:ring-2 focus-visible:ring-zinc-400 lg:grid-cols-[minmax(0,1fr)_90px_100px_80px] motion-reduce:transition-none ${selectedId === entry.id ? "border-l-2 border-l-zinc-900 bg-zinc-100 shadow-xs dark:border-l-zinc-100 dark:bg-zinc-800/85" : "hover:bg-zinc-50/80 dark:hover:bg-zinc-850/60"}`}
+                  className={`[[data-density=compact]_&]:min-h-10 [[data-density=compact]_&]:py-1.5 grid min-h-14 w-full grid-cols-[minmax(0,1fr)_90px] items-center gap-3 px-4 py-2.5 text-left outline-none transition-all focus-visible:ring-2 focus-visible:ring-zinc-400 lg:grid-cols-[minmax(0,1fr)_90px_100px_80px] motion-reduce:transition-none ${selectedId === entry.id ? "border-l-2 border-l-zinc-900 bg-zinc-100 shadow-xs dark:border-l-zinc-100 dark:bg-zinc-800/85" : "hover:bg-zinc-50/80 dark:hover:bg-zinc-850/60"}`}
                 >
                   <span className="flex min-w-0 items-center gap-3">
                     <span

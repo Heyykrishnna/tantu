@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { flushSync } from "react-dom";
 import { cn } from "@/lib/utils";
+import { useUiMotion } from "@/lib/use-ui-motion";
 import { applyTheme as applyDocumentTheme } from "@/lib/theme";
 
 export type TransitionVariant =
@@ -21,7 +22,7 @@ export interface ThemeToggleProps extends React.ComponentPropsWithoutRef<"button
   fromCenter?: boolean;
   candy?: boolean;
   theme?: "light" | "dark";
-  onThemeChange?: (theme: "light" | "dark") => void;
+  onThemeChange?: (theme: "light" | "dark") => void | Promise<void>;
 }
 
 function polygonCollapsed(point: string, vertexCount: number): string {
@@ -149,6 +150,8 @@ export const ThemeToggle = ({
   onThemeChange,
   ...props
 }: ThemeToggleProps) => {
+  const reducedMotion = useUiMotion();
+  const [saving, setSaving] = useState(false);
   const shape = variant ?? "circle";
   const isControlled = theme !== undefined;
   const [internalIsDark, setInternalIsDark] = useState(true);
@@ -252,7 +255,12 @@ export const ThemeToggle = ({
     const applyTheme = () => {
       const nextIsDark = document.documentElement.dataset.theme === "light";
       applyDocumentTheme(nextIsDark ? "dark" : "light");
-      onThemeChange?.(nextIsDark ? "dark" : "light");
+      if (onThemeChange) {
+        setSaving(true);
+        Promise.resolve(onThemeChange(nextIsDark ? "dark" : "light"))
+          .catch(() => setPreferenceUnavailable(true))
+          .finally(() => setSaving(false));
+      }
       if (!isControlled) setInternalIsDark(nextIsDark);
       try {
         localStorage.setItem("tantu-theme", nextIsDark ? "dark" : "light");
@@ -271,7 +279,7 @@ export const ThemeToggle = ({
       typeof document === "undefined" ||
       !("startViewTransition" in document) ||
       typeof document.startViewTransition !== "function" ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      reducedMotion
     ) {
       applyTheme();
       return;
@@ -368,7 +376,7 @@ export const ThemeToggle = ({
         })
         .catch(() => {});
     }
-  }, [shape, fromCenter, duration, isControlled, onThemeChange, cancelAnim]);
+  }, [shape, fromCenter, duration, isControlled, onThemeChange, cancelAnim, reducedMotion]);
 
   const candyClasses = candy
     ? "relative inline-flex items-center justify-center font-medium leading-none tracking-[0.01em] select-none overflow-hidden cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 hover:brightness-105 bg-zinc-900 text-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 border border-zinc-800 dark:border-zinc-200 shadow-xs"
@@ -386,9 +394,10 @@ export const ThemeToggle = ({
       )}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       {...props}
-      disabled={transitioning || props.disabled}
+      disabled={transitioning || saving || props.disabled}
+      aria-busy={saving}
     >
-      {preferenceUnavailable && <span role="status" className="sr-only">Theme applied for this tab. Browser preference storage is unavailable.</span>}
+      {preferenceUnavailable && <span role="status" className="sr-only">Theme applied for this tab. Preference synchronization is unavailable.</span>}
       <span className="relative z-10 flex items-center justify-center">
         {isDark ? (
           <Sun

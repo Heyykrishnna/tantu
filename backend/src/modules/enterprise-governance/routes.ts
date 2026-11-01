@@ -1,10 +1,11 @@
 import type { FastifyInstance } from "fastify";
-import { object, text, workspaceParams } from "../../http/schema.js";
+import { object, text, uuid, workspaceParams } from "../../http/schema.js";
 import type { Identity } from "../workspace-access/service.js";
 import {
   createAuditExport,
   getEnterprisePolicy,
   listAuditExports,
+  getAuditExportFile,
   listDlpLogs,
   scanAndRedactText,
   updateEnterprisePolicy
@@ -27,13 +28,21 @@ export function enterpriseGovernanceRoutes(app: FastifyInstance, identity: Ident
   const db = identity.database;
   const root = "/api/v1/workspaces/:workspaceId";
 
+  app.get<{ Params: { workspaceId: string; exportId: string } }>(root + "/audit-exports/:exportId/file", { schema: { params: object({ workspaceId: uuid, exportId: uuid }) } }, async request => {
+    const scope = await identity.scope(request, request.params.workspaceId);
+    return db.transaction(scope, async client => {
+      await identity.requireManager(client, scope);
+      return getAuditExportFile(client, scope.workspaceId, request.params.exportId);
+    });
+  });
+
   app.get<{
     Params: { workspaceId: string };
   }>(
     root + "/enterprise-policy",
     { schema: { params: workspaceParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
         const policy = await getEnterprisePolicy(client, scope.workspaceId);
         return { policy };
@@ -72,8 +81,9 @@ export function enterpriseGovernanceRoutes(app: FastifyInstance, identity: Ident
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const policy = await updateEnterprisePolicy(client, scope.workspaceId, {
           ...request.body,
           updatedBy: scope.userId
@@ -102,8 +112,9 @@ export function enterpriseGovernanceRoutes(app: FastifyInstance, identity: Ident
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const policy = await getEnterprisePolicy(client, scope.workspaceId);
         const result = scanAndRedactText(request.body.content, policy.dlpRules, policy.dlpEnabled);
         return { scan: result };
@@ -117,8 +128,9 @@ export function enterpriseGovernanceRoutes(app: FastifyInstance, identity: Ident
     root + "/dlp/logs",
     { schema: { params: workspaceParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const logs = await listDlpLogs(client, scope.workspaceId);
         return { logs };
       });
@@ -144,8 +156,9 @@ export function enterpriseGovernanceRoutes(app: FastifyInstance, identity: Ident
       }
     },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const exportRecord = await createAuditExport(
           client,
           scope.workspaceId,
@@ -162,8 +175,9 @@ export function enterpriseGovernanceRoutes(app: FastifyInstance, identity: Ident
     root + "/audit-exports",
     { schema: { params: workspaceParams } },
     async (request) => {
-      const scope = await identity.scope(request, request.params.workspaceId);
+      const scope = await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return db.transaction(scope, async (client) => {
+        await identity.requireManager(client, scope);
         const exports = await listAuditExports(client, scope.workspaceId);
         return { exports };
       });
@@ -176,7 +190,7 @@ export function enterpriseGovernanceRoutes(app: FastifyInstance, identity: Ident
     root + "/operating-model/evaluation",
     { schema: { params: workspaceParams } },
     async (request) => {
-      await identity.scope(request, request.params.workspaceId);
+      await identity.scope(request, request.params.workspaceId, request.method !== "GET");
       return {
         evaluation: {
           ssoScimLifecycle: {
