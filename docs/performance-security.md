@@ -32,6 +32,8 @@ Theme controls now share one DOM update helper and the existing `tantu-theme` pr
 
 Run `npm run check`, `npm --prefix backend run contracts:check`, and low-severity npm audits for frontend, backend, and discovery. Run `npm --prefix backend run test:integration` against disposable PostgreSQL binaries and `npm --prefix discovery run test:l1a:browser` after a production frontend build. The integration suite checks the entire sorted migration ledger, including idempotent reapplication, rather than a stale hardcoded migration count.
 
+Browser scenarios receive separate synthetic accounts and workspaces. The expanded suite previously exhausted the real sign-in limit by repeatedly authenticating one shared account. Scenario isolation preserves rate limiting and tenant boundaries; no limiter is reset, bypassed or relaxed for qualification.
+
 For a production payload measurement, build the frontend, start it on a spare local port, then run `PERFORMANCE_ORIGIN=http://127.0.0.1:3200 node discovery/scripts/measure-frontend.mjs`. It uses a fresh Chromium context, does not sign in, and writes evidence under ignored `discovery/.artifacts/performance/`. Local execution uses Chrome; CI uses installed Playwright Chromium. Keep the same build mode, browser, origin configuration and cache state when comparing revisions.
 
 The isolated Linux PostgreSQL run passed all 25 integration tests. Native macOS execution encountered an exhausted shared-memory-ID limit during `initdb`; use the isolated Linux run or CI rather than changing database security or host kernel settings. For browser tests on a busy workstation, `L1A_BACKEND_PORT` can select another unprivileged port; build with the matching `BACKEND_ORIGIN`. Default CI ports remain unchanged.

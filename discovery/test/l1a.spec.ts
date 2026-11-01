@@ -10,13 +10,13 @@ import { fixture, testPassword } from "../../backend/test/integration/support.js
 
 let environment: Awaited<ReturnType<typeof fixture>>;
 let owner: Awaited<ReturnType<Awaited<ReturnType<typeof fixture>>["account"]>>;
+let ownerEmail: string;
 let server: ChildProcess | undefined;
 let serverOutput = "";
 const backendPort = Number(process.env.L1A_BACKEND_PORT ?? 4000);
 
 test.beforeAll(async () => {
   environment = await fixture({ origin: "http://localhost:3100" });
-  owner = await environment.account("browser@example.test");
   if (!Number.isInteger(backendPort) || backendPort < 1024 || backendPort > 65535) throw new Error("L1A_BACKEND_PORT must be an unprivileged TCP port.");
   await environment.app.listen({ host: "127.0.0.1", port: backendPort });
   server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--port", "3100", "--hostname", "127.0.0.1"], { cwd: fileURLToPath(new URL("../../frontend/", import.meta.url)), stdio: ["ignore", "pipe", "pipe"] });
@@ -30,6 +30,11 @@ test.beforeAll(async () => {
   throw new Error("Frontend startup timed out: " + serverOutput);
 });
 
+test.beforeEach(async () => {
+  ownerEmail = `browser-${randomUUID()}@example.test`;
+  owner = await environment.account(ownerEmail);
+});
+
 test.afterAll(async () => {
   if (server && server.exitCode === null) {
     server.kill("SIGTERM");
@@ -39,7 +44,7 @@ test.afterAll(async () => {
   if (environment) await environment.close();
 });
 
-async function login(page: Page, email = "browser@example.test") {
+async function login(page: Page, email = ownerEmail) {
   await page.goto("/");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(testPassword);
