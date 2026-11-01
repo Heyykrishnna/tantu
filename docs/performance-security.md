@@ -16,7 +16,7 @@ Validate with the same production sign-in journey, browser regressions, isolated
 
 | Resource or journey | Before | After | Policy |
 | --- | --- | --- | --- |
-| Initial sign-in JavaScript | 1,790,917 bytes / 14 scripts | 839,343 bytes / 11 scripts | Decoded resource bytes in clean local Chromium, production Webpack builds; 53.1% less JavaScript |
+| Initial sign-in JavaScript | 1,790,917 bytes / 14 scripts | 839,314 bytes / 11 scripts | Decoded resource bytes in clean local Chromium, production Webpack builds; 53.1% less JavaScript |
 | Workspace and file refresh while hidden | One timer every 15 seconds, potentially overlapping | No scheduled requests; active polling aborted | Refresh on visibility return; schedule next poll after completion |
 | Closed unified search | Component and its effect remained mounted | Unmounted, request aborted, private query/results discarded | Reopening starts empty; workspace changes remount it |
 | Private API responses | `no-store` | `no-store` | Authentication, current permissions and PostgreSQL RLS remain authoritative |
@@ -25,6 +25,8 @@ Validate with the same production sign-in journey, browser regressions, isolated
 These are local payload measurements, not claims about production LCP, INP, p95 latency, or Neon query latency. No Redis, IndexedDB cache, service worker, new dependency, schema change, or API TTL was introduced. Existing mutation handlers refresh authoritative records after successful writes. Hidden-tab views can be stale until the visibility refresh completes; every protected API operation still rechecks access. Existing account-scoped recovery drafts remain in session storage and are cleared by the existing logout/revocation paths; they are not API response caches.
 
 Enterprise access reviews previously showed seeded names and reported approvals without a server write. The panel now explicitly reports that reviews are unavailable and directs administrators to actual workspace membership settings. It cannot report a successful privilege change.
+
+Theme controls now share one DOM update helper and the existing `tantu-theme` preference key. Header toggles, saved settings and initial restoration synchronize `data-theme`, the Tailwind dark class and native control colors. The toggle exposes its current action to assistive technology and waits for an active transition to finish before accepting another change. Browser regressions retain light/dark color, font, alignment and reload-persistence assertions and use the current task-card accessible names.
 
 ## Reproduction and operations
 

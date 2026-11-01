@@ -131,11 +131,11 @@ test("real task/page persistence, conflict recovery, keyboard and responsive she
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile.png", import.meta.url)), fullPage: true });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.getByRole("button", { name: "Toggle light and dark theme" }).click();
+  await page.getByRole("button", { name: /Switch to (light|dark) theme/ }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await expect(page.getByLabel("Title", { exact: true })).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile-light.png", import.meta.url)), fullPage: true });
-  await page.getByRole("button", { name: "Toggle light and dark theme" }).click();
+  await page.getByRole("button", { name: /Switch to (light|dark) theme/ }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.getByLabel("Title", { exact: true })).toHaveCSS("background-color", "rgb(20, 20, 22)");
   await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile-dark.png", import.meta.url)), fullPage: true });
@@ -203,8 +203,10 @@ test("reference UI uses local fonts, aligned surfaces and working mobile navigat
   const table = await page.getByRole("region", { name: "Task list", exact: true }).boundingBox();
   expect(heading && table && Math.abs(heading.x - table.x) < 1).toBe(true);
   await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-tasks-dark.png", import.meta.url)), fullPage: true });
-  await page.getByRole("button", { name: "Toggle light and dark theme" }).click();
+  await page.getByRole("button", { name: /Switch to (light|dark) theme/ }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("html")).not.toHaveClass(/(^|\s)dark(\s|$)/);
+  expect(await page.evaluate(() => localStorage.getItem("tantu-theme"))).toBe("light");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await expect(page.getByRole("button", { name: /Refine workspace navigation/ })).toBeVisible();
@@ -259,7 +261,7 @@ test("connected project views, reviewed scheduling and private provider configur
   await expect(page.getByRole("button", { name: title, exact: true })).toBeVisible();
   for (const mode of ["board", "table", "timeline", "list"]) {
     await page.getByRole("button", { name: mode, exact: true }).click();
-    await expect(page.getByRole("button", { name: title, exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: mode === "board" ? `Open ${title}` : title, exact: true })).toBeVisible();
   }
   await page.getByRole("link", { name: "Calendar", exact: true }).click();
   await page.getByLabel("Calendar date", { exact: true }).fill("2026-11-03");

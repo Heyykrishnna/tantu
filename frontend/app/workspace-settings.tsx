@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import { applyTheme } from "../lib/theme";
 import { acknowledgment, api, items, record, string } from "../lib/api";
 import type { User, Workspace } from "../lib/api";
 import { Icon } from "../components/icon";
@@ -647,11 +648,13 @@ export default function WorkspaceSettings({
         },
       });
       setPreferences(updated);
-      document.documentElement.dataset.theme =
-        themeVal === "light" ? "light" : "dark";
+      applyTheme(themeVal === "light" ? "light" : "dark");
       try {
         localStorage.setItem("tantu-theme", themeVal);
-      } catch {}
+      } catch {
+        showToast("Preferences saved. Browser theme storage is unavailable; this tab has been updated.");
+        return;
+      }
       showToast("Preferences saved.");
     } catch (error) {
       setMessage(

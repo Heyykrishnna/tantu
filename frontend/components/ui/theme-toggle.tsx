@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { flushSync } from "react-dom";
 import { cn } from "@/lib/utils";
+import { applyTheme as applyDocumentTheme } from "@/lib/theme";
 
 export type TransitionVariant =
   | "circle"
@@ -151,6 +152,8 @@ export const ThemeToggle = ({
   const shape = variant ?? "circle";
   const isControlled = theme !== undefined;
   const [internalIsDark, setInternalIsDark] = useState(true);
+  const [preferenceUnavailable, setPreferenceUnavailable] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const isDark = isControlled ? theme === "dark" : internalIsDark;
   const buttonRef = useRef<HTMLButtonElement>(null);
   const isTransitioningRef = useRef(false);
@@ -176,7 +179,7 @@ export const ThemeToggle = ({
     if (isControlled) return;
 
     const updateTheme = () => {
-      setInternalIsDark(document.documentElement.classList.contains("dark"));
+      setInternalIsDark(document.documentElement.dataset.theme !== "light");
     };
 
     updateTheme();
@@ -184,11 +187,12 @@ export const ThemeToggle = ({
     const observer = new MutationObserver(updateTheme);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["class"],
+      attributeFilter: ["data-theme"],
     });
 
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === "theme") {
+      if (e.key === "tantu-theme") {
+        applyDocumentTheme(e.newValue === "light" ? "light" : "dark");
         updateTheme();
       }
     };
@@ -246,30 +250,16 @@ export const ThemeToggle = ({
     );
 
     const applyTheme = () => {
-      const isCurrentlyDark =
-        document.documentElement.classList.contains("dark");
-      const nextIsDark = !isCurrentlyDark;
-      if (nextIsDark) {
-        document.documentElement.classList.add("dark");
-        document.documentElement.style.colorScheme = "dark";
-      } else {
-        document.documentElement.classList.remove("dark");
-        document.documentElement.style.colorScheme = "light";
-      }
-      if (isControlled) {
-        onThemeChange?.(nextIsDark ? "dark" : "light");
-      } else {
-        setInternalIsDark(nextIsDark);
-      }
+      const nextIsDark = document.documentElement.dataset.theme === "light";
+      applyDocumentTheme(nextIsDark ? "dark" : "light");
+      onThemeChange?.(nextIsDark ? "dark" : "light");
+      if (!isControlled) setInternalIsDark(nextIsDark);
       try {
-        localStorage.setItem("theme", nextIsDark ? "dark" : "light");
-      } catch {}
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "theme",
-          newValue: nextIsDark ? "dark" : "light",
-        }),
-      );
+        localStorage.setItem("tantu-theme", nextIsDark ? "dark" : "light");
+        setPreferenceUnavailable(false);
+      } catch {
+        setPreferenceUnavailable(true);
+      }
       window.dispatchEvent(
         new CustomEvent("theme-change", {
           detail: { theme: nextIsDark ? "dark" : "light" },
@@ -329,6 +319,7 @@ export const ThemeToggle = ({
         safetyTimer = undefined;
       }
       isTransitioningRef.current = false;
+      setTransitioning(false);
       delete root.dataset.magicuiThemeVt;
       root.style.removeProperty("--magicui-theme-toggle-vt-duration");
       root.style.removeProperty("--magicui-theme-vt-clip-from");
@@ -336,6 +327,7 @@ export const ThemeToggle = ({
     };
 
     isTransitioningRef.current = true;
+    setTransitioning(true);
     safetyTimer = setTimeout(cleanup, duration + 250);
 
     let transition: ViewTransition | undefined;
@@ -394,7 +386,9 @@ export const ThemeToggle = ({
       )}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       {...props}
+      disabled={transitioning || props.disabled}
     >
+      {preferenceUnavailable && <span role="status" className="sr-only">Theme applied for this tab. Browser preference storage is unavailable.</span>}
       <span className="relative z-10 flex items-center justify-center">
         {isDark ? (
           <Sun

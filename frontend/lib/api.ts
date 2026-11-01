@@ -103,7 +103,10 @@ export async function api<T>(path: string, parser: (value: unknown) => T, option
   }
   let body: unknown;
   try { body = await response.json(); }
-  catch { throw new ApiError(response.status, "SERVICE_UNAVAILABLE", "The application service is unavailable. Try again shortly."); }
+  catch {
+    options.signal?.throwIfAborted();
+    throw new ApiError(response.status, "SERVICE_UNAVAILABLE", "The application service is unavailable. Try again shortly.");
+  }
   if (!response.ok) {
     const failure = record(body);
     throw new ApiError(response.status, string(failure.code), string(failure.message));

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { applyTheme } from "../lib/theme";
 import { pollWhileVisible } from "../lib/visible-polling";
 import type { FormEvent } from "react";
 import {
@@ -237,10 +238,9 @@ export default function WorkspaceApp({
     };
     window.addEventListener("popstate", handlePopState);
     try {
-      document.documentElement.dataset.theme =
-        localStorage.getItem("tantu-theme") === "light" ? "light" : "dark";
+      applyTheme(localStorage.getItem("tantu-theme") === "light" ? "light" : "dark");
     } catch {
-      document.documentElement.dataset.theme = "dark";
+      applyTheme("dark");
     }
     document.addEventListener("keydown", keyboard);
     return () => {
@@ -572,18 +572,7 @@ export default function WorkspaceApp({
                 ⌘K
               </kbd>
             </button>
-            <ThemeToggle
-              variant="circle"
-              onThemeChange={(newTheme) => {
-                document.documentElement.dataset.theme = newTheme;
-                document.documentElement.classList.toggle("dark", newTheme === "dark");
-                try {
-                  localStorage.setItem("tantu-theme", newTheme);
-                } catch {
-                  setNotice("Theme changed for this tab.");
-                }
-              }}
-            />
+            <ThemeToggle variant="circle" />
             <span className="mx-1 h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
             <span
               title={user.name}

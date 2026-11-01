@@ -17,3 +17,9 @@ test("a cancelled response cannot publish state after its body finishes reading"
   await assert.rejects(api("/auth/session", () => { parsed = true; }, { signal: controller.signal }), { name: "AbortError" });
   assert.equal(parsed, false);
 });
+
+test("cancelling a streaming response preserves cancellation instead of reporting an outage", async (context) => {
+  const controller = new AbortController();
+  context.mock.method(globalThis, "fetch", async () => ({ ok: true, json: async () => { controller.abort(); throw controller.signal.reason; } }));
+  await assert.rejects(api("/auth/session", () => {}, { signal: controller.signal }), { name: "AbortError" });
+});
