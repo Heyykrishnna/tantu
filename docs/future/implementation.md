@@ -43,19 +43,18 @@ Attention Budgets (`tantu.attention_budgets`) balance focus time with delivery a
 
 ## Specialized GitHub Actions workflow architecture
 
-The legacy monolithic `validate.yml` workflow has been replaced with 14 modular, path-filtered workflows:
+The legacy monolithic `validate.yml` workflow has been replaced with 13 modular, path-filtered workflows:
 1. `ci.yml`: Unified CI Pipeline orchestrating linting, strict typing, tests, builds, and synthetic qualifications.
 2. `frontend.yml`: Path-filtered Next.js quality, strict TypeScript, and production build artifact generation.
 3. `backend.yml`: Path-filtered Fastify typechecking, contract verification, and unit test execution.
 4. `e2e.yml`: Playwright end-to-end browser journeys and synthetic test validation.
-5. `codeql.yml`: CodeQL AST static security analysis for TypeScript and Go.
-6. `dependency-scanner.yml`: Automated npm dependency vulnerability auditing (`npm audit`).
-7. `secret-detection.yml`: Gitleaks scanner detecting leaked API tokens and credentials.
-8. `docker.yml`: Multi-stage Docker container builds and Trivy container vulnerability scanning.
-9. `deploy.yml`: Staging and production deployment pipelines with healthcheck readiness probes.
-10. `release.yml`: Automated release packaging, changelog generation, and checksum publication.
-11. `coverage.yml`: Code quality and test coverage tracking using Node's native test runner.
-12. `lighthouse.yml`: Performance audits and JavaScript bundle budget enforcement.
-13. `dependency-updates.yml`: Automated scheduled dependency updates and lockfile checks.
-14. `maintenance.yml`: Scheduled repository maintenance, branch pruning, and workflow run retention.
+5. `dependency-scanner.yml`: Automated npm dependency vulnerability auditing (`npm audit`).
+6. `secret-detection.yml`: Gitleaks scanner detecting leaked API tokens and credentials.
+7. `docker.yml`: Multi-stage Docker container builds and Trivy container vulnerability scanning.
+8. `deploy.yml`: Staging and production deployment pipelines with healthcheck readiness probes.
+9. `release.yml`: Automated release packaging, changelog generation, and checksum publication.
+10. `coverage.yml`: Code quality and test coverage tracking using Node's native test runner.
+11. `lighthouse.yml`: Performance audits and JavaScript bundle budget enforcement.
+12. `dependency-updates.yml`: Automated scheduled dependency updates and lockfile checks.
+13. `maintenance.yml`: Scheduled repository maintenance, branch pruning, and workflow run retention.
 

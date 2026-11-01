@@ -1,6 +1,6 @@
 # Future discovery local qualification and acceptance
 
-Status: **local implementation and automated qualification gates passed; live enterprise pilot acceptance remains open**. The delivery completes local engineering qualification for Sharing Exposure Maps (F-05), Secure Handover Packs (F-03), Knowledge Freshness Reviews (F-04), Workspace Scenario Planning (F-01), Attention Budgets (F-06), and the 14-workflow GitHub Actions CI/CD matrix.
+Status: **local implementation and automated qualification gates passed; live enterprise pilot acceptance remains open**. The delivery completes local engineering qualification for Sharing Exposure Maps (F-05), Secure Handover Packs (F-03), Knowledge Freshness Reviews (F-04), Workspace Scenario Planning (F-01), Attention Budgets (F-06), and the GitHub Actions CI/CD matrix.
 
 ## Delivered implementation
 
@@ -11,7 +11,7 @@ Status: **local implementation and automated qualification gates passed; live en
 | Knowledge Freshness (F-04) | Document freshness audits (`knowledge_freshness_reviews`); configurable cadences; dynamic age thresholds (`fresh`, `due_for_review`, `stale`); verification logging.                                                                                                     |
 | Scenario Planning (F-01)   | Non-destructive simulation engine (`scenario_plans`); models deadline and estimate shifts; calculates workload deltas, impacted commitments, and feasibility scores.                                                                                                     |
 | Attention Budgets (F-06)   | Daily focus window management (`attention_budgets`); notification batching intervals; urgent priority override bypasses.                                                                                                                                                 |
-| CI/CD Modernization        | Replaced monolithic `validate.yml` with 14 modular workflows covering CI, frontend quality, backend testing, E2E Playwright, CodeQL security, dependency audits, secret detection, Docker Trivy scans, deployments, releases, coverage, bundle budgets, and maintenance. |
+| CI/CD Modernization        | Replaced monolithic `validate.yml` with 13 modular workflows covering CI, frontend quality, backend testing, E2E Playwright, dependency audits, secret detection, Docker Trivy scans, deployments, releases, coverage, bundle budgets, and maintenance. |
 
 See [implementation](implementation.md) and [setup/operational procedures](setup.md) for detailed contracts and configuration. Private technology guides remain gitignored.
 

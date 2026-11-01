@@ -16,7 +16,6 @@ All workflows can be started from GitHub Actions with `workflow_dispatch`. Run t
 | Docker Build & Container Security | Container image build and a blocking Trivy high/critical vulnerability scan |
 | Performance & Lighthouse Audit | Static JavaScript bundle budget; this workflow currently does not run Lighthouse |
 | Secret Detection | Gitleaks scan with the repository's reviewed example-template and exact historical test-fixture exceptions |
-| CodeQL Security Analysis | JavaScript/TypeScript and Go analysis; requires an eligible repository and enabled GitHub code scanning |
 
 ## Security tooling compatibility
 
@@ -36,9 +35,9 @@ Production Deployment defaults to `validation_only=true` for manual runs. It ver
 
 Repository Maintenance defaults to `dry_run=true` for manual runs. It inspects workflow-retention candidates without deleting history. Scheduled retention keeps its existing behavior: fourteen-day retention with at least five runs preserved.
 
-## CodeQL availability
+## CodeQL removal
 
-Private repositories require an eligible GitHub organization plan with GitHub Code Security enabled. Repository visibility and licensing are external prerequisites, not conditions that source changes can repair. Keep a blocked CodeQL run visible and report the limitation rather than disabling the scanner, bypassing the failure, or changing repository visibility without authorization. See [GitHub's private-repository guidance](https://docs.github.com/en/code-security/reference/code-scanning/troubleshoot-analysis-errors/private-repository-enablement).
+CodeQL was removed at the repository owner's explicit request. The former workflow's JavaScript/TypeScript and Go matrix checks no longer run. The repository remains private. Dependency audits, Gitleaks, Trivy, and application security regressions remain enabled. Historical CodeQL failures remain in GitHub Actions history; removing the workflow does not erase them.
 
 ## Secret-scan fixtures
 
