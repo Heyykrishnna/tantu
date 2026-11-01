@@ -14,7 +14,7 @@ The HTTP factory is separate from listening and accepts explicit database/settin
 
 ## Validation and synchronization
 
-Run `npm run check:l1b` for source lint/types, unit tests, both builds, database/backup/restore/crash tests, browser journeys, generated-contract checks, three dependency audits and documentation checks. PostgreSQL 16+ tools and local Chrome or Playwright Chromium are required. Set `PG_BIN` if necessary. Test logs, reports and screenshots stay in ignored artifacts.
+Run `npm run check:l1b` for source lint/types, unit tests, both builds, database/backup/restore/crash tests, browser journeys, generated-contract checks, three dependency audits and documentation checks. PostgreSQL 16+ tools and local Chrome or Playwright Chromium are required. Set `PG_BIN` if necessary. Test logs, reports and screenshots stay in ignored artifacts. The [workspace navigation guide](workspace-navigation.md) documents retained sections and the isolated `npm --prefix discovery run test:navigation` production-UI regression suite.
 
 `npm run check:l0` retains the earlier isolated engineering experiments and requires Python/Go in addition. CI runs that baseline and the connected-work aggregate checks. Report commands actually executed; do not infer remote CI success from local output or a workflow file.
 

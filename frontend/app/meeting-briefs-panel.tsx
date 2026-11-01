@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
@@ -229,13 +230,13 @@ export default function MeetingBriefsPanel({
         <form onSubmit={handleCreateBrief} className={`${panelClass} space-y-4 p-5 sm:p-6`}>
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-sm">Prepare New Meeting Brief</h3>
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               type="button"
               onClick={() => setIsCreating(false)}
               className="text-neutral-400 hover:text-neutral-600 text-xs"
             >
               Cancel
-            </button>
+            </CandyButton>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Meeting / Event Title">
@@ -281,7 +282,7 @@ export default function MeetingBriefsPanel({
 
       {loading ? (
         <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
-          <Orb state="solving" size={64} display={44} />
+          <Orb state="solving" interactive={false} theme="auto" size={64} display={44} />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading meeting briefs...</p>
         </div>
       ) : briefs.length === 0 ? (

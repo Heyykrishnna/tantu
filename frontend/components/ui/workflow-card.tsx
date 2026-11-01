@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useGSAP, gsap, type Timeline, type Tween } from "@/lib/use-gsap";
 import { spring, useReducedMotion } from "motion/react";
@@ -176,7 +177,7 @@ function WorkflowRow({
   );
 
   return (
-    <button
+    <CandyButton variant="ghost" size="unstyled"
       ref={rootRef}
       type="button"
       role="checkbox"
@@ -240,7 +241,7 @@ function WorkflowRow({
           {person.name.slice(0, 1)}
         </span>
       )}
-    </button>
+    </CandyButton>
   );
 }
 
@@ -703,7 +704,7 @@ export function WorkflowCard({
         }}
       >
         <header className="flex items-center gap-2.5 px-3 py-3">
-          <button
+          <CandyButton variant="ghost" size="unstyled"
             ref={triggerRef}
             type="button"
             aria-expanded={isOpen}
@@ -747,13 +748,13 @@ export function WorkflowCard({
             >
               {complete}
             </span>
-          </button>
+          </CandyButton>
           <div className="min-w-0 flex-1">
             <h3
               id={`${id}-title`}
               className="text-[13px] leading-5 font-semibold tracking-tight"
             >
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 type="button"
                 aria-expanded={isOpen}
                 aria-controls={`${id}-panel`}
@@ -764,10 +765,10 @@ export function WorkflowCard({
                 )}
               >
                 {title}
-              </button>
+              </CandyButton>
             </h3>
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] leading-4">
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 ref={statusRef}
                 type="button"
                 aria-expanded={pickerOpen && isOpen}
@@ -788,7 +789,7 @@ export function WorkflowCard({
               >
                 <statusSpec.Icon size={10} strokeWidth={2} aria-hidden="true" />
                 {statusSpec.label}
-              </button>
+              </CandyButton>
               {showDueDate && dueDate && (
                 <span className="text-(--wf-muted)">Due {dueDate}</span>
               )}
@@ -800,7 +801,7 @@ export function WorkflowCard({
               aria-label="Filter by teammate"
             >
               {assignees.slice(0, 5).map((person) => (
-                <button
+                <CandyButton variant="ghost" size="unstyled"
                   key={person.id}
                   data-assignee={person.id}
                   type="button"
@@ -827,7 +828,7 @@ export function WorkflowCard({
                     className="pointer-events-none absolute -inset-0.5 rounded-full border border-current opacity-0"
                   />
                   {person.name.slice(0, 1)}
-                </button>
+                </CandyButton>
               ))}
             </div>
           )}
@@ -958,7 +959,7 @@ export function WorkflowCard({
             {showFooter && (
               <footer className="flex min-h-10 items-center justify-between gap-2 rounded-b-[inherit] bg-[var(--wf-hover)] px-4 py-2 text-[10px] text-[var(--wf-muted)]">
                 <span className="min-w-0 wrap-anywhere">{footerLabel}</span>
-                <button
+                <CandyButton variant="ghost" size="unstyled"
                   type="button"
                   aria-label={onOpen ? `Open ${title}` : `Collapse ${title}`}
                   onClick={() => (onOpen ? onOpen() : changeExpanded(false))}
@@ -969,7 +970,7 @@ export function WorkflowCard({
                 >
                   {onOpen ? "Open" : "Close"}
                   <ArrowRight size={12} aria-hidden="true" />
-                </button>
+                </CandyButton>
               </footer>
             )}
           </div>

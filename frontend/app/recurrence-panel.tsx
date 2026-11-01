@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "../components/ui/loading-state";
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api } from "../lib/api";
@@ -97,9 +98,7 @@ export default function RecurrencePanel({
           {message}
         </Notice>
         {!data ? (
-          <p role="status" className="text-[11px]">
-            Loading recurrence…
-          </p>
+          <LoadingState label="Loading recurrence…" />
         ) : data.id ? (
           <>
             {canEdit && (

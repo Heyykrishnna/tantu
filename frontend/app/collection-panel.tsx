@@ -1,4 +1,6 @@
 "use client";
+import { LoadingState } from "../components/ui/loading-state";
+import { CandyButton } from "@/components/ui/candy-button";
 import CollectionViews from "./collection-views";
 import type { CollectionView } from "./collection-views";
 import CollectionTemplates from "./collection-templates";
@@ -376,9 +378,7 @@ export default function CollectionPanel({
           aria-label="Collections"
         >
           {loading ? (
-            <p role="status" className="p-3 text-[12px]">
-              Loading collections…
-            </p>
+            <LoadingState label="Loading collections…" />
           ) : entries.length ? (
             entries.map((entry) => (
               <Button
@@ -493,14 +493,14 @@ export default function CollectionPanel({
                         key={row.record.id}
                       >
                         <td className="max-w-xs px-4 py-3">
-                          <button
+                          <CandyButton variant="ghost" size="unstyled"
                             className="max-w-xs truncate rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                             onClick={() =>
                               onOpen(row.record.id, row.record.kind)
                             }
                           >
                             {row.record.title}
-                          </button>
+                          </CandyButton>
                           {row.repairs.length > 0 && (
                             <span className="ml-2">
                               <Badge tone="amber">Needs repair</Badge>
@@ -542,12 +542,12 @@ export default function CollectionPanel({
                       className="flex items-center justify-between gap-3 p-4"
                       key={row.record.id}
                     >
-                      <button
+                      <CandyButton variant="ghost" size="unstyled"
                         className="truncate rounded text-left text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                         onClick={() => onOpen(row.record.id, row.record.kind)}
                       >
                         {row.record.title}
-                      </button>
+                      </CandyButton>
                       <Badge>
                         {group !== "none"
                           ? display(row.values[group])

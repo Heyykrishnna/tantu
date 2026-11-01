@@ -1,4 +1,5 @@
 "use client";
+import { CandyButton } from "@/components/ui/candy-button";
 import ProviderHealth from "./provider-health";
 import MailboxActions from "./mailbox-actions";
 import MailWorkflows from "./mail-workflows";
@@ -200,7 +201,7 @@ export default function MailPanel({
         )}
       {!accounts ? (
         <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
-          <Orb state="solving" size={64} display={44} />
+          <Orb state="solving" interactive={false} theme="auto" size={64} display={44} />
           <p className={`text-xs font-medium ${mutedClass}`}>Loading connected accounts…</p>
         </div>
       ) : !accounts.items.length ? (
@@ -214,7 +215,7 @@ export default function MailPanel({
             aria-label="Connected accounts"
           >
             {accounts.items.map((item) => (
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 key={item.id}
                 className="grid gap-2 rounded-lg p-3 text-left text-[12px] outline-none hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:hover:bg-zinc-800"
                 onClick={() => void run(() => select(item.id))}
@@ -223,7 +224,7 @@ export default function MailPanel({
                 <Badge>
                   {item.provider} · {item.status}
                 </Badge>
-              </button>
+              </CandyButton>
             ))}
           </aside>
           {account ? (
@@ -308,7 +309,7 @@ export default function MailPanel({
                 ) : (
                   entries.items.map((entry) => (
                     <article className="p-4" key={entry.id}>
-                      <button
+                      <CandyButton variant="ghost" size="unstyled"
                         onClick={() =>
                           setSelected(selected === entry.id ? "" : entry.id)
                         }
@@ -330,7 +331,7 @@ export default function MailPanel({
                             {entry.labels.join(" · ")}
                           </span>
                         )}
-                      </button>
+                      </CandyButton>
                       {selected === entry.id && (
                         <div className="mt-4 grid gap-2">
                           <p className="whitespace-pre-wrap wrap-break-word text-[12px] leading-relaxed">

@@ -1,3 +1,4 @@
+import { CandyButton } from "@/components/ui/candy-button";
 import type { CanonicalRecord } from "../lib/contracts";
 import type { ViewSettings } from "./saved-views";
 import { TaskCard } from "@/components/ui/task-card";
@@ -34,12 +35,12 @@ export default function ProjectTaskViews({
             group,
         );
   const title = (task: CanonicalRecord) => (
-    <button
+    <CandyButton variant="ghost" size="unstyled"
       onClick={() => onOpen(task.id)}
       className="min-w-0 truncate rounded text-left text-[12px] font-medium outline-none hover:text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:hover:text-zinc-100"
     >
       {task.title}
-    </button>
+    </CandyButton>
   );
   const columns = ["status", "priority", "deadline", "estimate"].filter(
     (column) => settings.columns.includes(column),

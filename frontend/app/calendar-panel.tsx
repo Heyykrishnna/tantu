@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import CalendarPreferences, { preferences } from "./calendar-preferences";
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -358,7 +359,7 @@ export default function CalendarPanel({
       {overlayCoverage && <Notice>{overlayCoverage}</Notice>}
       {loading ? (
         <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
-          <Orb state="solving" size={64} display={44} />
+          <Orb state="solving" interactive={false} theme="auto" size={64} display={44} />
           <p className={`text-xs font-medium ${mutedClass}`}>Loading schedule…</p>
         </div>
       ) : (
@@ -436,12 +437,12 @@ export default function CalendarPanel({
                       key={block.id}
                       className="grid gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 dark:border-zinc-800 dark:bg-zinc-850"
                     >
-                      <button
+                      <CandyButton variant="ghost" size="unstyled"
                         onClick={() => onOpenTask(block.taskId)}
                         className="truncate rounded text-left text-[11px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                       >
                         {block.title}
-                      </button>
+                      </CandyButton>
                       <span className={`text-[10px] ${mutedClass}`}>
                         {localTime(block.startsAt, zone)}–
                         {localTime(block.endsAt, zone)}

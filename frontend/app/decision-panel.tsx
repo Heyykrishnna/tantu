@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
@@ -237,7 +238,7 @@ export default function DecisionPanel({
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
         {["all", "confirmed", "draft", "superseded", "revoked"].map((st) => (
-          <button
+          <CandyButton variant="ghost" size="unstyled"
             key={st}
             type="button"
             onClick={() => setStatusFilter(st)}
@@ -248,7 +249,7 @@ export default function DecisionPanel({
             }`}
           >
             {st.charAt(0).toUpperCase() + st.slice(1)}
-          </button>
+          </CandyButton>
         ))}
       </div>
 
@@ -258,13 +259,13 @@ export default function DecisionPanel({
             <h3 className="font-medium text-sm">
               New Architectural / Work Decision
             </h3>
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               type="button"
               onClick={() => setIsCreating(false)}
               className="text-neutral-400 hover:text-neutral-600 text-xs"
             >
               Cancel
-            </button>
+            </CandyButton>
           </div>
           <Field label="Decision Title">
             <input
@@ -325,13 +326,13 @@ export default function DecisionPanel({
                 confirmed successor.
               </p>
             </div>
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               type="button"
               onClick={() => setSupersedeTarget(null)}
               className="text-neutral-400 hover:text-neutral-600 text-xs"
             >
               Cancel
-            </button>
+            </CandyButton>
           </div>
           <Field label="Successor Decision Title">
             <input
@@ -370,7 +371,7 @@ export default function DecisionPanel({
 
       {loading ? (
         <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
-          <Orb state="solving" size={64} display={44} />
+          <Orb state="solving" interactive={false} theme="auto" size={64} display={44} />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading decisions...</p>
         </div>
       ) : filtered.length === 0 ? (
@@ -418,13 +419,13 @@ export default function DecisionPanel({
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-900 text-xs">
-                <button
+                <CandyButton variant="ghost" size="unstyled"
                   type="button"
                   onClick={() => viewRevisions(item)}
                   className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 underline"
                 >
                   View audit history
-                </button>
+                </CandyButton>
                 {item.status === "confirmed" && (
                   <Button
                     type="button"
@@ -450,13 +451,13 @@ export default function DecisionPanel({
               <h3 className="font-semibold text-sm">
                 Decision History: {selectedDecision.title}
               </h3>
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 type="button"
                 onClick={() => setShowHistory(false)}
                 className="text-neutral-400 hover:text-neutral-600 text-xs"
               >
                 Close
-              </button>
+              </CandyButton>
             </div>
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {revisions.map((rev) => (

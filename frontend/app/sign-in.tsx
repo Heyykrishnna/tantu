@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -256,15 +257,15 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                   </div>
                 </Field>
                 <div className="flex items-center justify-between text-[11px]">
-                  <button
+                  <CandyButton variant="ghost" size="unstyled"
                     type="button"
                     disabled={busy}
                     onClick={() => void resendCode()}
                     className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-200"
                   >
                     Didn’t receive code? Resend
-                  </button>
-                  <button
+                  </CandyButton>
+                  <CandyButton variant="ghost" size="unstyled"
                     type="button"
                     onClick={() => {
                       setMessage("");
@@ -274,7 +275,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                     className="text-zinc-500 underline-offset-4 hover:underline dark:text-zinc-400"
                   >
                     Change email
-                  </button>
+                  </CandyButton>
                 </div>
               </>
             ) : (
@@ -375,7 +376,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             </Button>
             {!invitation && mode !== "verify" && (
               <div className="mt-2 text-center">
-                <button
+                <CandyButton variant="ghost" size="unstyled"
                   type="button"
                   onClick={() => {
                     setMessage("");
@@ -387,7 +388,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                   {mode === "signin"
                     ? "Don’t have an account? Create one"
                     : "Already have an account? Sign in"}
-                </button>
+                </CandyButton>
               </div>
             )}
           </form>

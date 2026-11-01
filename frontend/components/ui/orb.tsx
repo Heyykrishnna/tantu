@@ -1,9 +1,11 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import React, { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import type { OrbState } from "thinking-orbs";
 import { useDecorativeMotionPaused } from "@/lib/use-ui-motion";
+import { usePanelVisible } from "./retained-panel";
 import { cn } from "@/lib/utils";
 
 const ThinkingOrb = dynamic(
@@ -70,6 +72,7 @@ export function Orb({
   onClick,
   onStateChange,
 }: OrbProps) {
+  const panelVisible = usePanelVisible();
   const pauseMotion = useDecorativeMotionPaused();
   const isControlled = controlledState !== undefined;
   const [internalState, setInternalState] = useState<OrbState>(defaultState);
@@ -98,7 +101,7 @@ export function Orb({
       size={size}
       theme={theme}
       speed={speed}
-      paused={paused || pauseMotion}
+      paused={paused || pauseMotion || !panelVisible}
       color={color}
       style={{ width: px, height: px, display: "block" }}
     />
@@ -120,7 +123,7 @@ export function Orb({
   }
 
   return (
-    <button
+    <CandyButton variant="ghost" size="unstyled"
       type="button"
       onClick={handleClick}
       aria-label={`Orb state is ${currentState}. Click to cycle state.`}
@@ -131,7 +134,7 @@ export function Orb({
       style={{ width: px, height: px }}
     >
       {canvas}
-    </button>
+    </CandyButton>
   );
 }
 

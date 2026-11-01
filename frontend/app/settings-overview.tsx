@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "../components/ui/loading-state";
 import type { Workspace } from "../lib/api";
 import {
   Badge,
@@ -150,10 +151,7 @@ export default function SettingsOverview({
             />
           </div>
         ) : (
-          <p role="status" className={`text-sm ${mutedClass}`}>
-            Usage is loading. If it remains unavailable, retry from Data &
-            Usage.
-          </p>
+          <LoadingState label="Loading workspace usage…" />
         )}
       </section>
       <PermissionsSummary role={workspace.role} />

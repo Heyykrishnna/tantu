@@ -1,8 +1,11 @@
 "use client";
 
+import { CandyButton } from "./candy-button";
 import { useState, type ComponentProps, type CSSProperties } from "react";
 import { motion, useReducedMotion, type Transition } from "motion/react";
 import { cn } from "@/lib/utils";
+
+const MotionCandyButton = motion.create(CandyButton);
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
@@ -332,7 +335,7 @@ export function TaskItem({
   };
 
   return (
-    <motion.button
+    <MotionCandyButton variant="ghost" size="unstyled"
       type="button"
       role="checkbox"
       aria-checked={done}
@@ -370,7 +373,7 @@ export function TaskItem({
         size={size}
         onStruck={onStruck}
       />
-    </motion.button>
+    </MotionCandyButton>
   );
 }
 

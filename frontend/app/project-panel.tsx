@@ -1,4 +1,5 @@
 "use client";
+import { CandyButton } from "@/components/ui/candy-button";
 import ProjectTaskViews from "./project-task-views";
 import SavedViews from "./saved-views";
 import type { ViewSettings } from "./saved-views";
@@ -229,7 +230,7 @@ export default function ProjectPanel({
             </p>
           ) : (
             entries.items.map((item) => (
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 key={item.id}
                 onClick={() => void select(item.id)}
                 aria-pressed={detail?.project.id === item.id}
@@ -239,7 +240,7 @@ export default function ProjectPanel({
                   {item.title}
                 </span>
                 <Badge>{item.state}</Badge>
-              </button>
+              </CandyButton>
             ))
           )}
           {entries.nextCursor && (

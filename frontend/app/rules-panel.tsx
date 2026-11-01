@@ -1,5 +1,7 @@
 "use client";
 
+import { LoadingState } from "../components/ui/loading-state";
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
@@ -213,7 +215,7 @@ export default function RulesPanel({
 
       <section>
         {loading ? (
-          <div className="p-8 text-center text-sm text-[#707c93]">Loading rules...</div>
+          <LoadingState label="Loading automation rules…" />
         ) : rules.length === 0 ? (
           <div className={`${panelClass} p-8 text-center text-sm ${mutedClass}`}>
             No rules configured yet. Create a rule to automatically triage tasks or route commitments.
@@ -295,13 +297,13 @@ export default function RulesPanel({
               <h3 className="text-sm font-semibold text-[#1e2025] dark:text-white">
                 Create Automation Rule
               </h3>
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 type="button"
                 onClick={() => setModalOpen(false)}
                 className="text-[#677287] hover:text-black dark:hover:text-white"
               >
                 <Icon name="close" className="size-4" />
-              </button>
+              </CandyButton>
             </div>
 
             <Notice tone="neutral">
@@ -421,13 +423,13 @@ export default function RulesPanel({
                   Quota: {selectedRuleRuns.rule.quotaUsed}/500 executed
                 </span>
               </div>
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 type="button"
                 onClick={() => setSelectedRuleRuns(null)}
                 className="text-[#677287] hover:text-black dark:hover:text-white"
               >
                 <Icon name="close" className="size-4" />
-              </button>
+              </CandyButton>
             </div>
 
             {selectedRuleRuns.runs.length === 0 ? (

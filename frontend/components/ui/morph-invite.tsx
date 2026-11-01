@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import {
   useEffect,
   useId,
@@ -386,7 +387,7 @@ export function MorphInvite({
             </span>
           ))}
         </div>
-        <button
+        <CandyButton variant="ghost" size="unstyled"
           ref={triggerRef}
           type="button"
           disabled={disabled}
@@ -403,7 +404,7 @@ export function MorphInvite({
         >
           <Plus className="size-3.5" strokeWidth={2} aria-hidden="true" />
           Invite
-        </button>
+        </CandyButton>
         <form
           ref={formRef}
           id={`${uid}-form`}
@@ -445,7 +446,7 @@ export function MorphInvite({
               state === "sent" && "text-zinc-500 dark:text-zinc-400",
             )}
           />
-          <button
+          <CandyButton variant="ghost" size="unstyled"
             type="submit"
             disabled={disabled || busy}
             aria-label={
@@ -478,7 +479,7 @@ export function MorphInvite({
             ) : (
               "Send"
             )}
-          </button>
+          </CandyButton>
         </form>
       </div>
       <p

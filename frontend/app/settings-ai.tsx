@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "../components/ui/loading-state";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api, list, record, string } from "../lib/api";
@@ -176,9 +177,7 @@ export default function SettingsAi({
         </form>
       ) : (
         !error && (
-          <p role="status" className={mutedClass}>
-            Loading AI preferences…
-          </p>
+          <LoadingState label="Loading AI preferences…" />
         )
       )}
       {error && (

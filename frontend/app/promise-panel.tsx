@@ -1,5 +1,7 @@
 "use client";
 
+import { LoadingState } from "../components/ui/loading-state";
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
@@ -275,9 +277,7 @@ export default function PromisePanel({
 
       <section>
         {loading ? (
-          <div className="p-8 text-center text-sm text-[#707c93]">
-            Loading commitments...
-          </div>
+          <LoadingState label="Loading commitments…" />
         ) : promises.length === 0 ? (
           <div
             className={`${panelClass} p-8 text-center text-sm ${mutedClass}`}
@@ -385,13 +385,13 @@ export default function PromisePanel({
               <h3 className="text-sm font-semibold text-[#1e2025] dark:text-white">
                 Record Promise Commitment
               </h3>
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 type="button"
                 onClick={() => setModalOpen(false)}
                 className="text-[#677287] hover:text-black dark:hover:text-white"
               >
                 <Icon name="close" className="size-4" />
-              </button>
+              </CandyButton>
             </div>
 
             <Field label="What is the commitment?">
@@ -469,13 +469,13 @@ export default function PromisePanel({
               <h3 className="text-sm font-semibold text-[#1e2025] dark:text-white">
                 Review Promise Outcome
               </h3>
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 type="button"
                 onClick={() => setOutcomeModal(null)}
                 className="text-[#677287] hover:text-black dark:hover:text-white"
               >
                 <Icon name="close" className="size-4" />
-              </button>
+              </CandyButton>
             </div>
 
             <p className="text-xs text-[#1e2025] dark:text-[#e4e4e7] font-medium">

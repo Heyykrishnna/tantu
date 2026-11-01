@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { flushSync } from "react-dom";
@@ -383,7 +384,7 @@ export const ThemeToggle = ({
     : "";
 
   return (
-    <button
+    <CandyButton variant="ghost" size="unstyled"
       type="button"
       ref={buttonRef}
       onClick={toggleTheme}
@@ -419,7 +420,7 @@ export const ThemeToggle = ({
           />
         )}
       </span>
-    </button>
+    </CandyButton>
   );
 };
 

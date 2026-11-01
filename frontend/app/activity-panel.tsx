@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "../components/ui/loading-state";
 import { useEffect, useState } from "react";
 import { acknowledgment, api, items, record, string } from "../lib/api";
 import { Icon } from "../components/icon";
@@ -154,13 +155,7 @@ export default function ActivityPanel({
           </span>
         </div>
         {loading ? (
-          <p
-            role="status"
-            className={`flex items-center justify-center gap-2 px-6 py-20 text-[12px] ${mutedClass}`}
-          >
-            <Icon name="refresh" className="size-4 motion-safe:animate-spin" />
-            Loading…
-          </p>
+          <LoadingState label="Loading activity…" />
         ) : rows.length ? (
           <ul className="divide-y divide-[#e8eaf2] dark:divide-[#2e2e32]">
             {rows.map((row) => (

@@ -218,7 +218,7 @@ test("reference UI uses local fonts, aligned surfaces and working mobile navigat
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-tasks-light.png", import.meta.url)), fullPage: true });
   await page.getByRole("link", { name: "Workspace settings", exact: true }).click();
-  await page.getByRole("button", { name: "People & Roles", exact: true }).click();
+  await page.getByRole("navigation", { name: "Workspace settings sections" }).getByRole("button", { name: "People & Roles", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Invite Teammate", exact: true })).toBeVisible();
   await expect(page.locator("a[aria-current=page]:visible")).toHaveCount(1);
   await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/reference-settings-light.png", import.meta.url)), fullPage: true });
@@ -354,4 +354,30 @@ test("reviewed archive recovery and saved collection views survive reload", asyn
   await page.getByRole("button", { name: "Load archived tasks", exact: true }).click(); await page.getByRole("checkbox", { name: title, exact: true }).check(); await page.getByRole("button", { name: "Review selected work", exact: true }).click(); await page.getByRole("button", { name: "Confirm reviewed work", exact: true }).click(); await expect(page.getByRole("button", { name: title }).last()).toBeVisible();
   const source = await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${user.workspaceId}/pages`, headers: user.headers, payload: { title: "Saved view browser collection", operationId: randomUUID() } }); const sourceId = source.json<{ id: string }>().id; await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${user.workspaceId}/collections`, headers: user.headers, payload: { pageId: sourceId, operationId: randomUUID() } });
   await page.getByRole("link", { name: "Collections", exact: true }).click(); await page.getByRole("button", { name: "Saved view browser collection", exact: true }).click(); await page.getByText("Saved collection views", { exact: true }).click(); await page.getByLabel("Collection view name", { exact: true }).fill("Browser focus"); await page.getByRole("button", { name: "Save collection view", exact: true }).click(); await expect(page.getByRole("button", { name: "Browser focus · Personal", exact: true })).toBeVisible(); await page.reload(); await page.getByRole("button", { name: "Saved view browser collection", exact: true }).click(); await page.getByText("Saved collection views", { exact: true }).click(); await expect(page.getByRole("button", { name: "Browser focus · Personal", exact: true })).toBeVisible();
+});
+
+test("settings retain drafts, requests and navigation when revisiting sections", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await login(page);
+  const preferences: string[] = [];
+  page.on("request", request => {
+    if (request.method() === "GET" && new URL(request.url()).pathname.endsWith("/preferences")) preferences.push(request.url());
+  });
+  await page.getByRole("link", { name: "Workspace settings", exact: true }).click();
+  const navigation = page.getByRole("navigation", { name: "Workspace settings sections" });
+  await navigation.evaluate(node => { node.setAttribute("data-continuity", "retained"); });
+  await navigation.getByRole("button", { name: "Appearance", exact: true }).click();
+  await page.getByLabel("Timezone", { exact: true }).fill("Europe/London");
+  const initialRequests = preferences.length;
+  await navigation.getByRole("button", { name: "General", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Workspace Profile", exact: true })).toBeVisible();
+  await navigation.getByRole("button", { name: "Appearance", exact: true }).click();
+  await expect(page.getByLabel("Timezone", { exact: true })).toHaveValue("Europe/London");
+  expect(preferences.length).toBe(initialRequests);
+  await expect(navigation).toHaveAttribute("data-continuity", "retained");
+  await page.getByRole("link", { name: "Decisions", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Decision Memory", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Workspace settings", exact: true }).click();
+  await expect(page.getByLabel("Timezone", { exact: true })).toHaveValue("Europe/London");
+  await expect(navigation).toHaveAttribute("data-continuity", "retained");
 });

@@ -26,7 +26,7 @@ export default function SettingsSpaces({
   currentId: string;
   csrf: string;
   onSwitch: (id: string) => void;
-  onCreated: () => void;
+  onCreated: (id: string) => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -34,7 +34,11 @@ export default function SettingsSpaces({
     event.preventDefault();
     const form = event.currentTarget;
     const name = String(new FormData(form).get("name") ?? "").trim();
-    if (!name) return;
+    if (!name || name.length > 100) {
+      setError("Enter a space name between 1 and 100 characters.");
+      return;
+    }
+    if (busy) return;
     setBusy(true);
     setError("");
     try {
@@ -43,12 +47,8 @@ export default function SettingsSpaces({
         csrf,
         body: { name },
       });
-      window.history.replaceState(
-        null,
-        "",
-        `/settings?w=${encodeURIComponent(id)}&section=spaces`,
-      );
-      onCreated();
+      form.reset();
+      await onCreated(id);
     } catch (failure) {
       setError(
         failure instanceof Error
@@ -63,7 +63,8 @@ export default function SettingsSpaces({
     <section className={`${panelClass} p-6`}>
       <h2 className={`${headingClass} text-lg`}>Your spaces</h2>
       <p className={`mt-2 text-sm ${mutedClass}`}>
-        Each space has its own members, records, permissions, and preferences.
+        Spaces keep members, records, and permissions separate. Your appearance
+        preferences are saved for each workspace.
       </p>
       {error && (
         <Notice tone="error" role="alert">
@@ -100,11 +101,19 @@ export default function SettingsSpaces({
       </ul>
       <form
         onSubmit={create}
-        className="grid max-w-md gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-800"
+        className="grid gap-4 rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-950/40"
       >
+        <div>
+          <h3 className={`${headingClass} text-base`}>Create a workspace</h3>
+          <p className={`mt-1 text-xs ${mutedClass}`}>
+            Start with a private space. Invite people when you are ready.
+          </p>
+        </div>
         <Field label="New space name">
           <input
             name="name"
+            autoComplete="off"
+            placeholder="For example, Design studio"
             maxLength={100}
             required
             className={inputClass}
@@ -112,7 +121,7 @@ export default function SettingsSpaces({
           />
         </Field>
         <div>
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" variant="primary" disabled={busy}>
             {busy ? "Creating…" : "Create space"}
           </Button>
         </div>

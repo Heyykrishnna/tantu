@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
@@ -195,7 +196,7 @@ export default function ContextGraphPanel({
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
         {["all", "project", "task", "page", "event", "promise", "decision"].map(
           (et) => (
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               key={et}
               type="button"
               onClick={() => setTypeFilter(et)}
@@ -206,7 +207,7 @@ export default function ContextGraphPanel({
               }`}
             >
               {et.charAt(0).toUpperCase() + et.slice(1)}
-            </button>
+            </CandyButton>
           ),
         )}
       </div>
@@ -215,13 +216,13 @@ export default function ContextGraphPanel({
         <form onSubmit={handleCreateLink} className={`${panelClass} space-y-4 p-5 sm:p-6`}>
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-sm">Create Context Relationship</h3>
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               type="button"
               onClick={() => setIsLinking(false)}
               className="text-neutral-400 hover:text-neutral-600 text-xs"
             >
               Cancel
-            </button>
+            </CandyButton>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Source Entity">
@@ -287,7 +288,7 @@ export default function ContextGraphPanel({
 
       {loading ? (
         <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
-          <Orb state="solving" size={64} display={44} />
+          <Orb state="solving" interactive={false} theme="auto" size={64} display={44} />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading context graph...</p>
         </div>
       ) : filteredNodes.length === 0 ? (

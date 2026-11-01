@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import React, {
   useCallback,
   useEffect,
@@ -183,7 +184,7 @@ const Dash = ({
   const scaleX = shouldReduceMotion ? targetScaleX : springScaleX;
 
   return (
-    <button
+    <CandyButton variant="ghost" size="unstyled"
       ref={ref}
       type="button"
       data-slot="proximity-dash"
@@ -219,7 +220,7 @@ const Dash = ({
           width: maxDashWidth,
         }}
       />
-    </button>
+    </CandyButton>
   );
 };
 

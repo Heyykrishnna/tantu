@@ -11,6 +11,7 @@ const stages = [
   ["application", "npm", "run", "check"],
   ["integration", "npm", "--prefix", "backend", "run", "test:integration"],
   ["browser", "npm", "--prefix", "discovery", "run", "test:l1a:browser"],
+  ["navigation", "npm", "--prefix", "discovery", "run", "test:navigation"],
   ["contracts", "npm", "--prefix", "backend", "run", "contracts:check"],
   ["frontend-audit", "npm", "--prefix", "frontend", "audit", "--audit-level=low"],
   ["backend-audit", "npm", "--prefix", "backend", "audit", "--audit-level=low"],

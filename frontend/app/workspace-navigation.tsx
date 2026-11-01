@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { FormEvent } from "react";
-import { motion } from "motion/react";
+import { TreeView } from "../components/ui/file-tree";
+import type { TreeNode } from "../components/ui/file-tree";
+import { resolveView } from "../lib/navigation";
 import type { User, Workspace } from "../lib/api";
 import { Icon } from "../components/icon";
 import { Brand, Button, Field, inputClass } from "../components/ui";
@@ -85,7 +87,8 @@ export default function WorkspaceNavigation({
             className="pointer-events-none absolute right-3 top-6 size-3.5 text-zinc-400"
           />
         </label>
-        <button
+        <Button
+          variant="ghost"
           onClick={onSearch}
           className="mt-2.5 flex h-8.5 w-full items-center gap-2 rounded-lg border border-zinc-200 bg-white px-2.5 text-left text-[11px] text-zinc-500 shadow-xs transition-colors hover:border-zinc-300 dark:border-zinc-800 dark:bg-[#141416] dark:text-zinc-400 dark:hover:border-zinc-700"
         >
@@ -94,143 +97,59 @@ export default function WorkspaceNavigation({
           <kbd className="rounded border border-zinc-200 px-1 text-[9px] font-medium text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
             ⌘ K
           </kbd>
-        </button>
+        </Button>
       </div>
       <div className="flex-1 overflow-y-auto px-2.5">
-        <p className="mb-1.5 px-3 text-[9px] font-semibold tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
-          WORKSPACE
-        </p>
-        <nav aria-label="Workspace navigation" className="grid gap-0.5">
-          {(
-            [
-              ["capture", "Capture"],
-              ["tasks", "Tasks"],
-              ["promises", "Promises"],
-              ["planning", "Plan My Day"],
-              ["decisions", "Decisions"],
-              ["graph", "Context Graph"],
-              ["pages", "Pages"],
-              ["collections", "Collections"],
-              ["kits", "Workspace Kits"],
-              ["meetings", "Meeting Briefs"],
-              ["projects", "Projects"],
-              ["calendar", "Calendar"],
-              ["mail", "Mail"],
-              ["activity", "Activity"],
-            ] as const
-          ).map(([target, label]) => (
-            <Link
-              key={target}
-              href={workspaceId ? `/${target}?w=${workspaceId}` : `/${target}`}
-              onClick={(event) => {
-                event.preventDefault();
-                onNavigate(target);
-              }}
-              aria-current={view === target ? "page" : undefined}
-              className={`relative flex h-8.5 items-center gap-2.5 rounded-lg px-3 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-zinc-400 ${
-                view === target
-                  ? "font-medium text-zinc-950 dark:text-white"
-                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/50"
-              }`}
-            >
-              {view === target && (
-                <motion.div
-                  layoutId="sidebar-active-pill"
-                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                  className="absolute inset-0 rounded-lg border border-zinc-300/80 bg-zinc-200/90 shadow-xs dark:border-zinc-700/80 dark:bg-zinc-800"
-                />
-              )}
-              <span className="relative z-10 flex w-full items-center gap-2.5">
-                <Icon
-                  name={
-                    target === "promises"
-                      ? "promise"
-                      : target === "projects"
-                        ? "folder"
-                        : target === "collections"
-                          ? "layers"
-                          : target === "decisions"
-                            ? "decision"
-                            : target === "graph"
-                              ? "network"
-                              : target === "planning"
-                                ? "plan"
-                                : target === "kits"
-                                  ? "kit"
-                                  : target === "meetings"
-                                    ? "brain"
-                                    : target
-                  }
-                  className="size-4 shrink-0"
-                />
-                <span className="truncate">{label}</span>
-                {view === target && (
-                  <span
-                    aria-hidden="true"
-                    className="ml-auto size-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100"
-                  />
-                )}
-              </span>
-            </Link>
-          ))}
-        </nav>
-        <p className="mb-1.5 mt-6 px-3 text-[9px] font-semibold tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
-          MANAGE
-        </p>
-        <nav aria-label="Workspace management" className="grid gap-0.5">
-          {(
-            [
-              ["integrations", "Integrations & APIs"],
-              ["enterprise", "Enterprise & Governance"],
-              ["discovery", "Future Discovery"],
-              ["rules", "Automation Rules"],
-              ["settings", "Workspace settings"],
-              ...(manager ? [["operations", "Operations"] as const] : []),
-            ] as const
-          ).map(([target, label]) => (
-            <Link
-              key={target}
-              href={workspaceId ? `/${target}?w=${workspaceId}` : `/${target}`}
-              onClick={(event) => {
-                event.preventDefault();
-                onNavigate(target);
-              }}
-              aria-current={view === target ? "page" : undefined}
-              className={`relative flex h-8.5 items-center gap-2.5 rounded-lg px-3 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-zinc-400 ${
-                view === target
-                  ? "font-medium text-zinc-950 dark:text-white"
-                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/50"
-              }`}
-            >
-              {view === target && (
-                <motion.div
-                  layoutId="sidebar-manage-active-pill"
-                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                  className="absolute inset-0 rounded-lg border border-zinc-300/80 bg-zinc-200/90 shadow-xs dark:border-zinc-700/80 dark:bg-zinc-800"
-                />
-              )}
-              <span className="relative z-10 flex w-full items-center gap-2.5">
-                <Icon
-                  name={
-                    target === "rules"
-                      ? "zap"
-                      : target === "integrations"
-                        ? "external"
-                        : target === "enterprise"
-                          ? "shield"
-                          : target === "discovery"
-                            ? "search"
-                            : target
-                  }
-                  className="size-4 shrink-0"
-                />
-                <span className="truncate">{label}</span>
-              </span>
-            </Link>
-          ))}
+        <nav aria-label="Workspace navigation">
+          <TreeView
+            label="Workspace sections"
+            selectedId={view}
+            defaultExpandedIds={["workspace", "manage"]}
+            onNodeClick={(node) => {
+              const target = resolveView(node.id);
+              if (target) onNavigate(target);
+            }}
+            data={[
+              {
+                id: "workspace",
+                label: "Workspace",
+                children: [
+                  ["capture", "Capture", "capture"],
+                  ["tasks", "Tasks", "tasks"],
+                  ["promises", "Promises", "promise"],
+                  ["planning", "Plan My Day", "plan"],
+                  ["decisions", "Decisions", "decision"],
+                  ["graph", "Context Graph", "network"],
+                  ["pages", "Pages", "pages"],
+                  ["collections", "Collections", "layers"],
+                  ["kits", "Workspace Kits", "kit"],
+                  ["meetings", "Meeting Briefs", "brain"],
+                  ["projects", "Projects", "folder"],
+                  ["calendar", "Calendar", "calendar"],
+                  ["mail", "Mail", "mail"],
+                  ["activity", "Activity", "activity"],
+                ].map(([id, label, icon]) => ({
+                  id,
+                  label,
+                  href: workspaceId ? `/${id}?w=${workspaceId}` : `/${id}`,
+                  icon: <Icon name={navigationIcon(icon)} className="size-4" />,
+                })),
+              },
+              {
+                id: "manage",
+                label: "Manage",
+                children: managementNodes(manager).map((node) => ({
+                  ...node,
+                  href: workspaceId
+                    ? `/${node.id}?w=${workspaceId}`
+                    : `/${node.id}`,
+                })),
+              },
+            ]}
+          />
         </nav>
         <details className="mt-3.5 rounded-lg border border-zinc-200/60 px-3 py-2 text-[11px] open:bg-white dark:border-zinc-800/70 dark:open:bg-[#141416]">
-          <summary className="cursor-pointer rounded font-medium text-zinc-600 outline-none hover:text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:text-zinc-400 dark:hover:text-zinc-200">
+          <summary className="cursor-pointer list-none rounded-lg px-1 py-1.5 font-medium text-zinc-600 outline-none transition-colors hover:text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:text-zinc-400 dark:hover:text-zinc-200">
             + New workspace
           </summary>
           <form onSubmit={onCreateWorkspace} className="grid gap-2.5 py-2.5">
@@ -286,4 +205,61 @@ export default function WorkspaceNavigation({
       </div>
     </div>
   );
+}
+
+function navigationIcon(name: string): import("../components/icon").IconName {
+  switch (name) {
+    case "capture":
+    case "tasks":
+    case "promise":
+    case "plan":
+    case "decision":
+    case "network":
+    case "pages":
+    case "layers":
+    case "kit":
+    case "brain":
+    case "folder":
+    case "calendar":
+    case "mail":
+    case "activity":
+      return name;
+    default:
+      return "folder";
+  }
+}
+
+function managementNodes(manager: boolean): TreeNode[] {
+  return [
+    {
+      id: "integrations",
+      label: "Integrations & APIs",
+      icon: <Icon name="external" />,
+    },
+    {
+      id: "enterprise",
+      label: "Enterprise & Governance",
+      icon: <Icon name="shield" />,
+    },
+    {
+      id: "discovery",
+      label: "Future Discovery",
+      icon: <Icon name="search" />,
+    },
+    { id: "rules", label: "Automation Rules", icon: <Icon name="zap" /> },
+    {
+      id: "settings",
+      label: "Workspace settings",
+      icon: <Icon name="settings" />,
+    },
+    ...(manager
+      ? [
+          {
+            id: "operations",
+            label: "Operations",
+            icon: <Icon name="activity" />,
+          },
+        ]
+      : []),
+  ];
 }

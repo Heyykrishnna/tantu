@@ -19,7 +19,7 @@ const candyVariantMap: Record<string, CandyButtonVariant> = {
   primary: "obsidian",
   secondary: "pearl",
   danger: "ruby",
-  ghost: "obsidian",
+  ghost: "ghost",
 };
 
 export function Button({
@@ -35,18 +35,6 @@ export function Button({
 }) {
   const candySize: CandyButtonSize =
     size === "icon" ? "icon" : size === "sm" ? "sm" : "default";
-
-  if (variant === "ghost") {
-    return (
-      <button
-        type={type}
-        className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent text-[12px] font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.98] transition-all outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:pointer-events-none disabled:opacity-45 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 ${size === "icon" ? "size-8" : size === "sm" ? "min-h-8 px-2.5 py-1" : "min-h-9 px-3.5 py-1.5"} ${className}`}
-        {...props}
-      >
-        {children}
-      </button>
-    );
-  }
 
   return (
     <CandyButton

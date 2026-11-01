@@ -11,6 +11,7 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
+import { SegmentedControl } from "../components/ui/segmented-control";
 import { SettingsSwitch } from "../components/ui/settings-switch";
 
 export default function SettingsAppearance({
@@ -22,6 +23,8 @@ export default function SettingsAppearance({
   busy: boolean;
   onSave: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const [theme, setTheme] = useState(preferences.theme);
+  const [density, setDensity] = useState(preferences.density);
   const [motion, setMotion] = useState(preferences.reduceMotion);
   const [accent, setAccent] = useState(preferences.accent);
 
@@ -62,29 +65,29 @@ export default function SettingsAppearance({
       </div>
       <form onSubmit={onSave} className="grid gap-6">
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Color theme">
-            <select
-              name="theme"
-              defaultValue={preferences.theme}
-              className={inputClass}
-              disabled={busy}
-            >
-              <option value="system">Follow device</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </Field>
-          <Field label="Layout density">
-            <select
-              name="density"
-              defaultValue={preferences.density}
-              className={inputClass}
-              disabled={busy}
-            >
-              <option value="comfortable">Comfortable</option>
-              <option value="compact">Compact</option>
-            </select>
-          </Field>
+          <SegmentedControl
+            name="theme"
+            label="Color theme"
+            value={theme}
+            onChange={setTheme}
+            disabled={busy}
+            options={[
+              { value: "system", label: "Follow device" },
+              { value: "light", label: "Light" },
+              { value: "dark", label: "Dark" },
+            ]}
+          />
+          <SegmentedControl
+            name="density"
+            label="Layout density"
+            value={density}
+            onChange={setDensity}
+            disabled={busy}
+            options={[
+              { value: "comfortable", label: "Comfortable" },
+              { value: "compact", label: "Compact" },
+            ]}
+          />
         </div>
         <fieldset disabled={busy}>
           <legend className="mb-3 text-xs font-medium">Action accent</legend>
@@ -96,16 +99,16 @@ export default function SettingsAppearance({
                 ["sage", "Forest", "bg-emerald-800"],
               ] as const
             ).map(([value, label, color]) => (
-              <label key={value} className="cursor-pointer">
+              <label key={value} className="relative cursor-pointer">
                 <input
                   type="radio"
                   name="accent"
                   value={value}
                   checked={accent === value}
                   onChange={() => setAccent(value)}
-                  className="peer sr-only"
+                  className="peer absolute inset-0 z-10 size-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
                 />
-                <span className="flex items-center justify-center gap-2 rounded-lg border border-zinc-200 p-3 text-xs transition-colors peer-checked:border-zinc-600 peer-checked:bg-zinc-50 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-400 dark:border-zinc-800 dark:peer-checked:border-zinc-400 dark:peer-checked:bg-zinc-900">
+                <span className="flex items-center justify-center gap-2 rounded-lg border border-zinc-200 p-3 text-xs transition-colors peer-checked:border-zinc-600 peer-checked:bg-zinc-50 peer-checked:ring-1 peer-checked:ring-zinc-500 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-400 dark:border-zinc-800 dark:peer-checked:border-zinc-400 dark:peer-checked:bg-zinc-900">
                   <span className={`size-3 rounded-full ${color}`} />
                   {label}
                 </span>

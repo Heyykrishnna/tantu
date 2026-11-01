@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "motion/react";
+import { useUiMotion } from "../../lib/use-ui-motion";
 import { useId } from "react";
 
 export function SettingsSwitch({
@@ -18,6 +20,7 @@ export function SettingsSwitch({
   disabled?: boolean;
 }) {
   const id = useId();
+  const reduced = useUiMotion();
   return (
     <label className="flex cursor-pointer items-center justify-between gap-6 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800 has-disabled:cursor-not-allowed has-disabled:opacity-60">
       <span className="min-w-0">
@@ -39,15 +42,21 @@ export function SettingsSwitch({
           checked={checked}
           disabled={disabled}
           onChange={(event) => onChange(event.target.checked)}
-          className="peer sr-only"
+          className="peer absolute inset-0 z-10 h-6 w-11 cursor-pointer opacity-0 disabled:cursor-not-allowed"
         />
         <span
           aria-hidden="true"
           className="block h-6 w-11 rounded-full border border-zinc-300 bg-zinc-200 transition-colors peer-checked:border-zinc-800 peer-checked:bg-zinc-900 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-400 peer-focus-visible:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-800 dark:peer-checked:border-zinc-200 dark:peer-checked:bg-zinc-100 motion-reduce:transition-none"
         />
-        <span
+        <motion.span
+          animate={{ x: checked ? 20 : 0 }}
+          transition={
+            reduced
+              ? { duration: 0 }
+              : { type: "spring", stiffness: 440, damping: 30 }
+          }
           aria-hidden="true"
-          className="absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5 dark:peer-checked:bg-zinc-900 motion-reduce:transition-none [[data-reduce-motion=true]_&]:transition-none"
+          className="absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm dark:peer-checked:bg-zinc-900"
         />
       </span>
     </label>

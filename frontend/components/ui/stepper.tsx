@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { forwardRef, type KeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -183,7 +184,7 @@ export const Stepper = forwardRef<HTMLElement, StepperProps>(function Stepper(
                 </span>
               )}
               {interactive ? (
-                <button
+                <CandyButton variant="ghost" size="unstyled"
                   type="button"
                   disabled={disabled || index > current}
                   onClick={() => onStepChange?.(index)}
@@ -191,7 +192,7 @@ export const Stepper = forwardRef<HTMLElement, StepperProps>(function Stepper(
                   className="relative flex w-full items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 focus-visible:ring-offset-4 focus-visible:ring-offset-white disabled:cursor-default @md:group-data-[orientation=auto]/stepper:flex-col group-data-[orientation=horizontal]/stepper:flex-col @md:group-data-[orientation=auto]/stepper:gap-3 group-data-[orientation=horizontal]/stepper:gap-3 dark:focus-visible:ring-offset-zinc-950"
                 >
                   {contents}
-                </button>
+                </CandyButton>
               ) : (
                 <div className="relative flex items-center gap-3 @md:group-data-[orientation=auto]/stepper:flex-col group-data-[orientation=horizontal]/stepper:flex-col @md:group-data-[orientation=auto]/stepper:gap-3 group-data-[orientation=horizontal]/stepper:gap-3">
                   {contents}

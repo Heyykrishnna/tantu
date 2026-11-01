@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import {
   useCallback,
   useEffect,
@@ -468,15 +469,15 @@ export function ConfirmMorph({
             >
               {shownPrompt}
             </span>
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               type="button"
               className="rounded-full px-2.5 py-1 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 transition-colors cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 active:scale-95"
               data-autofocus
               onClick={cancel}
             >
               {cancelLabel}
-            </button>
-            <button
+            </CandyButton>
+            <CandyButton variant="ghost" size="unstyled"
               type="button"
               className={cn(
                 "rounded-full px-2.5 py-1 text-xs font-medium transition-all cursor-pointer outline-none active:scale-95 shadow-xs",
@@ -488,7 +489,7 @@ export function ConfirmMorph({
               onClick={() => void perform("confirm")}
             >
               {confirmLabel}
-            </button>
+            </CandyButton>
           </>
         );
       case "pending":
@@ -510,14 +511,14 @@ export function ConfirmMorph({
               <span>{doneLabel}</span>
             </span>
             {onUndo && (
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 type="button"
                 className="rounded-full px-2.5 py-1 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 transition-colors cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 active:scale-95 ml-1"
                 data-autofocus
                 onClick={() => void perform("undo")}
               >
                 {undoLabel}
-              </button>
+              </CandyButton>
             )}
           </>
         );
@@ -532,19 +533,19 @@ export function ConfirmMorph({
               />
               <span>{errorLabel}</span>
             </span>
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               type="button"
               className="rounded-full px-2.5 py-1 text-xs font-medium text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 transition-colors cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-rose-400 active:scale-95 ml-1"
               data-autofocus
               onClick={() => void perform(working)}
             >
               {retryLabel}
-            </button>
+            </CandyButton>
           </>
         );
       default:
         return (
-          <button
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             className={cn(
               "inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer transition-colors outline-none rounded-full select-none",
@@ -571,7 +572,7 @@ export function ConfirmMorph({
               </span>
             )}
             <span>{label}</span>
-          </button>
+          </CandyButton>
         );
     }
   })();

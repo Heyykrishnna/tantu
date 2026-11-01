@@ -1,11 +1,14 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, FileSpreadsheet, FileText, Minus, Trash2 } from "lucide-react";
 import { ConfirmMorph } from "./confirm-morph";
 import { cn } from "@/lib/utils";
+
+const MotionCandyButton = motion.create(CandyButton);
 
 export const deleteFiles = async (ids: string[]) => {
   await new Promise((resolve) => setTimeout(resolve, 900));
@@ -195,7 +198,7 @@ export function DeleteSelectionShowcase() {
           <div className="flex items-center gap-3">
             <AnimatePresence mode="popLayout" initial={false}>
               {files.length > 0 && (
-                <motion.button
+                <MotionCandyButton variant="ghost" size="unstyled"
                   key="select-all-btn"
                   type="button"
                   role="checkbox"
@@ -243,7 +246,7 @@ export function DeleteSelectionShowcase() {
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
-                </motion.button>
+                </MotionCandyButton>
               )}
             </AnimatePresence>
 
@@ -389,7 +392,7 @@ export function DeleteSelectionShowcase() {
 
       <div className="mt-6 flex items-center justify-center">
         <div className="relative inline-flex items-center p-1 rounded-full bg-[#161618] border border-white/8 shadow-lg">
-          <button
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setOutcome("succeeds")}
             className={cn(
@@ -412,8 +415,8 @@ export function DeleteSelectionShowcase() {
               />
             )}
             Succeeds
-          </button>
-          <button
+          </CandyButton>
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setOutcome("fails")}
             className={cn(
@@ -436,7 +439,7 @@ export function DeleteSelectionShowcase() {
               />
             )}
             Fails
-          </button>
+          </CandyButton>
         </div>
       </div>
     </div>

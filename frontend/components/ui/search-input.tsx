@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { VoiceBeam } from "voice-glow";
 import { Orb } from "./fx/Orb";
@@ -118,7 +119,7 @@ export function SearchComposer({
         placeholder={placeholder}
         className="min-w-0 flex-1 bg-transparent py-2 text-[18px] leading-8 tracking-[-0.01em] text-text outline-none placeholder:text-faint"
       />
-      <button
+      <CandyButton variant="ghost" size="unstyled"
         type="submit"
         disabled={busy || currentValue.trim().length < 2}
         aria-label={busy ? "Searching" : "Search"}
@@ -130,7 +131,7 @@ export function SearchComposer({
           display={30}
           interactive={false}
         />
-      </button>
+      </CandyButton>
     </form>
   );
 

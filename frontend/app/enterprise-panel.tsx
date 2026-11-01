@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { motion } from "motion/react";
@@ -174,11 +175,6 @@ export default function EnterprisePanel({
     setError("");
     setNotice("");
 
-    const ipRanges = ipRangesInput
-      .split(",")
-      .map((ip) => ip.trim())
-      .filter((ip) => ip.length > 0);
-
     api<{ policy: EnterprisePolicyItem }>(
       `/workspaces/${workspaceId}/enterprise-policy`,
       (v) => v as { policy: EnterprisePolicyItem },
@@ -186,10 +182,6 @@ export default function EnterprisePanel({
         method: "PUT",
         csrf,
         body: {
-          ssoEnforced,
-          ssoProvider,
-          sessionDurationMinutes: sessionMinutes,
-          allowedIpRanges: ipRanges,
           retentionDays,
         },
       },
@@ -300,7 +292,7 @@ export default function EnterprisePanel({
   if (loading) {
     return (
       <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
-        <Orb state="solving" size={64} display={48} />
+        <Orb state="solving" interactive={false} theme="auto" size={64} display={48} />
         <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
           Loading enterprise governance controls...
         </p>
@@ -316,7 +308,7 @@ export default function EnterprisePanel({
             Enterprise Governance & Policy Controls
           </h2>
           <p className={mutedClass}>
-            Manage SAML/SCIM SSO, DLP redaction rules, audit log streams, and
+            Review identity integration prerequisites, DLP redaction rules, audit exports, and
             operating model compliance.
           </p>
         </div>
@@ -330,7 +322,7 @@ export default function EnterprisePanel({
               ["requests", "Access Requests"],
             ] as const
           ).map(([tabKey, tabLabel]) => (
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               key={tabKey}
               type="button"
               onClick={() => setActiveTab(tabKey)}
@@ -352,7 +344,7 @@ export default function EnterprisePanel({
               >
                 {tabLabel}
               </span>
-            </button>
+            </CandyButton>
           ))}
         </div>
       </div>
@@ -366,10 +358,12 @@ export default function EnterprisePanel({
             <h3 className="text-base font-semibold">
               Single Sign-On (SSO) & Identity Federation
             </h3>
+            <Notice>SSO/SCIM requires a configured and verified identity provider. Per-workspace session limits and network restrictions are not enforced in this foundation release. Existing sign-in and server session controls remain active.</Notice>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex items-center gap-3 p-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg cursor-pointer">
                 <input
                   type="checkbox"
+                  disabled
                   checked={ssoEnforced}
                   onChange={(e) => setSsoEnforced(e.target.checked)}
                   className="rounded text-stone-900 focus:ring-stone-500"
@@ -387,6 +381,7 @@ export default function EnterprisePanel({
 
               <Field label="Identity Provider Protocol">
                 <select
+                  disabled
                   value={ssoProvider}
                   onChange={(e) =>
                     setSsoProvider(e.target.value as "saml" | "oidc" | "none")
@@ -411,6 +406,7 @@ export default function EnterprisePanel({
                   type="number"
                   min="15"
                   max="10080"
+                  disabled
                   value={sessionMinutes}
                   onChange={(e) =>
                     setSessionMinutes(parseInt(e.target.value, 10) || 480)
@@ -436,6 +432,7 @@ export default function EnterprisePanel({
               <input
                 type="text"
                 placeholder="e.g. 192.168.1.0/24, 10.0.0.0/16"
+                disabled
                 value={ipRangesInput}
                 onChange={(e) => setIpRangesInput(e.target.value)}
                 className={inputClass}

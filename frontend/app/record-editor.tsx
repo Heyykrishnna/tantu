@@ -1,5 +1,6 @@
 "use client";
 
+import { Orb } from "../components/ui/orb";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { CanonicalRecord, Document } from "../lib/contracts";
@@ -416,10 +417,7 @@ export default function RecordEditor({
                 variant="primary"
                 disabled={busy || conflict}
               >
-                <Icon
-                  name={busy ? "refresh" : "check"}
-                  className={`size-3.5 ${busy ? "motion-safe:animate-spin" : ""}`}
-                />
+                {busy ? <Orb state="solving" size={20} display={16} theme="auto" interactive={false} /> : <Icon name="check" className="size-3.5" />}
                 {busy ? "Saving…" : entry ? "Save changes" : `Create ${kind}`}
               </Button>
               {entry && (

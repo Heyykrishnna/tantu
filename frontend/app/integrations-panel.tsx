@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
@@ -406,7 +407,7 @@ export default function IntegrationsPanel({
   if (loading) {
     return (
       <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
-        <Orb state="solving" size={64} display={44} />
+        <Orb state="solving" interactive={false} theme="auto" size={64} display={44} />
         <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading integration settings...</p>
       </div>
     );
@@ -425,7 +426,7 @@ export default function IntegrationsPanel({
           </p>
         </div>
         <div className="flex gap-2">
-          <button
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setActiveTab("keys")}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -435,8 +436,8 @@ export default function IntegrationsPanel({
             }`}
           >
             API Keys
-          </button>
-          <button
+          </CandyButton>
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setActiveTab("webhooks")}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -446,8 +447,8 @@ export default function IntegrationsPanel({
             }`}
           >
             Webhooks
-          </button>
-          <button
+          </CandyButton>
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setActiveTab("providers")}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -457,7 +458,7 @@ export default function IntegrationsPanel({
             }`}
           >
             Providers Matrix
-          </button>
+          </CandyButton>
         </div>
       </div>
 
@@ -770,7 +771,7 @@ export default function IntegrationsPanel({
                       <span className="text-stone-400">
                         Created: {new Date(wh.createdAt).toLocaleDateString()}
                       </span>
-                      <button
+                      <CandyButton variant="ghost" size="unstyled"
                         type="button"
                         onClick={() => loadDeliveries(wh.id)}
                         className="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 underline font-medium"
@@ -778,7 +779,7 @@ export default function IntegrationsPanel({
                         {selectedWebhookId === wh.id
                           ? "Refresh Delivery Ledger"
                           : "View Delivery Ledger"}
-                      </button>
+                      </CandyButton>
                     </div>
 
                     {selectedWebhookId === wh.id && (

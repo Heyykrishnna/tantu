@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useRef } from "react";
 import { useGSAP, gsap } from "@/lib/use-gsap";
 import { Check, LoaderCircle, X } from "lucide-react";
@@ -135,7 +136,7 @@ export function AccessRequestRow({
         ) : (
           <div className="flex items-center gap-1.5">
             {(["approved", "declined"] as const).map((value) => (
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 key={value}
                 type="button"
                 disabled={busy || disabled || leaving}
@@ -159,7 +160,7 @@ export function AccessRequestRow({
                 ) : (
                   "Decline"
                 )}
-              </button>
+              </CandyButton>
             ))}
           </div>
         )}

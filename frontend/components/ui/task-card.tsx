@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useId, useRef, type CSSProperties } from "react";
 import { useGSAP, gsap } from "@/lib/use-gsap";
 import { FolderClosed, Link2, MessagesSquare } from "lucide-react";
@@ -199,14 +200,14 @@ export function TaskCard({
           className="text-[19px] leading-snug font-medium tracking-[-0.04em] wrap-anywhere"
         >
           {onOpen ? (
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               type="button"
               onClick={onOpen}
               className="cursor-pointer rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
               aria-label={`Open ${title || "Untitled task"}`}
             >
               {title || "Untitled task"}
-            </button>
+            </CandyButton>
           ) : (
             title || "Untitled task"
           )}

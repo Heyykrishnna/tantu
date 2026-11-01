@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { api, searchResults } from "../lib/api";
@@ -116,7 +117,7 @@ export default function SearchModal({
               ["promise", "Promises"],
             ] as const
           ).map(([val, label]) => (
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               key={val}
               type="button"
               onClick={() => setTypeFilter(val)}
@@ -138,7 +139,7 @@ export default function SearchModal({
               >
                 {label}
               </span>
-            </button>
+            </CandyButton>
           ))}
         </div>
       </div>
@@ -146,7 +147,7 @@ export default function SearchModal({
       <div className="max-h-90 overflow-y-auto p-2">
         {loading ? (
           <div className="flex flex-col items-center justify-center gap-3 p-12 text-center">
-            <Orb state="solving" size={64} display={36} />
+            <Orb state="solving" interactive={false} theme="auto" size={64} display={36} />
             <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Searching live records...</p>
           </div>
         ) : error ? (
@@ -162,7 +163,7 @@ export default function SearchModal({
         ) : (
           <div className="space-y-1">
             {results.map((item) => (
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 key={`${item.targetType}:${item.recordId}`}
                 type="button"
                 onClick={() => handleSelect(item)}
@@ -186,7 +187,7 @@ export default function SearchModal({
                     {item.snippet}
                   </p>
                 )}
-              </button>
+              </CandyButton>
             ))}
           </div>
         )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import {
   useId,
   useMemo,
@@ -292,7 +293,7 @@ function ToastCard({
   );
 
   const actionButton = (action: ToastAction, footer = false) => (
-    <button
+    <CandyButton variant="ghost" size="unstyled"
       type="button"
       disabled={busy !== null || closing !== null}
       onClick={() => void runAction(action)}
@@ -338,7 +339,7 @@ function ToastCard({
       {footer && item.footer && (
         <ArrowRight aria-hidden="true" size={14} className="ml-auto" />
       )}
-    </button>
+    </CandyButton>
   );
 
   return (
@@ -434,7 +435,7 @@ function ToastCard({
                 {item.secondaryAction ? (
                   actionButton(item.secondaryAction)
                 ) : (
-                  <button
+                  <CandyButton variant="ghost" size="unstyled"
                     type="button"
                     className={cn(
                       buttonClass,
@@ -444,7 +445,7 @@ function ToastCard({
                     disabled={busy !== null || closing !== null}
                   >
                     Dismiss
-                  </button>
+                  </CandyButton>
                 )}
                 {item.action &&
                   item.actionPlacement !== "footer" &&
@@ -461,7 +462,7 @@ function ToastCard({
             )}
           </div>
         </div>
-        <button
+        <CandyButton variant="ghost" size="unstyled"
           type="button"
           aria-label={`Dismiss ${item.title}`}
           disabled={busy !== null || closing !== null}
@@ -472,7 +473,7 @@ function ToastCard({
           )}
         >
           <X size={16} aria-hidden="true" />
-        </button>
+        </CandyButton>
         {item.badges && item.badges.length > 0 && (
           <div className="flex flex-wrap gap-1.5 border-t border-zinc-100 bg-zinc-50/80 px-4 py-2.5 dark:border-white/5 dark:bg-white/[0.025]">
             {item.badges.map((badge, index) => (

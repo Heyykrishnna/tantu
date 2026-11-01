@@ -10,11 +10,13 @@ export type CandyButtonVariant =
   | "violet"
   | "azure"
   | "obsidian"
-  | "pearl";
+  | "pearl"
+  | "ghost";
 
-export type CandyButtonSize = "sm" | "default" | "lg" | "icon";
+export type CandyButtonSize = "sm" | "default" | "lg" | "icon" | "unstyled";
 
-export interface CandyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface CandyButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   as?: React.ElementType;
   href?: string;
   target?: string;
@@ -29,6 +31,8 @@ export interface CandyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonE
 }
 
 const variantStyles: Record<CandyButtonVariant, string> = {
+  ghost:
+    "border-0 bg-transparent text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100",
   emerald:
     "bg-emerald-600 dark:bg-emerald-700 text-white shadow-xs hover:bg-emerald-500",
   ruby: "bg-rose-600 dark:bg-rose-700 text-white shadow-xs hover:bg-rose-500",
@@ -44,6 +48,7 @@ const variantStyles: Record<CandyButtonVariant, string> = {
 };
 
 const sizeStyles: Record<CandyButtonSize, string> = {
+  unstyled: "",
   sm: "h-8 px-3.5 text-xs rounded-lg gap-1.5 [&_svg]:size-3.5",
   default: "h-10 px-5 text-sm rounded-xl gap-2 [&_svg]:size-4",
   lg: "h-12 px-7 text-base rounded-2xl gap-2.5 [&_svg]:size-5",
@@ -82,7 +87,7 @@ export const CandyButton = React.forwardRef<HTMLElement, CandyButtonProps>(
       : (style ?? {});
 
     const commonClass = cn(
-      "relative inline-flex items-center justify-center font-medium leading-none tracking-[0.01em] select-none overflow-hidden cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
+      "relative inline-flex items-center justify-center font-medium leading-none tracking-[0.01em] select-none overflow-hidden cursor-pointer transition-[color,background-color,border-color,box-shadow,transform,filter] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none motion-reduce:active:scale-100 [[data-reduce-motion=true]_&]:transition-none [[data-reduce-motion=true]_&]:active:scale-100 active:scale-[0.98] active:brightness-95 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
       !isCustom && variantStyles[variant],
       sizeStyles[size],
       className,
@@ -90,7 +95,13 @@ export const CandyButton = React.forwardRef<HTMLElement, CandyButtonProps>(
 
     const innerContent = (
       <>
-        <span className="relative z-10 inline-flex items-center justify-center gap-2">
+        <span
+          className={
+            size === "unstyled"
+              ? "contents"
+              : "relative z-10 inline-flex items-center justify-center gap-2"
+          }
+        >
           {leftIcon && <span className="shrink-0">{leftIcon}</span>}
           {children}
           {rightIcon && <span className="shrink-0">{rightIcon}</span>}
@@ -118,6 +129,8 @@ export const CandyButton = React.forwardRef<HTMLElement, CandyButtonProps>(
 
     return (
       <button
+        type="button"
+        data-candy-button="true"
         ref={ref as React.Ref<HTMLButtonElement>}
         disabled={disabled}
         style={customStyle}

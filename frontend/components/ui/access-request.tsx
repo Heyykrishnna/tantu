@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import {
   useEffect,
   useId,
@@ -349,7 +350,7 @@ export function AccessRequest({
       }}
     >
       <div className="relative h-16">
-        <button
+        <CandyButton variant="ghost" size="unstyled"
           type="button"
           data-request-compact
           aria-expanded={isOpen}
@@ -384,7 +385,7 @@ export function AccessRequest({
                   : `${reviewed} ${reviewed === 1 ? "request" : "requests"} reviewed`}
             </span>
           </span>
-        </button>
+        </CandyButton>
         <h3
           id={`${uid}-heading`}
           data-request-heading
@@ -394,7 +395,7 @@ export function AccessRequest({
           Access requests
         </h3>
         <div className="absolute top-4 right-11 pointer-coarse:top-3">
-          <button
+          <CandyButton variant="ghost" size="unstyled"
             ref={triggerRef}
             type="button"
             aria-label={
@@ -414,10 +415,10 @@ export function AccessRequest({
                 transform: initialExpanded ? "rotate(180deg)" : undefined,
               }}
             />
-          </button>
+          </CandyButton>
         </div>
         <div className="absolute top-4 right-2 pointer-coarse:top-3">
-          <button
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             aria-label="Dismiss access requests"
             onClick={dismiss}
@@ -425,7 +426,7 @@ export function AccessRequest({
             className={controlClass}
           >
             <X size={17} aria-hidden="true" />
-          </button>
+          </CandyButton>
         </div>
       </div>
       <div

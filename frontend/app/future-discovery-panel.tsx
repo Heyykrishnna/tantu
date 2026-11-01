@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
@@ -415,7 +416,7 @@ export default function FutureDiscoveryPanel({
   if (loading) {
     return (
       <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
-        <Orb state="solving" size={64} display={44} />
+        <Orb state="solving" interactive={false} theme="auto" size={64} display={44} />
         <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading future discovery capabilities...</p>
       </div>
     );
@@ -434,7 +435,7 @@ export default function FutureDiscoveryPanel({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setActiveTab("exposure")}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -444,8 +445,8 @@ export default function FutureDiscoveryPanel({
             }`}
           >
             Exposure Map
-          </button>
-          <button
+          </CandyButton>
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setActiveTab("handover")}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -455,8 +456,8 @@ export default function FutureDiscoveryPanel({
             }`}
           >
             Handover Packs
-          </button>
-          <button
+          </CandyButton>
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setActiveTab("freshness")}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -466,8 +467,8 @@ export default function FutureDiscoveryPanel({
             }`}
           >
             Knowledge Freshness
-          </button>
-          <button
+          </CandyButton>
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setActiveTab("scenarios")}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -477,8 +478,8 @@ export default function FutureDiscoveryPanel({
             }`}
           >
             Scenario Planning
-          </button>
-          <button
+          </CandyButton>
+          <CandyButton variant="ghost" size="unstyled"
             type="button"
             onClick={() => setActiveTab("attention")}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -488,7 +489,7 @@ export default function FutureDiscoveryPanel({
             }`}
           >
             Attention Budgets
-          </button>
+          </CandyButton>
         </div>
       </div>
 

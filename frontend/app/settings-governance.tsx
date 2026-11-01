@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "../components/ui/loading-state";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api, list, record, string } from "../lib/api";
@@ -166,9 +167,7 @@ export default function SettingsGovernance({
             </Button>
           </form>
         ) : (
-          <p role="status" className={mutedClass}>
-            Loading policy defaults…
-          </p>
+          <LoadingState label="Loading policy defaults…" />
         )}
       </section>
       <section className={`${panelClass} p-6`}>

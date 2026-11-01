@@ -1,5 +1,6 @@
 "use client";
 
+import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { motion } from "motion/react";
@@ -231,7 +232,7 @@ export default function CapturePanel({
       >
         <div className="inline-flex items-center gap-1 rounded-xl border border-zinc-200/80 bg-zinc-100/90 p-1 dark:border-zinc-800 dark:bg-zinc-900">
           {(["note", "link", "mail", "request"] as const).map((k) => (
-            <button
+            <CandyButton variant="ghost" size="unstyled"
               key={k}
               type="button"
               onClick={() => setKind(k)}
@@ -253,7 +254,7 @@ export default function CapturePanel({
               >
                 {k}
               </span>
-            </button>
+            </CandyButton>
           ))}
         </div>
         <Field label="What do you want to capture?">
@@ -297,7 +298,7 @@ export default function CapturePanel({
           <div
             className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}
           >
-            <Orb state="solving" size={64} display={44} />
+            <Orb state="solving" interactive={false} theme="auto" size={64} display={44} />
             <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
               Loading triage queue...
             </p>
@@ -369,13 +370,13 @@ export default function CapturePanel({
               <h3 className="text-sm font-semibold text-[#1e2025] dark:text-white">
                 Review Task Conversion
               </h3>
-              <button
+              <CandyButton variant="ghost" size="unstyled"
                 type="button"
                 onClick={() => setReviewing(null)}
                 className="text-[#677287] hover:text-black dark:hover:text-white"
               >
                 <Icon name="close" className="size-4" />
-              </button>
+              </CandyButton>
             </div>
 
             <Notice tone="neutral">{reviewing.audienceNotice}</Notice>

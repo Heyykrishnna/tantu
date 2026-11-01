@@ -112,5 +112,7 @@ export async function api<T>(path: string, parser: (value: unknown) => T, option
     throw new ApiError(response.status, string(failure.code), string(failure.message));
   }
   options.signal?.throwIfAborted();
-  return parser(body);
+  const parsed = parser(body);
+  if (options.method && options.method !== "GET" && typeof window !== "undefined") window.dispatchEvent(new Event("tantu:data-changed"));
+  return parsed;
 }
