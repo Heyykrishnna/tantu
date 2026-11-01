@@ -226,18 +226,18 @@ test("readRuntimeSettings normalizes Gmail app passwords and fallback variables"
   const settings = readRuntimeSettings(config, {
     APP_ORIGIN: "http://localhost:3000",
     FILE_STORAGE_PATH: "/tmp/tantu-files",
-    FILE_SIGNING_SECRET: "0123456789abcdef0123456789abcdef",
+    FILE_SIGNING_SECRET: secret(),
     SMTP_HOST: "smtp.gmail.com",
     SMTP_PORT: "587",
     SMTP_USERNAME: "test@gmail.com",
-    SMTP_PASS: '"xvpx ykrc acys khqa"',
+    SMTP_PASS: '"aaaa bbbb cccc dddd"',
     SENDER_EMAIL: "support@example.test",
   });
 
   assert.equal(settings.smtp.host, "smtp.gmail.com");
   assert.equal(settings.smtp.port, 587);
   assert.equal(settings.smtp.user, "test@gmail.com");
-  assert.equal(settings.smtp.pass, "xvpxykrcacyskhqa");
+  assert.equal(settings.smtp.pass, "aaaabbbbccccdddd");
   assert.equal(settings.smtp.fromEmail, "support@example.test");
 });
 

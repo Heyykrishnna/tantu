@@ -4,3 +4,7 @@
 345f58486d2f45e179c6aac99cd475b89c2a0219:.env.example:generic-api-key:54
 345f58486d2f45e179c6aac99cd475b89c2a0219:.env.example:generic-api-key:58
 fcb36b7742efafbe8d59c954cb3ba1bd2504719b:backend/test/integrations-webhooks.test.ts:generic-api-key:10
+5b38f86d09542a52eeb120da27608a0f68b22eae:backend/test/auth-security.test.ts:generic-api-key:229
+f5e3cd3fe783e2041e88798afb34cd8c6b7598c2:AUTH_SPECIFICATION.md:generic-api-key:209
+907828f8dc06a20b4fb983dd308a90158f81d803:AUTH_SPECIFICATION.md:generic-api-key:145
+907828f8dc06a20b4fb983dd308a90158f81d803:AUTH_SPECIFICATION.md:generic-api-key:170

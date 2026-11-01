@@ -206,7 +206,7 @@ CREATE POLICY record_update ON tantu.records
   {
     "email": "user@example.com",
     "name": "Jane Doe",
-    "password": "valid-passphrase-at-least-12-chars"
+    "password": "<user-supplied-password>"
   }
   ```
 - **Response** (HTTP 200):
@@ -269,7 +269,7 @@ CREATE POLICY record_update ON tantu.records
   {
     "email": "user@example.com",
     "name": "Jane Doe",
-    "password": "valid-passphrase-at-least-12-chars"
+    "password": "<user-supplied-password>"
   }
   ```
 - **Response** (HTTP 201):
@@ -294,7 +294,7 @@ CREATE POLICY record_update ON tantu.records
   ```json
   {
     "email": "user@example.com",
-    "password": "valid-passphrase-at-least-12-chars"
+    "password": "<user-supplied-password>"
   }
   ```
 - **Response** (HTTP 200):

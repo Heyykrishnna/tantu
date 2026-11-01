@@ -12,11 +12,13 @@ let environment: Awaited<ReturnType<typeof fixture>>;
 let owner: Awaited<ReturnType<Awaited<ReturnType<typeof fixture>>["account"]>>;
 let server: ChildProcess | undefined;
 let serverOutput = "";
+const backendPort = Number(process.env.L1A_BACKEND_PORT ?? 4000);
 
 test.beforeAll(async () => {
   environment = await fixture({ origin: "http://localhost:3100" });
   owner = await environment.account("browser@example.test");
-  await environment.app.listen({ host: "127.0.0.1", port: 4000 });
+  if (!Number.isInteger(backendPort) || backendPort < 1024 || backendPort > 65535) throw new Error("L1A_BACKEND_PORT must be an unprivileged TCP port.");
+  await environment.app.listen({ host: "127.0.0.1", port: backendPort });
   server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--port", "3100", "--hostname", "127.0.0.1"], { cwd: fileURLToPath(new URL("../../frontend/", import.meta.url)), stdio: ["ignore", "pipe", "pipe"] });
   server.stdout?.on("data", (chunk: Buffer) => { serverOutput = (serverOutput + chunk.toString()).slice(-20_000); });
   server.stderr?.on("data", (chunk: Buffer) => { serverOutput = (serverOutput + chunk.toString()).slice(-20_000); });
@@ -44,6 +46,35 @@ async function login(page: Page, email = "browser@example.test") {
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
 }
+
+test("closed search discards private results and performs no background requests", async ({ page }) => {
+  await login(page);
+  const requests: string[] = [];
+  page.on("request", request => { if (new URL(request.url()).pathname.endsWith("/search")) requests.push(request.url()); });
+  await page.keyboard.press("ControlOrMeta+k");
+  const search = page.getByRole("dialog", { name: "Unified live search" });
+  const input = search.getByPlaceholder("Search tasks, pages, projects, promises, or archives...");
+  await input.fill("release");
+  await expect.poll(() => requests.length).toBe(1);
+  await search.getByRole("button", { name: "Close search" }).click();
+  await expect(search).toHaveCount(0);
+  await page.waitForTimeout(350);
+  expect(requests).toHaveLength(1);
+  await page.keyboard.press("ControlOrMeta+k");
+  await expect(input).toHaveValue("");
+  await page.waitForTimeout(350);
+  expect(requests).toHaveLength(1);
+  await search.getByRole("button", { name: "Close search" }).click();
+});
+
+test("enterprise reviews cannot report an unpersisted privilege change", async ({ page }) => {
+  await login(page);
+  await page.getByRole("link", { name: "Enterprise & Governance", exact: true }).click();
+  await page.getByRole("button", { name: "Access Requests", exact: true }).click();
+  await expect(page.getByText("Access request reviews are not available yet.", { exact: false })).toBeVisible();
+  await expect(page.getByText("Marcus Aurelius")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /approve|decline/i })).toHaveCount(0);
+});
 
 test("real task/page persistence, conflict recovery, keyboard and responsive shell", async ({ page }) => {
   const errors: string[] = [];
@@ -106,7 +137,7 @@ test("real task/page persistence, conflict recovery, keyboard and responsive she
   await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile-light.png", import.meta.url)), fullPage: true });
   await page.getByRole("button", { name: "Toggle light and dark theme" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByLabel("Title", { exact: true })).toHaveCSS("background-color", "rgb(32, 32, 33)");
+  await expect(page.getByLabel("Title", { exact: true })).toHaveCSS("background-color", "rgb(20, 20, 22)");
   await page.screenshot({ animations: "disabled", path: fileURLToPath(new URL("../.artifacts/l1a-browser/mobile-dark.png", import.meta.url)), fullPage: true });
   expect(errors).toEqual([]);
 });
@@ -167,7 +198,7 @@ test("reference UI uses local fonts, aligned surfaces and working mobile navigat
   expect(typography.inter.trim()).not.toBe("");
   expect(typography.poppins.trim()).not.toBe("");
   expect(typography.heading).not.toBe(typography.body);
-  expect(typography.background).toBe("rgb(27, 27, 27)");
+  expect(typography.background).toBe("rgb(12, 12, 14)");
   const heading = await page.getByRole("heading", { name: "My tasks", exact: true }).boundingBox();
   const table = await page.getByRole("region", { name: "Task list", exact: true }).boundingBox();
   expect(heading && table && Math.abs(heading.x - table.x) < 1).toBe(true);

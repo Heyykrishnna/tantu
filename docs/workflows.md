@@ -41,4 +41,6 @@ CodeQL was removed at the repository owner's explicit request. The former workfl
 
 ## Secret-scan fixtures
 
-The full-history secret scan has one exact historical exception for the synthetic HMAC key in `backend/test/integrations-webhooks.test.ts` at commit `fcb36b7742efafbe8d59c954cb3ba1bd2504719b`, line 10. It was only an in-memory unit-test input, never a provider credential. Current webhook tests generate random keys instead. No test-directory exclusion or scanner disablement is used.
+The full-history secret scan has exact historical exceptions for the synthetic HMAC key in `backend/test/integrations-webhooks.test.ts` at `fcb36b7:10`, the in-memory signing-key input in `backend/test/auth-security.test.ts` at `5b38f86:229`, and illustrative request passwords in `AUTH_SPECIFICATION.md` at `907828f:145`, `907828f:170`, and `f5e3cd3:209`. These inputs are examples, not deployed credentials. Current signing tests generate keys and documentation uses explicit placeholders. Existing environment-template exceptions remain unchanged. No test-directory exclusion or scanner disablement is used.
+
+The SMTP normalization fixture also contained a deployed credential, discovered by manual review. Current source uses synthetic repeated-letter input instead. This credential has no scanner exception: the owner must revoke and replace it because removing it from current source does not remove Git history. Never copy real environment values into tests, even when a scanner does not identify their format.
