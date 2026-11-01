@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { FastifyRequest } from "fastify";
+import { readEnvironment } from "../src/config/environment.js";
+import { readRuntimeSettings } from "../src/config/runtime.js";
 import type { SmtpSettings } from "../src/config/runtime.js";
 import { digest, hashPassword, secret, validatePassword, verifyPassword } from "../src/modules/workspace-access/credentials.js";
 import { cookies } from "../src/modules/workspace-access/service.js";
@@ -214,6 +216,54 @@ test("sendMail captures delivered messages in testOutbox during test execution",
     assert.equal(testOutbox[0]?.to, "recipient@example.test");
     assert.equal(testOutbox[0]?.subject, "Test Verification");
     assert.equal(testOutbox[0]?.text, "Code: 123456");
+  } finally {
+    process.env.NODE_ENV = previousEnv;
+  }
+});
+
+test("readRuntimeSettings normalizes Gmail app passwords and fallback variables", () => {
+  const config = readEnvironment({ NODE_ENV: "development" });
+  const settings = readRuntimeSettings(config, {
+    APP_ORIGIN: "http://localhost:3000",
+    FILE_STORAGE_PATH: "/tmp/tantu-files",
+    FILE_SIGNING_SECRET: "0123456789abcdef0123456789abcdef",
+    SMTP_HOST: "smtp.gmail.com",
+    SMTP_PORT: "587",
+    SMTP_USERNAME: "test@gmail.com",
+    SMTP_PASS: '"xvpx ykrc acys khqa"',
+    SENDER_EMAIL: "support@example.test",
+  });
+
+  assert.equal(settings.smtp.host, "smtp.gmail.com");
+  assert.equal(settings.smtp.port, 587);
+  assert.equal(settings.smtp.user, "test@gmail.com");
+  assert.equal(settings.smtp.pass, "xvpxykrcacyskhqa");
+  assert.equal(settings.smtp.fromEmail, "support@example.test");
+});
+
+test("sendMail rejects Gmail configuration when credentials are missing", async () => {
+  const previousEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  try {
+    const invalidSettings: SmtpSettings = {
+      host: "smtp.gmail.com",
+      port: 587,
+      user: "",
+      pass: "",
+      fromEmail: "support@example.test",
+      fromName: "Tantu Test",
+    };
+    const message = {
+      to: "recipient@example.test",
+      subject: "Test",
+      text: "Code: 123456",
+      html: "<p>Code: 123456</p>",
+    };
+
+    await assert.rejects(
+      sendMail(invalidSettings, message),
+      (err) => err instanceof Failure && err.statusCode === 503 && err.code === "SMTP_AUTH_REQUIRED",
+    );
   } finally {
     process.env.NODE_ENV = previousEnv;
   }

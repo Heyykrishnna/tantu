@@ -121,7 +121,12 @@ export class Identity {
     );
 
     const message = buildVerificationEmail(name.trim(), code);
-    await sendMail(this.settings.smtp, { to: email.toLowerCase(), ...message });
+    try {
+      await sendMail(this.settings.smtp, { to: email.toLowerCase(), ...message });
+    } catch (error) {
+      await this.database.pool.query("DELETE FROM tantu.email_verifications WHERE email=$1", [email.toLowerCase()]);
+      throw error;
+    }
     return { sent: true, email: email.toLowerCase() };
   }
 

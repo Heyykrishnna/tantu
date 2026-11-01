@@ -15,6 +15,7 @@ export const testOutbox: Array<{ to: string; subject: string; text: string; html
 
 class SmtpSession {
   private buffer = "";
+  private lastReply = "";
   private resolveStep: ((code: string) => void) | undefined = undefined;
   private rejectStep: ((error: Error) => void) | undefined = undefined;
   private socket: net.Socket | tls.TLSSocket;
@@ -25,9 +26,8 @@ class SmtpSession {
   }
 
   private attach(sock: net.Socket | tls.TLSSocket): void {
-    sock.setEncoding("utf8");
-    sock.on("data", (chunk: string) => {
-      this.buffer += chunk;
+    sock.on("data", (chunk: Buffer | string) => {
+      this.buffer += typeof chunk === "string" ? chunk : chunk.toString("utf8");
       this.checkBuffer();
     });
     sock.on("error", (err: Error) => {
@@ -39,9 +39,14 @@ class SmtpSession {
     });
   }
 
-  upgrade(tlsSocket: tls.TLSSocket): void {
+  detach(): void {
     this.socket.removeAllListeners("data");
     this.socket.removeAllListeners("error");
+    this.buffer = "";
+  }
+
+  upgrade(tlsSocket: tls.TLSSocket): void {
+    this.detach();
     this.socket = tlsSocket;
     this.attach(tlsSocket);
   }
@@ -55,19 +60,22 @@ class SmtpSession {
       if (match) {
         const code = match[1]!;
         const isLast = line.length === 3 || line.charAt(3) === " ";
-        if (isLast && this.resolveStep) {
-          this.buffer = lines.slice(i + 1).join("\r\n");
-          const resolve = this.resolveStep;
-          this.resolveStep = undefined;
-          this.rejectStep = undefined;
-          resolve(code);
-          return;
+        if (isLast) {
+          this.lastReply = line;
+          if (this.resolveStep) {
+            this.buffer = lines.slice(i + 1).join("\r\n");
+            const resolve = this.resolveStep;
+            this.resolveStep = undefined;
+            this.rejectStep = undefined;
+            resolve(code);
+            return;
+          }
         }
       }
     }
   }
 
-  async command(cmd: string | null, expectedCode: string, timeoutMs = 15000): Promise<void> {
+  async command(cmd: string | null, expectedCode: string, timeoutMs = 15000): Promise<string> {
     const code = await new Promise<string>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.resolveStep = undefined;
@@ -87,11 +95,16 @@ class SmtpSession {
       if (cmd !== null) {
         this.socket.write(cmd + "\r\n");
       }
+
+      this.checkBuffer();
     });
 
     if (code !== expectedCode) {
-      throw new Failure(502, "SMTP_ERROR", `SMTP server returned unexpected code: ${code} (expected ${expectedCode}).`);
+      const details = this.lastReply ? `: ${this.lastReply}` : "";
+      throw new Failure(502, "SMTP_ERROR", `SMTP server returned unexpected code: ${code} (expected ${expectedCode})${details}.`);
     }
+
+    return code;
   }
 
   destroy(): void {
@@ -109,11 +122,19 @@ export async function sendMail(settings: SmtpSettings, message: EmailMessage): P
     throw new Failure(503, "SMTP_UNCONFIGURED", "SMTP host and port must be configured.");
   }
 
+  const isGmail = settings.host.toLowerCase().includes("gmail");
+  if (isGmail && (!settings.user || !settings.pass)) {
+    throw new Failure(503, "SMTP_AUTH_REQUIRED", "Gmail SMTP requires SMTP_USER and SMTP_PASS to be configured.");
+  }
+
   const boundary = "----=_Part_" + randomUUID();
   const dateStr = new Date().toUTCString();
+  const envelopeFrom = isGmail && settings.user.includes("@") ? settings.user : settings.fromEmail;
   const rawData = [
     `From: ${settings.fromName} <${settings.fromEmail}>`,
     `To: <${message.to}>`,
+    `Reply-To: <${settings.fromEmail}>`,
+    ...(envelopeFrom !== settings.fromEmail ? [`Sender: <${envelopeFrom}>`] : []),
     `Subject: ${message.subject}`,
     `Date: ${dateStr}`,
     `Message-ID: <${randomUUID()}@${settings.host}>`,
@@ -164,6 +185,8 @@ export async function sendMail(settings: SmtpSettings, message: EmailMessage): P
       await session.command("EHLO tantu.local", "250");
       await session.command("STARTTLS", "220");
 
+      session.detach();
+
       const upgraded = tls.connect({
         socket: netSocket,
         host: settings.host,
@@ -180,12 +203,13 @@ export async function sendMail(settings: SmtpSettings, message: EmailMessage): P
     await session.command("EHLO tantu.local", "250");
 
     if (settings.user && settings.pass) {
+      const pass = isGmail ? settings.pass.replace(/\s+/g, "") : settings.pass;
       await session.command("AUTH LOGIN", "334");
       await session.command(Buffer.from(settings.user).toString("base64"), "334");
-      await session.command(Buffer.from(settings.pass).toString("base64"), "235");
+      await session.command(Buffer.from(pass).toString("base64"), "235");
     }
 
-    await session.command(`MAIL FROM:<${settings.fromEmail}>`, "250");
+    await session.command(`MAIL FROM:<${envelopeFrom}>`, "250");
     await session.command(`RCPT TO:<${message.to}>`, "250");
     await session.command("DATA", "354");
     await session.command(rawData, "250");
