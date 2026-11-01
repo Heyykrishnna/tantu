@@ -5,6 +5,8 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { api, record, string } from "../lib/api";
 import { Icon } from "../components/icon";
+import { Stepper } from "@/components/ui/stepper";
+import { OtpInput } from "@/components/ui/otp-input";
 import {
   Brand,
   Button,
@@ -224,28 +226,34 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                   ? "We'll send a 6-character verification code to your email."
                   : "Sign in to your workspace. Pick up where you left off."}
           </p>
+
+          {mode !== "signin" && !invitation && (
+            <Stepper
+              orientation="horizontal"
+              showDescriptions={false}
+              currentStep={mode === "verify" ? 1 : 0}
+              steps={[
+                { id: "account", title: "Details" },
+                { id: "verify", title: "Verification" },
+              ]}
+              className="mb-6"
+            />
+          )}
+
           <form onSubmit={submit} className="grid gap-4">
             {mode === "verify" ? (
               <>
                 <Field label="6-Character Verification Code">
-                  <input
-                    name="code"
-                    type="text"
-                    required
-                    maxLength={6}
-                    autoFocus
-                    autoComplete="one-time-code"
-                    value={verificationCode}
-                    onChange={(event) =>
-                      setVerificationCode(
-                        event.target.value
-                          .toUpperCase()
-                          .replace(/[^A-Z0-9]/g, ""),
-                      )
-                    }
-                    placeholder="e.g. K7N2P4"
-                    className={`${inputClass} font-mono text-center tracking-[0.25em] text-lg font-bold uppercase`}
-                  />
+                  <div className="flex justify-center py-2">
+                    <OtpInput
+                      length={6}
+                      type="both"
+                      size="md"
+                      value={verificationCode}
+                      onChange={(val) => setVerificationCode(val.toUpperCase())}
+                      autoFocus
+                    />
+                  </div>
                 </Field>
                 <div className="flex items-center justify-between text-[11px]">
                   <button

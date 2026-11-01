@@ -1,5 +1,6 @@
 import type { CanonicalRecord } from "../lib/contracts";
 import { Icon } from "../components/icon";
+import { Orb } from "@/components/ui/orb";
 import {
   Badge,
   Button,
@@ -144,13 +145,12 @@ export default function RecordList({
       {loading ? (
         <div
           role="status"
-          className={`px-5 py-20 text-center text-[12px] ${mutedClass}`}
+          className="flex flex-col items-center justify-center gap-3 px-5 py-20 text-center"
         >
-          <Icon
-            name="refresh"
-            className="mx-auto mb-3 size-5 motion-safe:animate-spin"
-          />
-          Gathering your {kind === "task" ? "tasks" : "pages"}…
+          <Orb state="solving" size={64} display={44} />
+          <p className={`text-xs font-medium ${mutedClass}`}>
+            Gathering your {kind === "task" ? "tasks" : "pages"}…
+          </p>
         </div>
       ) : entries.length ? (
         <>

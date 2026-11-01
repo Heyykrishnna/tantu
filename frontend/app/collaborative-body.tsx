@@ -1,7 +1,7 @@
 "use client";
 import RichBody from "./rich-body";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as Y from "yjs";
 import {
   acknowledgment,
@@ -12,6 +12,7 @@ import {
   string,
 } from "../lib/api";
 import { integer } from "../lib/projects";
+import { ProximitySidebar, type ProximitySection } from "@/components/ui/proximity-sidebar";
 import {
   Button,
   Field,
@@ -223,24 +224,69 @@ export default function CollaborativeBody({
       if (inserted) current.insert(prefix, inserted);
     });
   }
+
+  const sections: ProximitySection[] = useMemo(() => {
+    const lines = text.split("\n").filter((l) => l.trim().length > 0);
+    const result: ProximitySection[] = [];
+    lines.forEach((line, idx) => {
+      if (line.startsWith("# ")) {
+        result.push({
+          id: `sec-${idx}`,
+          label: line.replace(/^#\s+/, ""),
+          kind: "title",
+          level: 1,
+        });
+      } else if (line.startsWith("## ")) {
+        result.push({
+          id: `sec-${idx}`,
+          label: line.replace(/^##\s+/, ""),
+          kind: "subtitle",
+          level: 2,
+        });
+      } else if (line.startsWith("### ")) {
+        result.push({
+          id: `sec-${idx}`,
+          label: line.replace(/^###\s+/, ""),
+          kind: "section",
+          level: 3,
+        });
+      }
+    });
+    if (result.length === 0) {
+      result.push({ id: "overview", label: "Overview", kind: "title", level: 1 });
+      result.push({ id: "notes", label: "Notes", kind: "section", level: 2 });
+    }
+    return result;
+  }, [text]);
+
   return (
     <section className="grid gap-3">
-      {ready && richDocument && (
-        <RichBody document={richDocument} editable={editable} />
-      )}
-      <Field label="Page text">
-        <textarea
-          name="collaborative-body"
-          aria-label="Page text"
-          rows={10}
-          maxLength={100000}
-          disabled={!ready || !editable}
-          value={text}
-          onChange={(event) => change(event.target.value)}
-          className={`${inputClass} min-h-55 resize-y leading-7`}
-          placeholder="Start writing. Use # for a heading."
-        />
-      </Field>
+      <div className="relative flex items-start gap-4">
+        <div className="min-w-0 flex-1 space-y-3">
+          {ready && richDocument && (
+            <RichBody document={richDocument} editable={editable} />
+          )}
+          <Field label="Page text">
+            <textarea
+              name="collaborative-body"
+              aria-label="Page text"
+              rows={10}
+              maxLength={100000}
+              disabled={!ready || !editable}
+              value={text}
+              onChange={(event) => change(event.target.value)}
+              className={`${inputClass} min-h-55 resize-y leading-7`}
+              placeholder="Start writing. Use # for a heading."
+            />
+          </Field>
+        </div>
+        <div className="sticky top-4 hidden shrink-0 xl:block">
+          <ProximitySidebar
+            sections={sections}
+            side="right"
+          />
+        </div>
+      </div>
       <p role="status" className={`text-[10px] ${mutedClass}`}>
         {status}
       </p>

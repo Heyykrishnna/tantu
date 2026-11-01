@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { motion } from "motion/react";
 import { api } from "../lib/api";
 import { Icon } from "../components/icon";
+import { Orb } from "@/components/ui/orb";
+import { ConfirmMorph } from "@/components/ui/confirm-morph";
 import {
   Button,
   Field,
@@ -194,14 +197,10 @@ export default function CapturePanel({
   const handleDismiss = async (itemId: string) => {
     try {
       setBusy(true);
-      await api(
-        `/workspaces/${workspaceId}/capture/${itemId}`,
-        (v) => v,
-        {
-          method: "DELETE",
-          csrf,
-        },
-      );
+      await api(`/workspaces/${workspaceId}/capture/${itemId}`, (v) => v, {
+        method: "DELETE",
+        csrf,
+      });
       setItems((prev) => prev.filter((i) => i.id !== itemId));
       setNotice("Item dismissed.");
     } catch (err) {
@@ -228,21 +227,32 @@ export default function CapturePanel({
 
       <form
         onSubmit={handleCaptureSubmit}
-        className={`${panelClass} space-y-4 p-4`}
+        className={`${panelClass} space-y-4 p-5 sm:p-6`}
       >
-        <div className="flex flex-wrap gap-2">
+        <div className="inline-flex items-center gap-1 rounded-xl border border-zinc-200/80 bg-zinc-100/90 p-1 dark:border-zinc-800 dark:bg-zinc-900">
           {(["note", "link", "mail", "request"] as const).map((k) => (
             <button
               key={k}
               type="button"
               onClick={() => setKind(k)}
-              className={`rounded-md px-3 py-1 text-xs font-medium capitalize transition-colors ${
-                kind === k
-                  ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-zinc-950"
-                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-400 dark:hover:bg-zinc-800"
-              }`}
+              className="relative rounded-lg px-3.5 py-1.5 text-xs font-medium capitalize outline-none transition-colors"
             >
-              {k}
+              {kind === k && (
+                <motion.div
+                  layoutId="capture-tab-active"
+                  transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                  className="absolute inset-0 rounded-lg border border-zinc-200/90 bg-white shadow-xs dark:border-zinc-700 dark:bg-zinc-800"
+                />
+              )}
+              <span
+                className={`relative z-10 ${
+                  kind === k
+                    ? "font-semibold text-zinc-950 dark:text-white"
+                    : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                }`}
+              >
+                {k}
+              </span>
             </button>
           ))}
         </div>
@@ -280,12 +290,17 @@ export default function CapturePanel({
       </form>
 
       <section className="space-y-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#677287] dark:text-[#8a8a93]">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
           Triage Queue ({items.length})
         </h3>
         {loading ? (
-          <div className="p-8 text-center text-sm text-[#707c93]">
-            Loading triage items...
+          <div
+            className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}
+          >
+            <Orb state="solving" size={64} display={44} />
+            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              Loading triage queue...
+            </p>
           </div>
         ) : items.length === 0 ? (
           <div
@@ -295,7 +310,7 @@ export default function CapturePanel({
             them into tasks.
           </div>
         ) : (
-          <div className="divide-y divide-[#e3e6ef] rounded-lg border border-[#e3e6ef] bg-white dark:divide-[#2d2d31] dark:border-[#2d2d31] dark:bg-[#1a1a1c]">
+          <div className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-[#141416]">
             {items.map((item) => (
               <div
                 key={item.id}
@@ -306,12 +321,12 @@ export default function CapturePanel({
                     <span className="rounded border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">
                       {item.kind}
                     </span>
-                    <span className="text-xs font-medium text-[#1e2025] dark:text-[#e4e4e7]">
+                    <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
                       {item.title}
                     </span>
                   </div>
                   {item.content && (
-                    <p className="mt-1 line-clamp-2 text-xs text-[#677287] dark:text-[#a4a4ad]">
+                    <p className="mt-1 line-clamp-2 text-xs text-zinc-600 dark:text-zinc-400">
                       {item.content}
                     </p>
                   )}
@@ -330,15 +345,13 @@ export default function CapturePanel({
                     <Icon name="arrow" className="size-3.5" />
                     Review & Convert
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDismiss(item.id)}
+                  <ConfirmMorph
+                    label="Dismiss"
+                    prompt="Dismiss this item?"
+                    onConfirm={() => handleDismiss(item.id)}
+                    tone="neutral"
                     disabled={busy}
-                  >
-                    <Icon name="close" className="size-3.5" />
-                    Dismiss
-                  </Button>
+                  />
                 </div>
               </div>
             ))}

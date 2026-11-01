@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { motion } from "motion/react";
 import { api } from "../lib/api";
-import { Icon } from "../components/icon";
+import { Orb } from "@/components/ui/orb";
+import {
+  AccessRequest,
+  type AccessRequester,
+  type AccessDecision,
+} from "@/components/ui/access-request";
 import {
   Button,
   Field,
@@ -85,7 +91,7 @@ export default function EnterprisePanel({
   csrf: string;
 }) {
   const [activeTab, setActiveTab] = useState<
-    "policy" | "dlp" | "audit" | "evaluation"
+    "policy" | "dlp" | "audit" | "evaluation" | "requests"
   >("policy");
   const [policy, setPolicy] = useState<EnterprisePolicyItem | null>(null);
   const [dlpLogs, setDlpLogs] = useState<DlpLogItem[]>([]);
@@ -93,6 +99,30 @@ export default function EnterprisePanel({
   const [evaluation, setEvaluation] = useState<OperatingModelEvaluation | null>(
     null,
   );
+  const [accessRequests, setAccessRequests] = useState<AccessRequester[]>([
+    {
+      id: "req-1",
+      name: "Marcus Aurelius",
+      handle: "@marcus",
+      description: "Audit Logs & DLP Policies",
+    },
+    {
+      id: "req-2",
+      name: "Elena Rostova",
+      handle: "@elena",
+      description: "SSO Policy Elevation",
+    },
+  ]);
+
+  const handleAccessDecision = (
+    person: AccessRequester,
+    decision: AccessDecision,
+  ) => {
+    setAccessRequests((prev) => prev.filter((r) => r.id !== person.id));
+    setNotice(
+      `Access request for ${person.name} has been ${decision === "approved" ? "approved" : "declined"}.`,
+    );
+  };
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -299,18 +329,18 @@ export default function EnterprisePanel({
 
   if (loading) {
     return (
-      <div className={panelClass}>
-        <div className="flex items-center gap-2 text-stone-500 py-8 justify-center">
-          <Icon name="refresh" className="animate-spin" />
-          <span>Loading enterprise governance controls...</span>
-        </div>
+      <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
+        <Orb state="solving" size={64} display={48} />
+        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          Loading enterprise governance controls...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className={panelClass}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-stone-200 dark:border-stone-800">
+    <div className={`${panelClass} space-y-6 p-5 sm:p-6`}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
         <div>
           <h2 className={headingClass}>
             Enterprise Governance & Policy Controls
@@ -320,51 +350,40 @@ export default function EnterprisePanel({
             operating model compliance.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab("policy")}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              activeTab === "policy"
-                ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
-                : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800"
-            }`}
-          >
-            Policy & SSO
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("dlp")}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              activeTab === "dlp"
-                ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
-                : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800"
-            }`}
-          >
-            Data Loss Prevention
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("audit")}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              activeTab === "audit"
-                ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
-                : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800"
-            }`}
-          >
-            Audit Exports
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("evaluation")}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              activeTab === "evaluation"
-                ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
-                : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800"
-            }`}
-          >
-            Operating Models
-          </button>
+        <div className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-zinc-200/80 bg-zinc-100/90 p-1 dark:border-zinc-800 dark:bg-zinc-900">
+          {(
+            [
+              ["policy", "Policy & SSO"],
+              ["dlp", "Data Loss Prevention"],
+              ["audit", "Audit Exports"],
+              ["evaluation", "Operating Models"],
+              ["requests", "Access Requests"],
+            ] as const
+          ).map(([tabKey, tabLabel]) => (
+            <button
+              key={tabKey}
+              type="button"
+              onClick={() => setActiveTab(tabKey)}
+              className="relative rounded-lg px-3 py-1.5 text-xs font-medium outline-none transition-colors"
+            >
+              {activeTab === tabKey && (
+                <motion.div
+                  layoutId="enterprise-tab-pill"
+                  transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                  className="absolute inset-0 rounded-lg border border-zinc-200/90 bg-white shadow-xs dark:border-zinc-700 dark:bg-zinc-800"
+                />
+              )}
+              <span
+                className={`relative z-10 ${
+                  activeTab === tabKey
+                    ? "font-semibold text-zinc-950 dark:text-white"
+                    : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                }`}
+              >
+                {tabLabel}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -705,7 +724,7 @@ export default function EnterprisePanel({
                 </p>
               </div>
 
-              <div className="p-4 border border-stone-200 dark:border-stone-800 rounded-lg bg-white dark:bg-stone-900 space-y-3">
+              <div className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-[#141416] space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold text-sm">Data Retention</h4>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
@@ -717,7 +736,7 @@ export default function EnterprisePanel({
                     (c) => (
                       <span
                         key={c}
-                        className="text-[10px] bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 px-1.5 py-0.5 rounded"
+                        className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-1.5 py-0.5 rounded"
                       >
                         {c}
                       </span>
@@ -727,6 +746,33 @@ export default function EnterprisePanel({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "requests" && (
+        <div className="space-y-6 pt-4">
+          <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-[#141416] space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                Pending Access Reviews & Elevation Requests
+              </h3>
+              <p className={`text-xs ${mutedClass} mt-1`}>
+                Review elevated role requests, DLP policy exemptions, and audit log access from workspace members.
+              </p>
+            </div>
+            {accessRequests.length === 0 ? (
+              <div className="p-8 text-center text-xs text-zinc-500">
+                No pending access requests. All workspace access permissions are settled.
+              </div>
+            ) : (
+              <div className="flex justify-center py-4">
+                <AccessRequest
+                  requests={accessRequests}
+                  onDecision={handleAccessDecision}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

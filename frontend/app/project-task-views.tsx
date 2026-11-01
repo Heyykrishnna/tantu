@@ -1,5 +1,6 @@
 import type { CanonicalRecord } from "../lib/contracts";
 import type { ViewSettings } from "./saved-views";
+import { TaskCard } from "@/components/ui/task-card";
 import { Badge, Button, mutedClass, panelClass } from "../components/ui";
 export default function ProjectTaskViews({
   tasks,
@@ -144,41 +145,58 @@ export default function ProjectTaskViews({
   return (
     <div
       className={
-        settings.mode === "board" ? "grid gap-3 sm:grid-cols-2" : "grid gap-3"
+        settings.mode === "board" ? "grid gap-4 sm:grid-cols-2" : "grid gap-3"
       }
     >
       {groups.map((group) => (
-        <section className={`${panelClass} p-4`} key={group}>
-          <h3 className="mb-3 text-[12px] font-medium capitalize">{group}</h3>
+        <section className={`${panelClass} p-4 sm:p-5`} key={group}>
+          <h3 className="mb-3 text-[12px] font-semibold text-zinc-900 dark:text-zinc-100 capitalize">{group}</h3>
           <div className="grid gap-3">
-            {grouped(group).map((task) => (
-              <article
-                className="flex flex-wrap items-center gap-3 rounded-lg border border-[#dedfeb] p-3 dark:border-[#303032]"
-                key={task.id}
-              >
-                {title(task)}
-                <span className="ml-auto">
-                  <Badge tone={task.status === "done" ? "green" : "neutral"}>
-                    {task.status}
-                  </Badge>
-                </span>
-                {settings.columns.includes("priority") && (
-                  <Badge>{task.priority}</Badge>
-                )}
-                {settings.columns.includes("deadline") && (
-                  <span className={`text-[10px] ${mutedClass}`}>
-                    {task.deadline ?? "No deadline"}
-                  </span>
-                )}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onOpen(task.id)}
+            {grouped(group).map((task) =>
+              settings.mode === "board" ? (
+                <TaskCard
+                  key={task.id}
+                  title={task.title}
+                  priority={
+                    task.priority === "urgent" || task.priority === "high"
+                      ? "urgent"
+                      : task.priority === "low"
+                        ? "low"
+                        : "moderate"
+                  }
+                  status={task.status === "done" ? "Done" : "Open"}
+                  dueDate={task.deadline ?? undefined}
+                  onOpen={() => onOpen(task.id)}
+                />
+              ) : (
+                <article
+                  className="flex flex-wrap items-center gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
+                  key={task.id}
                 >
-                  Open details
-                </Button>
-              </article>
-            ))}
+                  {title(task)}
+                  <span className="ml-auto">
+                    <Badge tone={task.status === "done" ? "green" : "neutral"}>
+                      {task.status}
+                    </Badge>
+                  </span>
+                  {settings.columns.includes("priority") && (
+                    <Badge>{task.priority}</Badge>
+                  )}
+                  {settings.columns.includes("deadline") && (
+                    <span className={`text-[10px] ${mutedClass}`}>
+                      {task.deadline ?? "No deadline"}
+                    </span>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onOpen(task.id)}
+                  >
+                    Open details
+                  </Button>
+                </article>
+              ),
+            )}
           </div>
         </section>
       ))}

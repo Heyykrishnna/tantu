@@ -21,6 +21,7 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
+import { Orb } from "@/components/ui/orb";
 
 type Block = ReturnType<typeof schedule>["items"][number];
 type Mode = "day" | "week" | "month" | "agenda";
@@ -356,7 +357,10 @@ export default function CalendarPanel({
       </div>
       {overlayCoverage && <Notice>{overlayCoverage}</Notice>}
       {loading ? (
-        <p role="status">Loading calendar…</p>
+        <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
+          <Orb state="solving" size={64} display={44} />
+          <p className={`text-xs font-medium ${mutedClass}`}>Loading schedule…</p>
+        </div>
       ) : (
         <div
           className={`grid gap-3 ${mode === "month" ? "sm:grid-cols-2 xl:grid-cols-7" : mode === "week" ? "sm:grid-cols-2 xl:grid-cols-7" : ""}`}

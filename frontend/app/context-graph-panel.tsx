@@ -13,6 +13,7 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
+import { Orb } from "@/components/ui/orb";
 
 export interface ContextNodeItem {
   id: string;
@@ -211,7 +212,7 @@ export default function ContextGraphPanel({
       </div>
 
       {isLinking && (
-        <form onSubmit={handleCreateLink} className={`${panelClass} space-y-4`}>
+        <form onSubmit={handleCreateLink} className={`${panelClass} space-y-4 p-5 sm:p-6`}>
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-sm">Create Context Relationship</h3>
             <button
@@ -285,8 +286,9 @@ export default function ContextGraphPanel({
       )}
 
       {loading ? (
-        <div className="p-8 text-center text-sm text-neutral-500">
-          Loading context graph...
+        <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
+          <Orb state="solving" size={64} display={44} />
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading context graph...</p>
         </div>
       ) : filteredNodes.length === 0 ? (
         <div className={`${panelClass} p-8 text-center space-y-2`}>

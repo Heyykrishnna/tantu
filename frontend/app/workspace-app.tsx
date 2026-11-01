@@ -42,6 +42,9 @@ import type { WorkspaceView } from "../lib/navigation";
 import WorkActions from "./work-actions";
 import RecordList, { RecordOverview } from "./record-list";
 import { Icon } from "../components/icon";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Orb } from "@/components/ui/orb";
+import { Toaster, type ToastItem } from "@/components/ui/toaster";
 import {
   Brand,
   Button,
@@ -90,6 +93,27 @@ export default function WorkspaceApp({
   const [message, setMessage] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const toasts: ToastItem[] = [
+    ...(message
+      ? [
+          {
+            id: "msg",
+            title: message,
+            tone: "danger" as const,
+          },
+        ]
+      : []),
+    ...(notice
+      ? [
+          {
+            id: "notice",
+            title: notice,
+            tone: "success" as const,
+          },
+        ]
+      : []),
+  ];
   const [loadingRecords, setLoadingRecords] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -448,10 +472,11 @@ export default function WorkspaceApp({
         <div className="mx-auto inline-flex items-center gap-2.5">
           <Brand />
         </div>
-        <div
-          className={`flex items-center justify-center gap-2 text-[12px] ${mutedClass}`}
-        >
-          <Icon name="refresh" className="size-3.5 motion-safe:animate-spin" />
+        <div className="flex flex-col items-center justify-center gap-3">
+          <Orb state="solving" size={64} display={48} />
+          <p className={`text-xs font-medium ${mutedClass}`}>
+            Preparing workspace session...
+          </p>
         </div>
       </main>
     );
@@ -546,30 +571,18 @@ export default function WorkspaceApp({
                 ⌘K
               </kbd>
             </button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Toggle light and dark theme"
-              onClick={() => {
-                const theme =
-                  document.documentElement.dataset.theme === "dark"
-                    ? "light"
-                    : "dark";
-                document.documentElement.dataset.theme = theme;
+            <ThemeToggle
+              variant="circle"
+              onThemeChange={(newTheme) => {
+                document.documentElement.dataset.theme = newTheme;
+                document.documentElement.classList.toggle("dark", newTheme === "dark");
                 try {
-                  localStorage.setItem("tantu-theme", theme);
+                  localStorage.setItem("tantu-theme", newTheme);
                 } catch {
                   setNotice("Theme changed for this tab.");
                 }
               }}
-            >
-              <span className="hidden dark:inline-flex">
-                <Icon name="sun" className="size-4" />
-              </span>
-              <span className="inline-flex dark:hidden">
-                <Icon name="moon" className="size-4" />
-              </span>
-            </Button>
+            />
             <span className="mx-1 h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
             <span
               title={user.name}
@@ -1016,6 +1029,13 @@ export default function WorkspaceApp({
           } else if (targetType === "promise") {
             navigate("promises");
           }
+        }}
+      />
+      <Toaster
+        items={toasts}
+        onDismiss={(id) => {
+          if (id === "msg") setMessage("");
+          if (id === "notice") setNotice("");
         }}
       />
     </div>

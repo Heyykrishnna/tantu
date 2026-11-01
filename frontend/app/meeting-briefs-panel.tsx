@@ -13,6 +13,7 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
+import { Orb } from "@/components/ui/orb";
 
 export interface AiSettingsItem {
   workspaceId: string;
@@ -201,7 +202,7 @@ export default function MeetingBriefsPanel({
       {error && <Notice tone="error">{error}</Notice>}
 
       {settings && (
-        <div className={`${panelClass} flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 ${settings.isEnabled ? "border-l-zinc-900 dark:border-l-zinc-100" : "border-l-neutral-400"}`}>
+        <div className={`${panelClass} flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 border-l-4 ${settings.isEnabled ? "border-l-zinc-900 dark:border-l-zinc-100" : "border-l-zinc-400"}`}>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-xs">AI Assistance Mode:</span>
@@ -225,7 +226,7 @@ export default function MeetingBriefsPanel({
       )}
 
       {isCreating && (
-        <form onSubmit={handleCreateBrief} className={`${panelClass} space-y-4`}>
+        <form onSubmit={handleCreateBrief} className={`${panelClass} space-y-4 p-5 sm:p-6`}>
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-sm">Prepare New Meeting Brief</h3>
             <button
@@ -279,7 +280,10 @@ export default function MeetingBriefsPanel({
       )}
 
       {loading ? (
-        <div className="p-8 text-center text-sm text-neutral-500">Loading meeting briefs...</div>
+        <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
+          <Orb state="solving" size={64} display={44} />
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading meeting briefs...</p>
+        </div>
       ) : briefs.length === 0 ? (
         <div className={`${panelClass} p-8 text-center space-y-2`}>
           <Icon name="brain" className="size-8 mx-auto text-neutral-400" />
@@ -317,7 +321,7 @@ export default function MeetingBriefsPanel({
 
           <div className="md:col-span-2 space-y-4">
             {selectedBrief ? (
-              <div className={`${panelClass} space-y-4`}>
+              <div className={`${panelClass} space-y-4 p-5 sm:p-6`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-base">{selectedBrief.title}</h3>

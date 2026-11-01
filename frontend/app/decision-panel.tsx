@@ -13,6 +13,7 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
+import { Orb } from "@/components/ui/orb";
 
 export interface DecisionItem {
   id: string;
@@ -252,7 +253,7 @@ export default function DecisionPanel({
       </div>
 
       {isCreating && (
-        <form onSubmit={handleCreate} className={`${panelClass} space-y-4`}>
+        <form onSubmit={handleCreate} className={`${panelClass} space-y-4 p-5 sm:p-6`}>
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-sm">
               New Architectural / Work Decision
@@ -312,7 +313,7 @@ export default function DecisionPanel({
       {supersedeTarget && (
         <form
           onSubmit={handleSupersede}
-          className={`${panelClass} space-y-4 border-amber-300 dark:border-amber-700`}
+          className={`${panelClass} space-y-4 p-5 sm:p-6 border-amber-300 dark:border-amber-700`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -368,14 +369,15 @@ export default function DecisionPanel({
       )}
 
       {loading ? (
-        <div className="p-8 text-center text-sm text-neutral-500">
-          Loading decisions...
+        <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
+          <Orb state="solving" size={64} display={44} />
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading decisions...</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className={`${panelClass} p-8 text-center space-y-2`}>
-          <Icon name="decision" className="size-8 mx-auto text-neutral-400" />
-          <h3 className="font-medium text-sm">No decisions found</h3>
-          <p className="text-xs text-neutral-500 max-w-sm mx-auto">
+          <Icon name="decision" className="size-8 mx-auto text-zinc-400" />
+          <h3 className="font-medium text-sm text-zinc-900 dark:text-zinc-100">No decisions found</h3>
+          <p className="text-xs text-zinc-500 max-w-sm mx-auto">
             Decisions capture architecture choices, trade-offs, and commitments
             with provenance.
           </p>
@@ -385,7 +387,7 @@ export default function DecisionPanel({
           {filtered.map((item) => (
             <div
               key={item.id}
-              className={`${panelClass} space-y-3 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors`}
+              className={`${panelClass} space-y-3 p-5 sm:p-6 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">

@@ -24,6 +24,7 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
+import { Orb } from "@/components/ui/orb";
 
 export default function MailPanel({
   workspaceId,
@@ -198,9 +199,10 @@ export default function MailPanel({
           </Notice>
         )}
       {!accounts ? (
-        <p role="status" className="text-[12px]">
-          Loading accounts…
-        </p>
+        <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
+          <Orb state="solving" size={64} display={44} />
+          <p className={`text-xs font-medium ${mutedClass}`}>Loading connected accounts…</p>
+        </div>
       ) : !accounts.items.length ? (
         <p className={`${panelClass} p-8 text-[12px]`}>
           No connected accounts yet.

@@ -19,6 +19,7 @@ import CollaborativeBody from "./collaborative-body";
 import RecurrencePanel from "./recurrence-panel";
 import FilePanel from "./file-panel";
 import { Icon } from "../components/icon";
+import { ConfirmMorph } from "@/components/ui/confirm-morph";
 import {
   Badge,
   Button,
@@ -189,12 +190,13 @@ export default function RecordEditor({
       setMessage(error instanceof Error ? error.message : "Reload failed.");
     }
   }
-  async function remove() {
+  async function remove(skipConfirm = false) {
     if (
       !entry ||
-      !window.confirm(
-        `Delete “${entry.title}”? Nested content will become unavailable.`,
-      )
+      (!skipConfirm &&
+        !window.confirm(
+          `Delete “${entry.title}”? Nested content will become unavailable.`,
+        ))
     )
       return;
     setBusy(true);
@@ -421,15 +423,14 @@ export default function RecordEditor({
                 {busy ? "Saving…" : entry ? "Save changes" : `Create ${kind}`}
               </Button>
               {entry && (
-                <Button
-                  variant="ghost"
-                  className="ml-auto text-rose-500 dark:text-rose-300"
-                  onClick={remove}
+                <ConfirmMorph
+                  label="Delete"
+                  prompt={`Delete “${entry.title}”?`}
+                  onConfirm={() => remove(true)}
+                  tone="danger"
                   disabled={busy}
-                >
-                  <Icon name="trash" className="size-3.5" />
-                  Delete
-                </Button>
+                  className="ml-auto"
+                />
               )}
             </div>
           </fieldset>

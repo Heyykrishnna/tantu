@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, items, record, string } from "../lib/api";
 import type { User, Workspace } from "../lib/api";
 import { Icon } from "../components/icon";
 import type { IconName } from "../components/icon";
+import { MorphInvite } from "@/components/ui/morph-invite";
+import { ConfirmMorph } from "@/components/ui/confirm-morph";
 import {
   Badge,
   Button,
@@ -485,6 +487,45 @@ export default function WorkspaceSettings({
     }
   }
 
+  const morphMembers = useMemo(
+    () =>
+      members.map((m) => ({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        color: "#71717a",
+      })),
+    [members],
+  );
+
+  const handleMorphInvite = async (emailToInvite: string) => {
+    try {
+      const generatedToken = await api(
+        path + "/invitations",
+        (value) => string(record(value).token),
+        {
+          method: "POST",
+          csrf,
+          body: {
+            email: emailToInvite.trim(),
+            role: "member",
+            permission: "edit",
+          },
+        },
+      );
+      setToken(generatedToken);
+      showToast("Invitation created successfully.");
+      await refreshPendingInvites();
+      return {
+        id: crypto.randomUUID(),
+        name: emailToInvite.split("@")[0] || "Teammate",
+        email: emailToInvite,
+      };
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Invitation failed.");
+    }
+  };
+
   async function revokeInvitation(tokenHash: string) {
     if (!window.confirm("Revoke this invitation? It will become invalid."))
       return;
@@ -557,13 +598,13 @@ export default function WorkspaceSettings({
     }
   }
 
-  async function removeMember(item: Member) {
+  async function removeMember(item: Member, skipConfirm = false) {
     const isSelf = currentUser?.id === item.id;
     const promptMessage = isSelf
       ? "Leave this workspace? You will lose access immediately."
       : `Remove ${item.name} from this workspace? Access will stop immediately.`;
 
-    if (!window.confirm(promptMessage)) return;
+    if (!skipConfirm && !window.confirm(promptMessage)) return;
 
     setBusy(true);
     setMessage("");
@@ -930,25 +971,27 @@ export default function WorkspaceSettings({
             </div>
 
             {!isOwner && (
-              <div className="mt-6 border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
-                <Button
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={() => {
+              <div className="mt-6 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                <ConfirmMorph
+                  label="Leave Workspace"
+                  prompt="Leave this workspace? You will lose access immediately."
+                  onConfirm={() => {
                     if (currentUser) {
-                      void removeMember({
-                        id: currentUser.id,
-                        name: currentUser.name,
-                        email: currentUser.email,
-                        role: workspace.role,
-                        active: true,
-                      });
+                      return removeMember(
+                        {
+                          id: currentUser.id,
+                          name: currentUser.name,
+                          email: currentUser.email,
+                          role: workspace.role,
+                          active: true,
+                        },
+                        true,
+                      );
                     }
                   }}
-                >
-                  <Icon name="logout" className="size-3.5" />
-                  Leave Workspace
-                </Button>
+                  tone="danger"
+                  disabled={busy}
+                />
               </div>
             )}
           </section>
@@ -1022,8 +1065,14 @@ export default function WorkspaceSettings({
                   <p
                     className={`mb-5 text-[11px] leading-relaxed ${mutedClass}`}
                   >
-                    Create a direct invitation link with role-based permissions.
+                    Quickly invite collaborators with animated invitation link creation or configure role-based access below.
                   </p>
+                  <div className="mb-6 flex justify-center">
+                    <MorphInvite
+                      members={morphMembers}
+                      onInvite={handleMorphInvite}
+                    />
+                  </div>
                   <form onSubmit={invite} className="grid gap-4">
                     <Field label="Teammate Email">
                       <input
@@ -1353,14 +1402,13 @@ export default function WorkspaceSettings({
                         )}
 
                         {item.active && item.role !== "owner" && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
+                          <ConfirmMorph
+                            label="Remove"
+                            prompt={`Remove ${item.name}?`}
+                            onConfirm={() => removeMember(item, true)}
+                            tone="danger"
                             disabled={busy}
-                            onClick={() => void removeMember(item)}
-                          >
-                            Remove
-                          </Button>
+                          />
                         )}
                       </div>
                     </li>

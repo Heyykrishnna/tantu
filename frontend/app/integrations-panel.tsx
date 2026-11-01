@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
-import { Icon } from "../components/icon";
 import {
   Button,
   Field,
@@ -13,6 +12,7 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
+import { Orb } from "@/components/ui/orb";
 
 export interface DeveloperApiKeyItem {
   id: string;
@@ -405,17 +405,15 @@ export default function IntegrationsPanel({
 
   if (loading) {
     return (
-      <div className={panelClass}>
-        <div className="flex items-center gap-2 text-stone-500 py-8 justify-center">
-          <Icon name="refresh" className="animate-spin" />
-          <span>Loading integration settings...</span>
-        </div>
+      <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
+        <Orb state="solving" size={64} display={44} />
+        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading integration settings...</p>
       </div>
     );
   }
 
   return (
-    <div className={panelClass}>
+    <div className={`${panelClass} p-5 sm:p-6 space-y-6`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-stone-200 dark:border-stone-800">
         <div>
           <h2 className={headingClass}>

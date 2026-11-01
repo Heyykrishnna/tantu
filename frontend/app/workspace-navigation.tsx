@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { FormEvent } from "react";
+import { motion } from "motion/react";
 import type { User, Workspace } from "../lib/api";
 import { Icon } from "../components/icon";
 import { Brand, Button, Field, inputClass } from "../components/ui";
@@ -126,37 +127,50 @@ export default function WorkspaceNavigation({
                 onNavigate(target);
               }}
               aria-current={view === target ? "page" : undefined}
-              className={`flex h-8.5 items-center gap-2.5 rounded-lg px-3 text-left text-[12px] outline-none transition-all focus-visible:ring-2 focus-visible:ring-zinc-400 motion-reduce:transition-none ${view === target ? "bg-white font-medium text-zinc-950 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] dark:bg-zinc-850 dark:text-white dark:shadow-[0_2px_6px_rgba(0,0,0,0.3)]" : "text-zinc-600 hover:bg-zinc-200/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-200"}`}
+              className={`relative flex h-8.5 items-center gap-2.5 rounded-lg px-3 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-zinc-400 ${
+                view === target
+                  ? "font-medium text-zinc-950 dark:text-white"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/50"
+              }`}
             >
-              <Icon
-                name={
-                  target === "promises"
-                    ? "promise"
-                    : target === "projects"
-                      ? "folder"
-                      : target === "collections"
-                        ? "layers"
-                        : target === "decisions"
-                          ? "decision"
-                          : target === "graph"
-                            ? "network"
-                            : target === "planning"
-                              ? "plan"
-                              : target === "kits"
-                                ? "kit"
-                                : target === "meetings"
-                                  ? "brain"
-                                  : target
-                }
-                className="size-4"
-              />
-              <span className="truncate">{label}</span>
               {view === target && (
-                <span
-                  aria-hidden="true"
-                  className="ml-auto size-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100"
+                <motion.div
+                  layoutId="sidebar-active-pill"
+                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                  className="absolute inset-0 rounded-lg border border-zinc-300/80 bg-zinc-200/90 shadow-xs dark:border-zinc-700/80 dark:bg-zinc-800"
                 />
               )}
+              <span className="relative z-10 flex w-full items-center gap-2.5">
+                <Icon
+                  name={
+                    target === "promises"
+                      ? "promise"
+                      : target === "projects"
+                        ? "folder"
+                        : target === "collections"
+                          ? "layers"
+                          : target === "decisions"
+                            ? "decision"
+                            : target === "graph"
+                              ? "network"
+                              : target === "planning"
+                                ? "plan"
+                                : target === "kits"
+                                  ? "kit"
+                                  : target === "meetings"
+                                    ? "brain"
+                                    : target
+                  }
+                  className="size-4 shrink-0"
+                />
+                <span className="truncate">{label}</span>
+                {view === target && (
+                  <span
+                    aria-hidden="true"
+                    className="ml-auto size-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100"
+                  />
+                )}
+              </span>
             </Link>
           ))}
         </nav>
@@ -182,23 +196,36 @@ export default function WorkspaceNavigation({
                 onNavigate(target);
               }}
               aria-current={view === target ? "page" : undefined}
-              className={`flex h-8.5 items-center gap-2.5 rounded-lg px-3 text-left text-[12px] outline-none transition-all focus-visible:ring-2 focus-visible:ring-zinc-400 ${view === target ? "bg-white font-medium text-zinc-950 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] dark:bg-zinc-850 dark:text-white dark:shadow-[0_2px_6px_rgba(0,0,0,0.3)]" : "text-zinc-600 hover:bg-zinc-200/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-200"}`}
+              className={`relative flex h-8.5 items-center gap-2.5 rounded-lg px-3 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-zinc-400 ${
+                view === target
+                  ? "font-medium text-zinc-950 dark:text-white"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/50"
+              }`}
             >
-              <Icon
-                name={
-                  target === "rules"
-                    ? "zap"
-                    : target === "integrations"
-                      ? "external"
-                      : target === "enterprise"
-                        ? "shield"
-                        : target === "discovery"
-                          ? "search"
-                          : target
-                }
-                className="size-4"
-              />
-              <span className="truncate">{label}</span>
+              {view === target && (
+                <motion.div
+                  layoutId="sidebar-manage-active-pill"
+                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                  className="absolute inset-0 rounded-lg border border-zinc-300/80 bg-zinc-200/90 shadow-xs dark:border-zinc-700/80 dark:bg-zinc-800"
+                />
+              )}
+              <span className="relative z-10 flex w-full items-center gap-2.5">
+                <Icon
+                  name={
+                    target === "rules"
+                      ? "zap"
+                      : target === "integrations"
+                        ? "external"
+                        : target === "enterprise"
+                          ? "shield"
+                          : target === "discovery"
+                            ? "search"
+                            : target
+                  }
+                  className="size-4 shrink-0"
+                />
+                <span className="truncate">{label}</span>
+              </span>
             </Link>
           ))}
         </nav>

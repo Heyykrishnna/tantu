@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
 import { Icon } from "../components/icon";
+import { Orb } from "@/components/ui/orb";
+import { WorkflowCard, type WorkflowSection } from "@/components/ui/workflow-card";
 import {
   Button,
   Field,
@@ -269,7 +271,7 @@ export default function KitsPanel({
       {notice && <Notice tone="success">{notice}</Notice>}
       {error && <Notice tone="error">{error}</Notice>}
 
-      <div className={`${panelClass} space-y-4`}>
+      <div className={`${panelClass} space-y-4 p-5 sm:p-6`}>
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">
             Rich Formula Sandbox
@@ -305,7 +307,7 @@ export default function KitsPanel({
       </div>
 
       {isCreating && (
-        <form onSubmit={handleCreateKit} className={`${panelClass} space-y-4`}>
+        <form onSubmit={handleCreateKit} className={`${panelClass} space-y-4 p-5 sm:p-6`}>
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-sm">Create New Workspace Kit</h3>
             <button
@@ -434,62 +436,89 @@ export default function KitsPanel({
       )}
 
       {loading ? (
-        <div className="p-8 text-center text-sm text-neutral-500">Loading kits...</div>
+        <div className={`${panelClass} flex flex-col items-center justify-center gap-3 p-12 text-center`}>
+          <Orb state="solving" size={64} display={48} />
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Loading workspace kits...</p>
+        </div>
       ) : kits.length === 0 ? (
         <div className={`${panelClass} p-8 text-center space-y-2`}>
-          <Icon name="kit" className="size-8 mx-auto text-neutral-400" />
-          <h3 className="font-medium text-sm">No workspace kits available</h3>
-          <p className="text-xs text-neutral-500 max-w-sm mx-auto">
+          <Icon name="kit" className="size-8 mx-auto text-zinc-400" />
+          <h3 className="font-medium text-sm text-zinc-900 dark:text-zinc-100">No workspace kits available</h3>
+          <p className="text-xs text-zinc-500 max-w-sm mx-auto">
             Workspace Kits bundle collection schemas, templates, views, and automation rules into reusable packages.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {kits.map((k) => (
-            <div
-              key={k.id}
-              className={`${panelClass} space-y-3 flex flex-col justify-between hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors`}
-            >
-              <div className="space-y-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {kits.map((k) => {
+            const sections: WorkflowSection[] = [
+              {
+                id: "schemas",
+                label: "Schemas & Types",
+                tasks: (k.manifest.schemas ?? []).map((s, idx) => ({
+                  id: `schema-${idx}`,
+                  label: s.name,
+                  done: true,
+                })),
+              },
+              {
+                id: "templates",
+                label: "Templates & Views",
+                tasks: (k.manifest.templates ?? []).map((t, idx) => ({
+                  id: `tpl-${idx}`,
+                  label: t.title,
+                  done: k.isInstalled ?? false,
+                })),
+              },
+            ];
+
+            return (
+              <div
+                key={k.id}
+                className={`${panelClass} flex flex-col justify-between p-5 space-y-4`}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{k.name}</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">{k.name}</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                       v{k.version}
                     </span>
-                    {k.isInstalled && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                        Installed
-                      </span>
-                    )}
                   </div>
+                  {k.isInstalled && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      Installed
+                    </span>
+                  )}
                 </div>
-                {k.description && (
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                    {k.description}
-                  </p>
-                )}
-                <div className="flex items-center gap-3 text-[11px] text-neutral-500 pt-1">
-                  <span>Schemas: {k.manifest.schemas?.length ?? 0}</span>
-                  <span>•</span>
-                  <span>Templates: {k.manifest.templates?.length ?? 0}</span>
-                  <span>•</span>
-                  <span>Views: {k.manifest.views?.length ?? 0}</span>
-                </div>
-              </div>
 
-              <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex justify-end">
-                <Button
-                  type="button"
-                  variant={k.isInstalled ? "ghost" : "primary"}
-                  onClick={() => handleOpenPreview(k.id)}
-                  disabled={busy}
-                >
-                  <span>{k.isInstalled ? "Reconfigure / Update" : "Inspect & Install"}</span>
-                </Button>
+                <div className="flex justify-center overflow-hidden py-1">
+                  <WorkflowCard
+                    title={k.name}
+                    description={k.description || "Pre-packaged workspace workflows and schema specifications."}
+                    status={k.isInstalled ? "done" : "todo"}
+                    sections={sections}
+                    width={380}
+                  />
+                </div>
+
+                <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <span>{k.manifest.schemas?.length ?? 0} schemas</span>
+                    <span>•</span>
+                    <span>{k.manifest.templates?.length ?? 0} templates</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant={k.isInstalled ? "ghost" : "primary"}
+                    onClick={() => handleOpenPreview(k.id)}
+                    disabled={busy}
+                  >
+                    <span>{k.isInstalled ? "Reconfigure" : "Install Kit"}</span>
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

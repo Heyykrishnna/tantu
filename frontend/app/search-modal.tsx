@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
 import { api } from "../lib/api";
 import { Icon } from "../components/icon";
+import { SearchInput } from "@/components/ui/search-input";
+import { Orb } from "@/components/ui/orb";
 import {
   Button,
-  inputClass,
   mutedClass,
   panelClass,
 } from "../components/ui";
@@ -102,23 +104,17 @@ export default function SearchModal({
         </Button>
       </header>
 
-      <div className="border-b border-zinc-200 p-4 dark:border-zinc-800">
-        <div className="relative">
-          <Icon
-            name="search"
-            className="pointer-events-none absolute left-3 top-2.5 size-4 text-zinc-400 dark:text-zinc-500"
-          />
-          <input
-            type="search"
-            className={`${inputClass} pl-9 pr-4 text-sm`}
-            placeholder="Search tasks, pages, projects, promises, or archives..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoFocus
-          />
-        </div>
+      <div className="border-b border-zinc-200 p-4 dark:border-zinc-800 space-y-3">
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          onSubmit={() => {}}
+          onClear={() => setQuery("")}
+          busy={loading}
+          placeholder="Search tasks, pages, projects, promises, or archives..."
+        />
 
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="inline-flex items-center gap-1 rounded-xl border border-zinc-200/80 bg-zinc-100/90 p-1 dark:border-zinc-800 dark:bg-zinc-900">
           {(
             [
               ["all", "All"],
@@ -132,13 +128,24 @@ export default function SearchModal({
               key={val}
               type="button"
               onClick={() => setTypeFilter(val)}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                typeFilter === val
-                  ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-zinc-950"
-                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70 dark:bg-zinc-850 dark:text-zinc-400 dark:hover:bg-zinc-800"
-              }`}
+              className="relative rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors outline-none"
             >
-              {label}
+              {typeFilter === val && (
+                <motion.div
+                  layoutId="search-filter-pill"
+                  transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                  className="absolute inset-0 rounded-lg border border-zinc-200/90 bg-white shadow-xs dark:border-zinc-700 dark:bg-zinc-800"
+                />
+              )}
+              <span
+                className={`relative z-10 ${
+                  typeFilter === val
+                    ? "font-semibold text-zinc-950 dark:text-white"
+                    : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                }`}
+              >
+                {label}
+              </span>
             </button>
           ))}
         </div>
@@ -146,7 +153,10 @@ export default function SearchModal({
 
       <div className="max-h-90 overflow-y-auto p-2">
         {loading ? (
-          <div className="p-8 text-center text-xs text-zinc-500">Searching live records...</div>
+          <div className="flex flex-col items-center justify-center gap-3 p-12 text-center">
+            <Orb state="solving" size={64} display={36} />
+            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Searching live records...</p>
+          </div>
         ) : error ? (
           <div className="p-4 text-center text-xs text-rose-500">{error}</div>
         ) : query.trim() && results.length === 0 ? (

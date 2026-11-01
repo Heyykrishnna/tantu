@@ -1,4 +1,11 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import {
+  CandyButton,
+  type CandyButtonVariant,
+  type CandyButtonSize,
+} from "@/components/ui/candy-button";
+
+export { CandyButton };
 
 export const inputClass =
   "min-w-0 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-[12px] font-normal text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-zinc-400 hover:border-zinc-300 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-400/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-[#141416] dark:text-zinc-100 dark:placeholder:text-zinc-600 dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)] dark:hover:border-zinc-700 dark:focus:border-zinc-400 dark:focus:ring-zinc-500/25 dark:scheme-dark motion-reduce:transition-none";
@@ -6,17 +13,13 @@ export const panelClass =
   "min-w-0 rounded-xl border border-zinc-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)] transition-all dark:border-zinc-800/80 dark:bg-[#141416] dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]";
 export const mutedClass = "text-zinc-500 dark:text-zinc-400";
 export const headingClass =
-  "font-heading font-medium tracking-tight text-zinc-900 dark:text-zinc-100";
+  "font-heading font-semibold tracking-tight text-zinc-900 dark:text-zinc-100";
 
-const variants = {
-  primary:
-    "border-transparent bg-zinc-900 text-white shadow-sm hover:bg-zinc-800 active:translate-y-px dark:border-transparent dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)]",
-  secondary:
-    "border-zinc-200 bg-white text-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-zinc-50 hover:border-zinc-300 active:translate-y-px dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-200 dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)] dark:hover:bg-zinc-800 dark:hover:border-zinc-700",
-  ghost:
-    "border-transparent bg-transparent text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:translate-y-px dark:text-zinc-400 dark:hover:bg-zinc-800/70 dark:hover:text-zinc-100",
-  danger:
-    "border-rose-200 bg-rose-50/50 text-rose-700 hover:bg-rose-100/60 active:translate-y-px dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-950/40",
+const candyVariantMap: Record<string, CandyButtonVariant> = {
+  primary: "obsidian",
+  secondary: "pearl",
+  danger: "ruby",
+  ghost: "obsidian",
 };
 
 export function Button({
@@ -24,17 +27,37 @@ export function Button({
   size = "md",
   className = "",
   type = "button",
+  children,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: keyof typeof variants;
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "md" | "sm" | "icon";
 }) {
+  const candySize: CandyButtonSize =
+    size === "icon" ? "icon" : size === "sm" ? "sm" : "default";
+
+  if (variant === "ghost") {
+    return (
+      <button
+        type={type}
+        className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent text-[12px] font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.98] transition-all outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:pointer-events-none disabled:opacity-45 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 ${size === "icon" ? "size-8" : size === "sm" ? "min-h-8 px-2.5 py-1" : "min-h-9 px-3.5 py-1.5"} ${className}`}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  }
+
   return (
-    <button
+    <CandyButton
       type={type}
-      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border text-[12px] font-medium transition-all outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-1 focus-visible:ring-offset-white disabled:pointer-events-none disabled:opacity-45 motion-reduce:transition-none dark:focus-visible:ring-zinc-400/40 dark:focus-visible:ring-offset-zinc-900 ${size === "icon" ? "size-8" : size === "sm" ? "min-h-8 px-2.5 py-1.5" : "min-h-9 px-3.5 py-2"} ${variants[variant]} ${className}`}
+      variant={candyVariantMap[variant] ?? "obsidian"}
+      size={candySize}
+      className={`text-[12px] font-medium ${className}`}
       {...props}
-    />
+    >
+      {children}
+    </CandyButton>
   );
 }
 
@@ -111,8 +134,7 @@ export function Badge({
       "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300",
     violet:
       "border-zinc-200 bg-zinc-100/70 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-300",
-    blue:
-      "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300",
+    blue: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300",
     amber:
       "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300",
   };
