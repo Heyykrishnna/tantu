@@ -430,11 +430,11 @@ export default function CalendarPanel({
                         event.dataTransfer.setData("text/plain", block.id)
                       }
                       key={block.id}
-                      className="grid gap-2 rounded-lg border border-violet-400/20 bg-violet-400/8 p-2.5"
+                      className="grid gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 dark:border-zinc-800 dark:bg-zinc-850"
                     >
                       <button
                         onClick={() => onOpenTask(block.taskId)}
-                        className="truncate rounded text-left text-[11px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                        className="truncate rounded text-left text-[11px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                       >
                         {block.title}
                       </button>

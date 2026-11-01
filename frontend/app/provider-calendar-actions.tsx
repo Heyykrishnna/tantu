@@ -247,7 +247,7 @@ export default function ProviderCalendarActions({
         {pending && (
           <section
             aria-label="External calendar review"
-            className="grid gap-3 rounded-lg border border-violet-400/30 p-4"
+            className="grid gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
           >
             <h3 className="text-[13px] font-medium">
               Review the exact external change

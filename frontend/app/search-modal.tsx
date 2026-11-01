@@ -87,13 +87,13 @@ export default function SearchModal({
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className={`${panelClass} m-auto w-160 max-w-[calc(100vw-32px)] p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-xs`}
+      className={`${panelClass} m-auto w-160 max-w-[calc(100vw-32px)] p-0 text-inherit shadow-2xl dark:shadow-black/70 backdrop:bg-black/60 backdrop:backdrop-blur-sm`}
       aria-label="Unified live search"
     >
-      <header className="flex items-center justify-between border-b border-[#e3e6ef] px-5 py-3.5 dark:border-[#303034]">
+      <header className="flex items-center justify-between border-b border-zinc-200 px-5 py-3.5 dark:border-zinc-800">
         <div className="flex items-center gap-2">
-          <Icon name="search" className="size-4 text-violet-500" />
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-[#1e2025] dark:text-[#e4e4e7]">
+          <Icon name="search" className="size-4 text-zinc-400" />
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
             Unified Live Search
           </h2>
         </div>
@@ -102,11 +102,11 @@ export default function SearchModal({
         </Button>
       </header>
 
-      <div className="border-b border-[#e3e6ef] p-4 dark:border-[#303034]">
+      <div className="border-b border-zinc-200 p-4 dark:border-zinc-800">
         <div className="relative">
           <Icon
             name="search"
-            className="pointer-events-none absolute left-3 top-3 size-4 text-[#737d90] dark:text-[#8e8e99]"
+            className="pointer-events-none absolute left-3 top-2.5 size-4 text-zinc-400 dark:text-zinc-500"
           />
           <input
             type="search"
@@ -134,8 +134,8 @@ export default function SearchModal({
               onClick={() => setTypeFilter(val)}
               className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
                 typeFilter === val
-                  ? "bg-violet-600 text-white"
-                  : "bg-[#edf0f7] text-[#565f74] hover:bg-[#e2e5ee] dark:bg-[#252528] dark:text-[#a4a4ad]"
+                  ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-zinc-950"
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70 dark:bg-zinc-850 dark:text-zinc-400 dark:hover:bg-zinc-800"
               }`}
             >
               {label}
@@ -146,9 +146,9 @@ export default function SearchModal({
 
       <div className="max-h-90 overflow-y-auto p-2">
         {loading ? (
-          <div className="p-8 text-center text-xs text-[#707c93]">Searching live records...</div>
+          <div className="p-8 text-center text-xs text-zinc-500">Searching live records...</div>
         ) : error ? (
-          <div className="p-4 text-center text-xs text-red-500">{error}</div>
+          <div className="p-4 text-center text-xs text-rose-500">{error}</div>
         ) : query.trim() && results.length === 0 ? (
           <div className={`p-8 text-center text-xs ${mutedClass}`}>
             No authorized records matched &ldquo;{query}&rdquo;.
@@ -164,14 +164,14 @@ export default function SearchModal({
                 key={`${item.targetType}:${item.recordId}`}
                 type="button"
                 onClick={() => handleSelect(item)}
-                className="w-full rounded-lg p-3 text-left transition-colors hover:bg-[#f1f3f9] dark:hover:bg-[#252529]"
+                className="w-full rounded-lg p-3 text-left transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-850"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">
+                    <span className="rounded border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">
                       {item.targetType}
                     </span>
-                    <span className="text-xs font-medium text-[#1e2025] dark:text-[#e4e4e7]">
+                    <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
                       {item.title}
                     </span>
                   </div>
@@ -180,7 +180,7 @@ export default function SearchModal({
                   </span>
                 </div>
                 {item.snippet && (
-                  <p className="mt-1 line-clamp-1 text-[11px] text-[#677287] dark:text-[#a4a4ad]">
+                  <p className="mt-1 line-clamp-1 text-[11px] text-zinc-600 dark:text-zinc-400">
                     {item.snippet}
                   </p>
                 )}
@@ -190,7 +190,7 @@ export default function SearchModal({
         )}
       </div>
 
-      <footer className="flex items-center justify-between border-t border-[#e3e6ef] px-4 py-2.5 text-[10px] dark:border-[#303034]">
+      <footer className="flex items-center justify-between border-t border-zinc-200 px-4 py-2.5 text-[10px] dark:border-zinc-800">
         <span className={mutedClass}>
           Current access and tombstones rechecked · ESC to close
         </span>

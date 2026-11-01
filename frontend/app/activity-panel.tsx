@@ -131,7 +131,7 @@ export default function ActivityPanel({
             <span className={`block text-[10px] font-semibold uppercase ${mutedClass}`}>
               Tenant Isolation
             </span>
-            <span className="mt-1 block text-sm font-semibold text-violet-600 dark:text-violet-400">
+            <span className="mt-1 block text-sm font-semibold text-zinc-900 dark:text-zinc-100">
               RLS Enforced
             </span>
             <span className={`text-[10px] ${mutedClass}`}>
@@ -215,7 +215,7 @@ export default function ActivityPanel({
           </ul>
         ) : (
           <div className="px-6 py-20 text-center">
-            <span className="mx-auto mb-5 grid size-12 place-items-center rounded-xl border border-[#e3e1f1] bg-[#f3f2fb] text-[#9991d5] dark:border-[#3c354e] dark:bg-[#2b2838]">
+            <span className="mx-auto mb-4 grid size-12 place-items-center rounded-xl border border-zinc-200 bg-zinc-100 text-zinc-700 shadow-xs dark:border-zinc-800 dark:bg-zinc-850 dark:text-zinc-300">
               <Icon
                 name={operations ? "operations" : "activity"}
                 className="size-6"

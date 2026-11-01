@@ -201,11 +201,11 @@ export default function MeetingBriefsPanel({
       {error && <Notice tone="error">{error}</Notice>}
 
       {settings && (
-        <div className={`${panelClass} flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 ${settings.isEnabled ? "border-l-violet-500" : "border-l-neutral-400"}`}>
+        <div className={`${panelClass} flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 ${settings.isEnabled ? "border-l-zinc-900 dark:border-l-zinc-100" : "border-l-neutral-400"}`}>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-xs">AI Assistance Mode:</span>
-              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${settings.isEnabled ? "bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300" : "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-300"}`}>
+              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${settings.isEnabled ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100" : "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-300"}`}>
                 {settings.isEnabled ? "Opted In (Assisted)" : "Disabled (Deterministic Only)"}
               </span>
             </div>

@@ -233,7 +233,7 @@ export default function ProjectPanel({
                 key={item.id}
                 onClick={() => void select(item.id)}
                 aria-pressed={detail?.project.id === item.id}
-                className={`rounded-lg p-3 text-left text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ${detail?.project.id === item.id ? "bg-violet-400/15" : "hover:bg-violet-400/5"}`}
+                className={`rounded-lg p-3 text-left text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 ${detail?.project.id === item.id ? "bg-zinc-100 dark:bg-zinc-800" : "hover:bg-zinc-50 dark:hover:bg-zinc-850"}`}
               >
                 <span className="mb-2 block truncate font-medium">
                   {item.title}

@@ -64,7 +64,7 @@ export default function SourcePreviews({
       {entries.map((entry) => (
         <article
           key={entry.id}
-          className="flex flex-wrap items-center justify-between gap-2 rounded bg-violet-400/5 p-3 text-xs"
+          className="flex flex-wrap items-center justify-between gap-2 rounded bg-zinc-100/60 p-3 text-xs dark:bg-zinc-850/60"
         >
           <div>
             <p>{entry.title}</p>

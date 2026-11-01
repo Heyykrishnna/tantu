@@ -112,65 +112,65 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     }
   }
   return (
-    <main className="grid min-h-dvh bg-[#f5f6fb] p-4 lg:grid-cols-[1.05fr_1fr] lg:gap-4 lg:p-6 dark:bg-[#131314]">
-      <section className="relative hidden min-h-175 overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(ellipse_at_top_right,#6969c1_0%,#3d4d80_46%,#252d47_100%)] p-10 text-white lg:flex lg:flex-col xl:p-14">
+    <main className="grid min-h-dvh bg-[#f8f9fa] p-4 lg:grid-cols-[1fr_1fr] lg:gap-6 lg:p-8 dark:bg-[#09090b]">
+      <section className="relative hidden min-h-175 overflow-hidden rounded-2xl border border-zinc-800 bg-[#121214] p-10 text-white shadow-2xl shadow-black/40 lg:flex lg:flex-col xl:p-14">
         <Link
-          className="relative z-10 inline-flex w-fit items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
+          className="relative z-10 inline-flex w-fit items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
           href="/"
           aria-label="tantu home"
         >
           <Brand compact />
-          <span className="font-heading text-[23px] font-semibold tracking-[-0.06em] text-white">
+          <span className="font-heading text-[22px] font-semibold tracking-[-0.04em] text-white">
             tantu.
           </span>
         </Link>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-64 top-1/4 size-162.5 rounded-full border border-white/8 bg-white/2.5"
+          className="pointer-events-none absolute -right-64 top-1/4 size-160 rounded-full border border-zinc-800/80 bg-zinc-900/20"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-32 top-[38%] size-97.5 rounded-full border border-white/8 bg-white/2.5"
+          className="pointer-events-none absolute -right-32 top-[38%] size-96 rounded-full border border-zinc-800/80 bg-zinc-900/30"
         />
-        <div className="relative z-10 my-auto max-w-110 py-20">
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-[10px] tracking-widest text-[#d0d6f7]">
-            <span className="size-1.5 rounded-full bg-[#b7b1ff]" />A LITTLE
-            CLARITY, EVERY DAY
+        <div className="relative z-10 my-auto max-w-lg py-16">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-[10px] font-medium tracking-widest text-zinc-300">
+            <span className="size-1.5 rounded-full bg-emerald-400" />
+            ORGANIZED WORKSPACE
           </div>
-          <h1 className="mb-6 font-heading text-[42px] leading-[1.22] font-medium tracking-[-0.055em] xl:text-[49px]">
+          <h1 className="mb-5 font-heading text-[40px] leading-[1.2] font-semibold tracking-tight xl:text-[46px]">
             Your work.
             <br />A place to think.
           </h1>
-          <p className="max-w-87.5 text-[13px] leading-7 text-[#c2cbe8]">
+          <p className="max-w-md text-[13px] leading-relaxed text-zinc-400">
             Keep the things you need to do beside the ideas that move them
-            forward.
+            forward. A focused space designed for clarity and precision.
           </p>
-          <div className="mt-10 rounded-2xl border border-white/15 bg-white/7 p-1.5 shadow-2xl shadow-[#151a43]/20 backdrop-blur-sm">
-            <div className="rounded-xl border border-white/10 bg-[#242b48]/45 px-5 py-4">
-              <div className="mb-5 flex items-center gap-2.5">
-                <span className="grid size-7 place-items-center rounded-lg bg-[#9690e7]/20 text-[#c4bdff]">
+          <div className="mt-10 rounded-xl border border-zinc-800 bg-zinc-900/70 p-1.5 shadow-xl">
+            <div className="rounded-lg border border-zinc-800/80 bg-[#151518] px-5 py-4">
+              <div className="mb-4 flex items-center gap-2.5">
+                <span className="grid size-7 place-items-center rounded-md border border-zinc-700 bg-zinc-800 text-zinc-200">
                   <Icon name="layers" className="size-4" />
                 </span>
-                <span className="text-[12px] font-medium text-[#e0e3f9]">
-                  Everything, a little more connected.
+                <span className="text-[12px] font-medium text-zinc-200">
+                  Everything, cleanly connected.
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-                  <Icon name="tasks" className="mb-3 size-4 text-[#a7b5e9]" />
-                  <p className="text-[11px] text-[#e3e7f8]">
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3.5 transition-colors hover:border-zinc-700">
+                  <Icon name="tasks" className="mb-3 size-4 text-zinc-300" />
+                  <p className="text-[11px] font-medium text-zinc-200">
                     Tasks with intention
                   </p>
-                  <p className="mt-1 text-[10px] text-[#a8b5d8]">
+                  <p className="mt-1 text-[10px] text-zinc-400">
                     One clear next step.
                   </p>
                 </div>
-                <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-                  <Icon name="pages" className="mb-3 size-4 text-[#beb3ee]" />
-                  <p className="text-[11px] text-[#e3e7f8]">
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3.5 transition-colors hover:border-zinc-700">
+                  <Icon name="pages" className="mb-3 size-4 text-zinc-300" />
+                  <p className="text-[11px] font-medium text-zinc-200">
                     Room for your ideas
                   </p>
-                  <p className="mt-1 text-[10px] text-[#a8b5d8]">
+                  <p className="mt-1 text-[10px] text-zinc-400">
                     Notes with a home.
                   </p>
                 </div>
@@ -178,21 +178,21 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             </div>
           </div>
         </div>
-        <div className="relative z-10 flex items-center gap-2 text-[11px] text-[#aeb9da]">
-          <Icon name="shield" className="size-4" />
+        <div className="relative z-10 flex items-center gap-2 text-[11px] font-medium text-zinc-400">
+          <Icon name="shield" className="size-4 text-zinc-400" />
           Private by default. Shared with intention.
         </div>
       </section>
-      <section className="flex min-h-[calc(100dvh-32px)] items-center justify-center rounded-[22px] border border-[#e3e6f0] bg-white px-6 py-12 sm:px-12 lg:min-h-0 dark:border-[#29292d] dark:bg-[#1b1b1d]">
-        <div className="w-full max-w-90">
+      <section className="flex min-h-[calc(100dvh-32px)] items-center justify-center rounded-2xl border border-zinc-200/90 bg-white px-6 py-12 shadow-xl sm:px-12 lg:min-h-0 dark:border-zinc-800/80 dark:bg-[#141416] dark:shadow-2xl">
+        <div className="w-full max-w-sm">
           <Link
             href="/"
-            className="mb-12 flex w-fit items-center gap-2.5 lg:hidden"
+            className="mb-10 flex w-fit items-center gap-2.5 lg:hidden"
             aria-label="tantu home"
           >
             <Brand />
           </Link>
-          <span className="mb-6 inline-flex size-11 items-center justify-center rounded-xl border border-[#e5e2f4] bg-[#f4f2fc] text-[#9990d5] dark:border-[#42394e] dark:bg-[#30283b]">
+          <span className="mb-6 inline-flex size-11 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-100 text-zinc-800 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
             <Icon
               name={
                 invitation
@@ -206,7 +206,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
               className="size-5"
             />
           </span>
-          <h2 className={`${headingClass} mb-3 text-[27px]`}>
+          <h2 className={`${headingClass} mb-2 text-[26px]`}>
             {invitation
               ? "You’re invited."
               : mode === "verify"
@@ -215,7 +215,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                   ? "Create your account."
                   : "Welcome back."}
           </h2>
-          <p className={`mb-8 text-[12px] leading-relaxed ${mutedClass}`}>
+          <p className={`mb-7 text-[12px] leading-relaxed ${mutedClass}`}>
             {invitation
               ? "Create your account and join your workspace."
               : mode === "verify"
@@ -252,7 +252,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                     type="button"
                     disabled={busy}
                     onClick={() => void resendCode()}
-                    className="font-medium text-violet-600 hover:underline dark:text-violet-400"
+                    className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-200"
                   >
                     Didn’t receive code? Resend
                   </button>
@@ -263,7 +263,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                       setInfoNotice("");
                       setMode("register");
                     }}
-                    className="text-slate-500 hover:underline dark:text-zinc-400"
+                    className="text-zinc-500 underline-offset-4 hover:underline dark:text-zinc-400"
                   >
                     Change email
                   </button>
@@ -374,7 +374,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                     setInfoNotice("");
                     setMode(mode === "signin" ? "register" : "signin");
                   }}
-                  className="text-[12px] font-medium text-violet-600 hover:underline dark:text-violet-400"
+                  className="text-[12px] font-medium text-zinc-700 underline-offset-4 hover:text-zinc-900 hover:underline dark:text-zinc-300 dark:hover:text-white"
                 >
                   {mode === "signin"
                     ? "Don’t have an account? Create one"
@@ -383,15 +383,15 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
               </div>
             )}
           </form>
-          <div className="mt-7 border-t border-[#e7e9f1] pt-5 dark:border-[#303034]">
-            <p className={`text-[10px] leading-6 ${mutedClass}`}>
+          <div className="mt-6 border-t border-zinc-200 pt-5 dark:border-zinc-800">
+            <p className={`text-[10px] leading-5 ${mutedClass}`}>
               Already have an account? Sign in first, then accept the invitation
               in Workspace settings. For a new installation, ask its operator to
               create the first account.
             </p>
           </div>
-          <p className="mt-9 flex items-center justify-center gap-1.5 text-[10px] text-[#6f798c] dark:text-[#90909b]">
-            <Icon name="shield" className="size-3" />A private place for focused
+          <p className="mt-8 flex items-center justify-center gap-1.5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+            <Icon name="shield" className="size-3.5" />A private place for focused
             work
           </p>
         </div>

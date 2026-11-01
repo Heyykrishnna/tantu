@@ -29,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-theme="dark"
       className={`${inter.variable} ${poppins.variable} scheme-light dark:scheme-dark`}
     >
-      <body className="min-h-dvh bg-[#f8f9fc] font-sans text-[13px] leading-relaxed text-[#30394a] antialiased selection:bg-violet-400/25 dark:bg-[#1b1b1b] dark:text-[#e8e8ec]">
+      <body className="min-h-dvh bg-[#f8f9fa] font-sans text-[13px] leading-relaxed text-zinc-900 antialiased selection:bg-zinc-500/20 dark:bg-[#0c0c0e] dark:text-zinc-100">
         {children}
       </body>
     </html>

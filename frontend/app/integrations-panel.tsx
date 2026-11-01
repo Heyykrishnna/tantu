@@ -622,11 +622,11 @@ export default function IntegrationsPanel({
       {activeTab === "webhooks" && (
         <div className="space-y-6 pt-4">
           {newWebhookSecret && (
-            <div className="p-4 bg-purple-50 dark:bg-purple-950/30 border border-purple-300 dark:border-purple-800 rounded-lg">
-              <div className="text-sm font-semibold text-purple-800 dark:text-purple-300">
+            <div className="p-4 bg-zinc-100 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-800 rounded-lg">
+              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 Webhook HMAC-SHA256 Signing Secret
               </div>
-              <p className="text-xs text-purple-700 dark:text-purple-400 mt-1">
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
                 Use this secret to verify X-Tantu-Signature headers on incoming
                 dispatches.
               </p>
@@ -635,7 +635,7 @@ export default function IntegrationsPanel({
                   type="text"
                   readOnly
                   value={newWebhookSecret}
-                  className="w-full bg-white dark:bg-stone-900 font-mono text-sm px-3 py-1.5 rounded border border-purple-300 dark:border-purple-700"
+                  className="w-full bg-white dark:bg-[#141416] font-mono text-sm px-3 py-1.5 rounded border border-zinc-300 dark:border-zinc-700"
                 />
                 <Button
                   variant="secondary"

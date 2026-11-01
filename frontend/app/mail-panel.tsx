@@ -214,7 +214,7 @@ export default function MailPanel({
             {accounts.items.map((item) => (
               <button
                 key={item.id}
-                className="grid gap-2 rounded-lg p-3 text-left text-[12px] outline-none hover:bg-violet-400/10 focus-visible:ring-2 focus-visible:ring-violet-400"
+                className="grid gap-2 rounded-lg p-3 text-left text-[12px] outline-none hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:hover:bg-zinc-800"
                 onClick={() => void run(() => select(item.id))}
               >
                 <span className="truncate">{item.address}</span>
@@ -311,7 +311,7 @@ export default function MailPanel({
                           setSelected(selected === entry.id ? "" : entry.id)
                         }
                         aria-expanded={selected === entry.id}
-                        className="grid w-full gap-2 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                        className="grid w-full gap-2 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                       >
                         <span className="text-[12px] font-medium">
                           {entry.subject || "No subject"}

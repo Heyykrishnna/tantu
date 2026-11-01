@@ -47,7 +47,7 @@ export default function RichBody({
           role: "textbox",
           "aria-label": "Rich page body",
           "aria-multiline": "true",
-          class: `${inputClass} min-h-55 leading-7 [&_h1]:font-[family-name:var(--font-poppins)] [&_h1]:text-xl [&_h1]:font-medium [&_code]:rounded [&_code]:bg-violet-400/10 [&_code]:px-1 [&_p]:min-h-7`,
+          class: `${inputClass} min-h-55 leading-7 [&_h1]:font-[family-name:var(--font-poppins)] [&_h1]:text-xl [&_h1]:font-medium [&_code]:rounded [&_code]:bg-zinc-100 [&_code]:px-1 [&_code]:text-zinc-800 dark:[&_code]:bg-zinc-800 dark:[&_code]:text-zinc-200 [&_p]:min-h-7`,
         },
         handleKeyDown: (_view, event) => {
           if (

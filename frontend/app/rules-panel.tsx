@@ -235,7 +235,7 @@ export default function RulesPanel({
                     <h4 className="text-xs font-medium text-[#1e2025] dark:text-[#e4e4e7]">
                       {rule.name}
                     </h4>
-                    <span className="rounded bg-violet-50 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
+                    <span className="rounded border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">
                       When: {rule.triggerType}
                     </span>
                   </div>

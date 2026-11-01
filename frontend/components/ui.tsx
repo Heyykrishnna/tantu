@@ -1,22 +1,22 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 export const inputClass =
-  "min-w-0 w-full rounded-lg border border-[#dfe3ec] bg-white px-3 py-2.5 text-[12px] font-normal text-[#30394a] shadow-xs outline-none transition-colors placeholder:text-[#6f7789] focus:border-[#8b87dd] focus:ring-3 focus:ring-violet-500/10 disabled:cursor-not-allowed disabled:opacity-55 dark:border-[#363638] dark:bg-[#202021] dark:text-[#e8e8ec] dark:placeholder:text-[#85858c] dark:focus:border-[#9290ed] dark:scheme-dark motion-reduce:transition-none";
+  "min-w-0 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-[12px] font-normal text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-zinc-400 hover:border-zinc-300 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-400/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-[#141416] dark:text-zinc-100 dark:placeholder:text-zinc-600 dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)] dark:hover:border-zinc-700 dark:focus:border-zinc-400 dark:focus:ring-zinc-500/25 dark:scheme-dark motion-reduce:transition-none";
 export const panelClass =
-  "min-w-0 rounded-xl border border-[#dfe3ed] bg-white shadow-xs dark:border-[#303032] dark:bg-[#1e1e1f] dark:shadow-none";
-export const mutedClass = "text-[#737d90] dark:text-[#a0a0a7]";
+  "min-w-0 rounded-xl border border-zinc-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)] transition-all dark:border-zinc-800/80 dark:bg-[#141416] dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]";
+export const mutedClass = "text-zinc-500 dark:text-zinc-400";
 export const headingClass =
-  "font-heading font-medium tracking-[-0.035em] text-[#283346] dark:text-[#eeeeF0]";
+  "font-heading font-medium tracking-tight text-zinc-900 dark:text-zinc-100";
 
 const variants = {
   primary:
-    "border-transparent bg-[#6662ce] text-white hover:bg-[#5753bd] dark:bg-[#9694f5] dark:text-[#171626] dark:hover:bg-[#aaa8ff]",
+    "border-transparent bg-zinc-900 text-white shadow-sm hover:bg-zinc-800 active:translate-y-px dark:border-transparent dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)]",
   secondary:
-    "border-[#dfe3ec] bg-white text-[#414b5d] shadow-xs hover:bg-[#f2f3f9] dark:border-[#363638] dark:bg-[#252526] dark:text-[#d9d9df] dark:shadow-none dark:hover:bg-[#303032]",
+    "border-zinc-200 bg-white text-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-zinc-50 hover:border-zinc-300 active:translate-y-px dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-200 dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)] dark:hover:bg-zinc-800 dark:hover:border-zinc-700",
   ghost:
-    "border-transparent bg-transparent text-[#737d90] hover:bg-[#e9ecf4] hover:text-[#30394a] dark:text-[#aaaab1] dark:hover:bg-[#2c2c2e] dark:hover:text-white",
+    "border-transparent bg-transparent text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:translate-y-px dark:text-zinc-400 dark:hover:bg-zinc-800/70 dark:hover:text-zinc-100",
   danger:
-    "border-[#f0d9dc] bg-transparent text-[#b64255] hover:bg-[#fff0f2] dark:border-[#5d353d] dark:text-[#ef9b9f] dark:hover:bg-[#352328]",
+    "border-rose-200 bg-rose-50/50 text-rose-700 hover:bg-rose-100/60 active:translate-y-px dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-950/40",
 };
 
 export function Button({
@@ -32,7 +32,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border text-[12px] font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-violet-400/50 disabled:pointer-events-none disabled:opacity-45 motion-reduce:transition-none ${size === "icon" ? "size-8" : size === "sm" ? "min-h-8 px-2.5 py-1.5" : "min-h-9 px-3.5 py-2"} ${variants[variant]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border text-[12px] font-medium transition-all outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-1 focus-visible:ring-offset-white disabled:pointer-events-none disabled:opacity-45 motion-reduce:transition-none dark:focus-visible:ring-zinc-400/40 dark:focus-visible:ring-offset-zinc-900 ${size === "icon" ? "size-8" : size === "sm" ? "min-h-8 px-2.5 py-1.5" : "min-h-9 px-3.5 py-2"} ${variants[variant]} ${className}`}
       {...props}
     />
   );
@@ -46,7 +46,7 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="grid min-w-0 gap-2 text-[12px] font-medium text-[#4f596b] dark:text-[#c8c8cf]">
+    <label className="grid min-w-0 gap-1.5 text-[12px] font-medium text-zinc-700 dark:text-zinc-300">
       {label}
       {children}
     </label>
@@ -65,7 +65,7 @@ export function Notice({
   return (
     <p
       role={role}
-      className={`rounded-lg border px-3.5 py-3 text-[12px] leading-relaxed wrap-anywhere empty:hidden ${tone === "error" ? "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-400/20 dark:bg-rose-400/8 dark:text-rose-200" : tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/8 dark:text-emerald-200" : "border-[#e0e2f2] bg-[#f1f2fa] text-[#656586] dark:border-[#41405c] dark:bg-[#2b293b] dark:text-[#c6c3e8]"}`}
+      className={`rounded-lg border px-3.5 py-2.5 text-[12px] leading-relaxed wrap-anywhere shadow-xs empty:hidden ${tone === "error" ? "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-200" : tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-200" : "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300"}`}
     >
       {children}
     </p>
@@ -77,20 +77,20 @@ export function Brand({ compact = false }: { compact?: boolean }) {
     <>
       <span
         aria-hidden="true"
-        className="grid size-8 shrink-0 place-items-center rounded-[10px] border border-violet-400/20 bg-[#e8e7fb] text-[#6760ca] dark:bg-[#303047] dark:text-[#b2abff]"
+        className="grid size-8 shrink-0 place-items-center rounded-lg border border-zinc-300 bg-zinc-900 text-white shadow-xs dark:border-zinc-700 dark:bg-zinc-100 dark:text-zinc-950"
       >
-        <svg viewBox="0 0 24 24" fill="none" className="size-5.5">
+        <svg viewBox="0 0 24 24" fill="none" className="size-5">
           <path
             d="M6 7.5h12M10 4.5v11a4 4 0 0 0 4 4h3M14 4.5V15"
             stroke="currentColor"
-            strokeWidth="2.8"
+            strokeWidth="2.6"
             strokeLinecap="round"
           />
         </svg>
       </span>
       {!compact && (
-        <span className="font-heading text-[19px] font-semibold tracking-[-0.06em] text-[#293248] dark:text-[#f2f1f7]">
-          tantu<span className="text-[#9a94d4]">.</span>
+        <span className="font-heading text-[18px] font-semibold tracking-[-0.04em] text-zinc-900 dark:text-zinc-100">
+          tantu<span className="text-zinc-400 dark:text-zinc-500">.</span>
         </span>
       )}
     </>
@@ -102,21 +102,23 @@ export function Badge({
   tone = "neutral",
 }: {
   children: ReactNode;
-  tone?: "neutral" | "green" | "violet" | "amber";
+  tone?: "neutral" | "green" | "violet" | "amber" | "blue";
 }) {
   const palettes = {
     neutral:
-      "border-[#e1e4ec] bg-[#f6f7fa] text-[#687286] dark:border-[#3a3a3c] dark:bg-[#272728] dark:text-[#b3b3ba]",
+      "border-zinc-200 bg-zinc-100/70 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-300",
     green:
-      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:text-emerald-300",
+      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300",
     violet:
-      "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-400/15 dark:bg-violet-400/12 dark:text-violet-300",
+      "border-zinc-200 bg-zinc-100/70 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-300",
+    blue:
+      "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-300",
     amber:
-      "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-400/15 dark:bg-amber-400/10 dark:text-amber-300",
+      "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300",
   };
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${palettes[tone]}`}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-medium whitespace-nowrap shadow-xs ${palettes[tone]}`}
     >
       {children}
     </span>

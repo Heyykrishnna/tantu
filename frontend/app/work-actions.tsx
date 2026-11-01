@@ -221,7 +221,7 @@ export default function WorkActions({
         {pending && (
           <section
             aria-label="Work impact review"
-            className="grid gap-3 rounded-lg border border-violet-400/20 p-3"
+            className="grid gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
           >
             <p className="text-[12px]">
               {selection.length} tasks · {pending.blocks.length} future local

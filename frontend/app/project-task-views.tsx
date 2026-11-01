@@ -35,7 +35,7 @@ export default function ProjectTaskViews({
   const title = (task: CanonicalRecord) => (
     <button
       onClick={() => onOpen(task.id)}
-      className="min-w-0 truncate rounded text-left text-[12px] font-medium outline-none hover:text-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400"
+      className="min-w-0 truncate rounded text-left text-[12px] font-medium outline-none hover:text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:hover:text-zinc-100"
     >
       {task.title}
     </button>
@@ -86,7 +86,7 @@ export default function ProjectTaskViews({
                   y1={12}
                   y2={12}
                   stroke="currentColor"
-                  className="text-violet-400/20"
+                  className="text-zinc-200 dark:text-zinc-800"
                 />
                 {task.deadline && (
                   <circle
@@ -99,7 +99,7 @@ export default function ProjectTaskViews({
                     cy={12}
                     r={5}
                     fill="currentColor"
-                    className="text-violet-400"
+                    className="text-zinc-900 dark:text-zinc-100"
                   />
                 )}
               </svg>
@@ -204,7 +204,7 @@ function GroupRows({
         <tr>
           <th
             colSpan={columns.length + 1}
-            className="bg-violet-400/5 px-4 py-2 capitalize"
+            className="bg-zinc-100/60 px-4 py-2 capitalize dark:bg-zinc-850/60"
           >
             {group}
           </th>

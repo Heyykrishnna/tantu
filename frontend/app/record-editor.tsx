@@ -239,11 +239,11 @@ export default function RecordEditor({
       aria-label={entry ? "Record details" : `New ${kind}`}
       className={`${panelClass} order-1 overflow-hidden xl:sticky xl:top-21.25 xl:order-2 xl:max-h-[calc(100dvh-110px)] xl:overflow-y-auto`}
     >
-      <header className="flex min-h-14 items-center justify-between gap-3 border-b border-[#e3e6ee] px-5 dark:border-[#303034]">
+      <header className="flex min-h-14 items-center justify-between gap-3 border-b border-zinc-200 px-5 dark:border-zinc-800">
         <div className="flex items-center gap-2.5">
           <Icon
             name={kind === "task" ? "tasks" : "pages"}
-            className="size-4 text-[#9a93de]"
+            className="size-4 text-zinc-500 dark:text-zinc-400"
           />
           <h2 className="text-[12px] font-medium">
             {entry ? "Record details" : `New ${kind}`}
@@ -264,7 +264,7 @@ export default function RecordEditor({
           ref={draftNotice}
           hidden
           role="status"
-          className="rounded-lg border border-violet-300/20 bg-violet-400/10 p-3 text-[11px] text-violet-700 dark:text-violet-200"
+          className="rounded-lg border border-zinc-200 bg-zinc-100 p-3 text-[11px] text-zinc-700 dark:border-zinc-800 dark:bg-zinc-850 dark:text-zinc-300"
         >
           Recovered your unsaved draft from this browser session.
         </p>
@@ -408,7 +408,7 @@ export default function RecordEditor({
                 </Button>
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-2 border-t border-[#e6e8ef] pt-4 dark:border-[#303034]">
+            <div className="flex flex-wrap items-center gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
               <Button
                 type="submit"
                 variant="primary"
@@ -445,14 +445,14 @@ export default function RecordEditor({
         )}
         {entry && (
           <>
-            <section className="grid gap-3 border-t border-[#e6e8ef] pt-5 dark:border-[#303034]">
+            <section className="grid gap-3 border-t border-zinc-200 pt-5 dark:border-zinc-800">
               <h3 className={`${headingClass} text-[12px]`}>
                 Record information
               </h3>
               <dl className="grid grid-cols-[70px_minmax(0,1fr)] gap-x-3 gap-y-2 text-[10px]">
                 <dt className={mutedClass}>Source</dt>
                 <dd className="inline-flex items-center gap-1.5">
-                  <span className="size-1.5 rounded-full bg-violet-400" />
+                  <span className="size-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100" />
                   tantu
                 </dd>
                 <dt className={mutedClass}>Record ID</dt>
@@ -488,7 +488,7 @@ export default function RecordEditor({
               </div>
               {history.length > 0 && (
                 <ol
-                  className={`grid gap-2 rounded-lg border border-[#e4e6ef] bg-[#f8f9fc] p-3 text-[10px] dark:border-[#323236] dark:bg-[#232325] ${mutedClass}`}
+                  className={`grid gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-[10px] dark:border-zinc-800 dark:bg-zinc-900/60 ${mutedClass}`}
                 >
                   {history.map((item) => (
                     <li key={item}>{item}</li>
@@ -542,7 +542,7 @@ export default function RecordEditor({
             <p
               className={`flex items-start gap-2 text-[10px] leading-relaxed ${mutedClass}`}
             >
-              <Icon name="shield" className="mt-0.5 size-3.5 text-[#9a93d6]" />
+              <Icon name="shield" className="mt-0.5 size-3.5 text-zinc-400" />
               Sharing is managed through an explicit record invitation in
               Workspace settings.
             </p>

@@ -165,7 +165,7 @@ export default function FilePanel({
                     item.state === "clean"
                       ? "green"
                       : item.state === "pending"
-                        ? "violet"
+                        ? "neutral"
                         : "amber"
                   }
                 >

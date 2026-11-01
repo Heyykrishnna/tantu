@@ -494,7 +494,7 @@ export default function CollectionPanel({
                       >
                         <td className="max-w-xs px-4 py-3">
                           <button
-                            className="max-w-xs truncate rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                            className="max-w-xs truncate rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                             onClick={() =>
                               onOpen(row.record.id, row.record.kind)
                             }
@@ -543,7 +543,7 @@ export default function CollectionPanel({
                       key={row.record.id}
                     >
                       <button
-                        className="truncate rounded text-left text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                        className="truncate rounded text-left text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                         onClick={() => onOpen(row.record.id, row.record.kind)}
                       >
                         {row.record.title}

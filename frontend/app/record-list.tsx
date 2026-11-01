@@ -25,21 +25,21 @@ export function RecordOverview({
             value: entries.length,
             icon: "layers" as const,
             detail: "Loaded records",
-            tone: "text-[#a3a0f3]",
+            tone: "text-zinc-700 dark:text-zinc-300",
           },
           {
             label: "Open tasks",
             value: entries.filter((item) => item.status === "open").length,
             icon: "circle" as const,
             detail: "Ready to move forward",
-            tone: "text-[#80a4e4]",
+            tone: "text-sky-600 dark:text-sky-400",
           },
           {
             label: "Completed",
             value: entries.filter((item) => item.status === "done").length,
             icon: "tasks" as const,
             detail: "In this view",
-            tone: "text-[#64b99b]",
+            tone: "text-emerald-600 dark:text-emerald-400",
           },
         ]
       : [
@@ -48,14 +48,14 @@ export function RecordOverview({
             value: entries.length,
             icon: "pages" as const,
             detail: "Loaded records",
-            tone: "text-[#a3a0f3]",
+            tone: "text-zinc-700 dark:text-zinc-300",
           },
           {
             label: "Nested pages",
             value: entries.filter((item) => item.parentId).length,
             icon: "layers" as const,
             detail: "Ideas with context",
-            tone: "text-[#80a4e4]",
+            tone: "text-sky-600 dark:text-sky-400",
           },
           {
             label: "Shared with workspace",
@@ -63,40 +63,38 @@ export function RecordOverview({
               .length,
             icon: "users" as const,
             detail: "Explicitly shared",
-            tone: "text-[#64b99b]",
+            tone: "text-emerald-600 dark:text-emerald-400",
           },
         ];
   return (
     <div
       aria-label="Current view summary"
-      className="mb-6 grid grid-cols-3 gap-2 sm:gap-3"
+      className="mb-6 grid grid-cols-3 gap-3 sm:gap-4"
     >
       {metrics.map((metric) => (
         <div
           key={metric.label}
-          className="rounded-xl bg-[#eceff7] p-1 dark:bg-[#242426]"
+          className={`${panelClass} flex flex-col justify-between p-3.5 sm:p-4`}
         >
-          <div
-            className={`${panelClass} flex items-start justify-between px-3 py-3 sm:px-4 sm:py-3.5`}
-          >
+          <div className="flex items-start justify-between gap-2">
             <div>
               <p
-                className={`mb-2 min-h-8 text-[10px] sm:min-h-0 sm:text-[11px] ${mutedClass}`}
+                className={`mb-1.5 text-[10px] font-medium sm:text-[11px] ${mutedClass}`}
               >
                 {metric.label}
               </p>
-              <p className="text-[26px] font-medium leading-none tracking-[-0.04em] text-[#354158] tabular-nums dark:text-[#f0f0f4]">
+              <p className="text-[24px] font-semibold leading-none tracking-tight text-zinc-900 tabular-nums sm:text-[28px] dark:text-zinc-100">
                 {loading ? "—" : metric.value}
               </p>
             </div>
             <span
-              className={`mt-0.5 hidden size-7 sm:grid place-items-center rounded-lg bg-[#f1f2fa] dark:bg-[#29292e] ${metric.tone}`}
+              className={`hidden size-8 place-items-center rounded-lg border border-zinc-200/80 bg-zinc-100/70 sm:grid dark:border-zinc-800 dark:bg-zinc-800/80 ${metric.tone}`}
             >
               <Icon name={metric.icon} className="size-4" />
             </span>
           </div>
           <p
-            className={`hidden px-3 py-1.5 text-[10px] sm:block ${mutedClass}`}
+            className={`mt-2 hidden text-[10px] sm:block ${mutedClass}`}
           >
             {metric.detail}
           </p>
@@ -135,11 +133,11 @@ export default function RecordList({
       aria-busy={loading}
       className={`${panelClass} overflow-hidden`}
     >
-      <div className="flex min-h-13.5 items-center justify-between gap-3 border-b border-[#e6e8f0] px-4 dark:border-[#2d2d30]">
-        <h2 className="text-[12px] font-medium">
+      <div className="flex min-h-12 items-center justify-between gap-3 border-b border-zinc-200 px-4 dark:border-zinc-800">
+        <h2 className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">
           {kind === "task" ? "All tasks" : "All pages"}
         </h2>
-        <span className={`text-[10px] ${mutedClass}`}>
+        <span className={`text-[10px] font-medium ${mutedClass}`}>
           {entries.length} shown
         </span>
       </div>
@@ -158,9 +156,9 @@ export default function RecordList({
         <>
           <div
             aria-hidden="true"
-            className="grid grid-cols-[minmax(0,1fr)_80px] gap-3 border-b border-[#e6e8f0] bg-[#fafbfe] px-4 py-2.5 text-[10px] text-[#70798b] lg:grid-cols-[minmax(0,1fr)_80px_88px_70px] dark:border-[#2d2d30] dark:bg-[#202021] dark:text-[#90909a]"
+            className="grid grid-cols-[minmax(0,1fr)_90px] gap-3 border-b border-zinc-200/80 bg-zinc-50/60 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 lg:grid-cols-[minmax(0,1fr)_90px_100px_80px] dark:border-zinc-800/80 dark:bg-zinc-900/40 dark:text-zinc-400"
           >
-            <span className={kind === "task" ? "pl-7.5" : "pl-10"}>
+            <span className={kind === "task" ? "pl-7" : "pl-8"}>
               {kind === "task" ? "Task name" : "Page name"}
             </span>
             <span className="hidden lg:block">
@@ -171,22 +169,22 @@ export default function RecordList({
             </span>
             <span>Access</span>
           </div>
-          <ul className="divide-y divide-[#e9ebf2] dark:divide-[#2b2b2e]">
+          <ul className="divide-y divide-zinc-200/80 dark:divide-zinc-800/80">
             {entries.map((entry) => (
               <li key={entry.id}>
                 <button
                   onClick={() => onOpen(entry.id)}
                   aria-pressed={selectedId === entry.id}
-                  className={`grid min-h-16 w-full grid-cols-[minmax(0,1fr)_80px] items-center gap-3 px-4 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-400 lg:grid-cols-[minmax(0,1fr)_80px_88px_70px] motion-reduce:transition-none ${selectedId === entry.id ? "bg-[#f0effb] dark:bg-[#2a2938]" : "hover:bg-[#f8f9fd] dark:hover:bg-[#242426]"}`}
+                  className={`grid min-h-14 w-full grid-cols-[minmax(0,1fr)_90px] items-center gap-3 px-4 py-2.5 text-left outline-none transition-all focus-visible:ring-2 focus-visible:ring-zinc-400 lg:grid-cols-[minmax(0,1fr)_90px_100px_80px] motion-reduce:transition-none ${selectedId === entry.id ? "border-l-2 border-l-zinc-900 bg-zinc-100 shadow-xs dark:border-l-zinc-100 dark:bg-zinc-800/85" : "hover:bg-zinc-50/80 dark:hover:bg-zinc-850/60"}`}
                 >
                   <span className="flex min-w-0 items-center gap-3">
                     <span
                       className={
                         entry.kind === "page"
-                          ? "rounded-md bg-violet-400/10 p-1.5 text-[#9c96e3]"
+                          ? "text-zinc-500 dark:text-zinc-400"
                           : entry.status === "done"
-                            ? "text-emerald-500 dark:text-emerald-400"
-                            : "text-[#9a9fae] dark:text-[#62626d]"
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-zinc-400 dark:text-zinc-500"
                       }
                     >
                       <Icon
@@ -198,13 +196,13 @@ export default function RecordList({
                               : "circle"
                         }
                         className={
-                          entry.kind === "page" ? "size-4" : "size-4.5"
+                          entry.kind === "page" ? "size-4" : "size-4"
                         }
                       />
                     </span>
                     <span className="min-w-0">
                       <strong
-                        className={`block truncate text-[12px] font-medium ${entry.status === "done" && entry.kind === "task" ? "text-[#858da0] dark:text-[#9999a4]" : "text-[#344056] dark:text-[#dcdce3]"}`}
+                        className={`block truncate text-[12px] font-medium ${entry.status === "done" && entry.kind === "task" ? "text-zinc-400 line-through dark:text-zinc-500" : "text-zinc-900 dark:text-zinc-100"}`}
                       >
                         {entry.title}
                       </strong>
@@ -262,7 +260,7 @@ export default function RecordList({
             ))}
           </ul>
           {cursor && (
-            <div className="flex justify-center border-t border-[#e6e8f0] p-3 dark:border-[#2d2d30]">
+            <div className="flex justify-center border-t border-zinc-200 p-3 dark:border-zinc-800">
               <Button size="sm" disabled={busy} onClick={onMore}>
                 Load more
                 <Icon name="down" className="size-3.5" />
@@ -272,13 +270,13 @@ export default function RecordList({
         </>
       ) : (
         <div className="px-6 py-20 text-center">
-          <span className="mx-auto mb-5 grid size-12 place-items-center rounded-xl border border-[#e3e4f2] bg-[#f3f3fc] text-[#9891d9] dark:border-[#3a374e] dark:bg-[#292737]">
+          <span className="mx-auto mb-4 grid size-12 place-items-center rounded-xl border border-zinc-200 bg-zinc-100 text-zinc-700 shadow-xs dark:border-zinc-800 dark:bg-zinc-850 dark:text-zinc-300">
             <Icon
               name={kind === "task" ? "tasks" : "pages"}
               className="size-6"
             />
           </span>
-          <h2 className={`${headingClass} mb-2 text-[18px]`}>
+          <h2 className={`${headingClass} mb-2 text-[17px]`}>
             {query
               ? "No matching records"
               : kind === "task"
@@ -286,7 +284,7 @@ export default function RecordList({
                 : "A home for your next idea"}
           </h2>
           <p
-            className={`mx-auto max-w-72.5 text-[12px] leading-relaxed ${mutedClass}`}
+            className={`mx-auto max-w-xs text-[12px] leading-relaxed ${mutedClass}`}
           >
             {query
               ? "Try a different title or refresh this view."

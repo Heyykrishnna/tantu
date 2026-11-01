@@ -330,7 +330,7 @@ export default function PromisePanel({
                       </span>
                     )}
                     {p.taskTitle && (
-                      <span className="rounded bg-violet-50 px-1 text-violet-700 dark:bg-violet-950/30 dark:text-violet-300">
+                      <span className="rounded bg-zinc-100 px-1 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                         Linked: {p.taskTitle}
                       </span>
                     )}

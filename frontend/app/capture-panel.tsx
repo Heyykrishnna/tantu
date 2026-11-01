@@ -238,8 +238,8 @@ export default function CapturePanel({
               onClick={() => setKind(k)}
               className={`rounded-md px-3 py-1 text-xs font-medium capitalize transition-colors ${
                 kind === k
-                  ? "bg-violet-600 text-white"
-                  : "bg-[#e2e5ee] text-[#555e70] hover:bg-[#d8dce6] dark:bg-[#252528] dark:text-[#a4a4ad]"
+                  ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-zinc-950"
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-850 dark:text-zinc-400 dark:hover:bg-zinc-800"
               }`}
             >
               {k}
@@ -303,7 +303,7 @@ export default function CapturePanel({
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">
+                    <span className="rounded border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">
                       {item.kind}
                     </span>
                     <span className="text-xs font-medium text-[#1e2025] dark:text-[#e4e4e7]">

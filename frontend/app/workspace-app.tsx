@@ -472,20 +472,20 @@ export default function WorkspaceApp({
       </main>
     );
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[238px_minmax(0,1fr)]">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
       <a
-        className="fixed -top-20 left-4 z-50 rounded-lg bg-violet-500 px-4 py-2 text-white focus:top-4"
+        className="fixed -top-20 left-4 z-50 rounded-lg bg-zinc-900 px-4 py-2 text-white shadow-md focus:top-4 dark:bg-zinc-100 dark:text-zinc-900"
         href="#main-content"
       >
         Skip to workspace
       </a>
-      <aside className="sticky top-0 hidden h-dvh border-r border-[#dfe3ed] lg:block dark:border-[#2a2a2d]">
+      <aside className="sticky top-0 hidden h-dvh border-r border-zinc-200/80 lg:block dark:border-zinc-850">
         {navigation}
       </aside>
       <dialog
         ref={drawer}
         aria-label="Workspace navigation drawer"
-        className="fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-67.5 max-w-[88vw] overflow-hidden border-0 bg-[#edf0f8] p-0 text-inherit backdrop:bg-black/55 backdrop:backdrop-blur-sm dark:bg-[#151516]"
+        className="fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-64 max-w-[88vw] overflow-hidden border-0 bg-[#f8f9fa] p-0 text-inherit backdrop:bg-black/60 backdrop:backdrop-blur-sm dark:bg-[#0c0c0e]"
       >
         <WorkspaceNavigation
           user={user}
@@ -505,7 +505,7 @@ export default function WorkspaceApp({
         />
       </dialog>
       <main id="main-content" className="min-w-0">
-        <header className="sticky top-0 z-20 flex h-16.25 items-center justify-between gap-3 border-b border-[#e1e4ed] bg-white/95 px-5 backdrop-blur-md lg:px-7 dark:border-[#2c2c2f] dark:bg-[#1c1c1d]/95">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-zinc-200/80 bg-white/80 px-4 sm:px-6 backdrop-blur-md lg:px-8 dark:border-zinc-850 dark:bg-[#0c0c0e]/80">
           <div className="flex min-w-0 items-center gap-3">
             <Button
               variant="ghost"
@@ -518,19 +518,19 @@ export default function WorkspaceApp({
             </Button>
             <Icon
               name="panel"
-              className="hidden size-4 text-[#727c8e] lg:block dark:text-[#777780]"
+              className="hidden size-4 text-zinc-400 lg:block dark:text-zinc-500"
             />
-            <span className="hidden h-4 w-px bg-[#e1e4ed] sm:block dark:bg-[#36363a]" />
+            <span className="hidden h-4 w-px bg-zinc-200 sm:block dark:bg-zinc-800" />
             <span
-              className={`hidden truncate text-[11px] sm:block ${mutedClass}`}
+              className={`hidden truncate text-[11px] font-medium sm:block ${mutedClass}`}
             >
               {currentWorkspace?.name ?? "Workspace"}
             </span>
             <Icon
               name="right"
-              className="hidden size-3 text-[#a0a7b4] sm:block dark:text-[#5c5c66]"
+              className="hidden size-3 text-zinc-400 sm:block dark:text-zinc-600"
             />
-            <span className="truncate text-[12px] font-medium">
+            <span className="truncate text-[12px] font-medium text-zinc-900 dark:text-zinc-100">
               {viewTitle}
             </span>
           </div>
@@ -538,11 +538,11 @@ export default function WorkspaceApp({
             <button
               onClick={() => dialog.current?.showModal()}
               aria-label="Open command palette"
-              className="mr-1 hidden h-8 w-55 items-center gap-2 rounded-lg border border-[#e1e4ed] bg-[#f8f9fc] px-2.5 text-left text-[11px] text-[#70798b] outline-none focus-visible:ring-2 focus-visible:ring-violet-400 xl:flex dark:border-[#343438] dark:bg-[#19191b] dark:text-[#94949e]"
+              className="mr-1 hidden h-8.5 w-60 items-center gap-2 rounded-lg border border-zinc-200 bg-[#f4f4f6] px-2.5 text-left text-[11px] text-zinc-500 shadow-xs outline-none transition-colors hover:border-zinc-300 focus-visible:ring-2 focus-visible:ring-zinc-400 xl:flex dark:border-zinc-800 dark:bg-[#141416] dark:text-zinc-400 dark:hover:border-zinc-700"
             >
               <Icon name="search" className="size-3.5" />
               <span className="flex-1">Search or jump to…</span>
-              <kbd className="rounded border border-[#e1e4ed] px-1 text-[9px] dark:border-[#36363b]">
+              <kbd className="rounded border border-zinc-200 px-1 text-[9px] font-medium text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
                 ⌘K
               </kbd>
             </button>
@@ -570,17 +570,17 @@ export default function WorkspaceApp({
                 <Icon name="moon" className="size-4" />
               </span>
             </Button>
-            <span className="mx-1 h-5 w-px bg-[#e1e4ed] dark:bg-[#343438]" />
+            <span className="mx-1 h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
             <span
               title={user.name}
               aria-label={user.name}
-              className="grid size-8 place-items-center rounded-full border border-violet-300/20 bg-[#e9e8fa] text-[10px] font-medium text-[#7167aa] dark:bg-[#2f2d46] dark:text-[#b9b1ed]"
+              className="grid size-8 place-items-center rounded-full border border-zinc-300 bg-zinc-200 text-[10px] font-semibold text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
             >
               {user.name.slice(0, 2).toUpperCase()}
             </span>
           </div>
         </header>
-        <div className="mx-auto max-w-[1540px] px-5 pb-8 pt-7 sm:px-8 lg:px-9 lg:pt-9">
+        <div className="mx-auto max-w-[1540px] px-4 pb-8 pt-6 sm:px-6 lg:px-8">
           <div className="mb-5 grid gap-2 empty:hidden">
             <Notice role="alert" tone="error">
               {message}
@@ -591,7 +591,7 @@ export default function WorkspaceApp({
             <section
               className={`${panelClass} mx-auto my-8 max-w-lg p-7 sm:p-10`}
             >
-              <span className="mb-6 inline-flex rounded-xl bg-violet-400/10 p-3 text-[#9c94e3]">
+              <span className="mb-6 inline-flex rounded-xl border border-zinc-200 bg-zinc-100 p-3 text-zinc-800 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
                 <Icon name="folder" className="size-6" />
               </span>
               <h1 className={`${headingClass} mb-3 text-[25px]`}>
@@ -754,10 +754,10 @@ export default function WorkspaceApp({
               <header className="mb-7 flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <div className="mb-2 flex items-center gap-2">
-                    <h1 className={`${headingClass} text-[25px] leading-tight`}>
+                    <h1 className={`${headingClass} text-[24px] leading-tight`}>
                       {view === "tasks" ? "My tasks" : "Your pages"}
                     </h1>
-                    <span className="rounded-md border border-[#dedff0] bg-[#f0effa] px-1.5 text-[10px] text-[#8c83bc] dark:border-[#3b364d] dark:bg-[#2b2838] dark:text-[#aca2e1]">
+                    <span className="rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-700 uppercase dark:border-zinc-800 dark:bg-zinc-850 dark:text-zinc-300">
                       {currentWorkspace.role}
                     </span>
                   </div>
@@ -800,8 +800,8 @@ export default function WorkspaceApp({
                 loading={loadingRecords}
               />
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="inline-flex items-center gap-1 rounded-lg border border-[#e0e3ed] bg-[#edf0f7] p-1 dark:border-[#303034] dark:bg-[#242426]">
-                  <span className="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-[11px] font-medium text-[#535b77] shadow-xs dark:bg-[#343437] dark:text-[#ededf2]">
+                <div className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-zinc-100/80 p-1 dark:border-zinc-800 dark:bg-zinc-900/80">
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-[11px] font-medium text-zinc-900 shadow-xs dark:bg-zinc-800 dark:text-zinc-100">
                     <Icon
                       name={view === "tasks" ? "tasks" : "pages"}
                       className="size-3.5"
@@ -824,8 +824,8 @@ export default function WorkspaceApp({
                   <label htmlFor="record-search" className="sr-only">
                     Search {view}
                   </label>
-                  <div className="relative min-w-0 flex-1 sm:w-55">
-                    <span className="pointer-events-none absolute top-2.5 left-2.5 text-[#70798b] dark:text-[#94949e]">
+                  <div className="relative min-w-0 flex-1 sm:w-60">
+                    <span className="pointer-events-none absolute top-2.5 left-2.5 text-zinc-400 dark:text-zinc-500">
                       <Icon name="search" className="size-3.5" />
                     </span>
                     <input
@@ -836,7 +836,7 @@ export default function WorkspaceApp({
                       type="search"
                       placeholder={`Search ${view}…`}
                       maxLength={100}
-                      className={`${inputClass} py-2 pl-8`}
+                      className={`${inputClass} py-1.5 pl-8`}
                     />
                   </div>
                   <Button type="submit" size="sm">
@@ -933,11 +933,11 @@ export default function WorkspaceApp({
       <dialog
         ref={dialog}
         aria-label="Command palette"
-        className={`${panelClass} m-auto w-115 max-w-[calc(100vw-32px)] p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm`}
+        className={`${panelClass} m-auto w-120 max-w-[calc(100vw-32px)] p-0 text-inherit shadow-2xl dark:shadow-black/70 backdrop:bg-black/60 backdrop:backdrop-blur-sm`}
       >
-        <header className="flex items-center justify-between border-b border-[#e3e6ef] px-5 py-4 dark:border-[#303034]">
-          <h2 className="flex items-center gap-2.5 text-[13px] font-medium">
-            <Icon name="search" className="size-4 text-[#9992df]" />
+        <header className="flex items-center justify-between border-b border-zinc-200 px-5 py-3.5 dark:border-zinc-800">
+          <h2 className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-900 dark:text-zinc-100">
+            <Icon name="search" className="size-4 text-zinc-400" />
             Find your way
           </h2>
           <Button
@@ -960,7 +960,7 @@ export default function WorkspaceApp({
             <Button
               key={target}
               variant="ghost"
-              className="justify-start"
+              className="justify-start hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
               onClick={() => navigate(target)}
             >
               <Icon name={target} className="size-4" />
@@ -972,7 +972,7 @@ export default function WorkspaceApp({
           ))}
         </nav>
         <form
-          className="grid gap-3 border-t border-[#e3e6ef] p-5 dark:border-[#303034]"
+          className="grid gap-3 border-t border-zinc-200 p-5 dark:border-zinc-800"
           onSubmit={(event) => {
             event.preventDefault();
             setQuery(String(new FormData(event.currentTarget).get("q")));
@@ -995,7 +995,7 @@ export default function WorkspaceApp({
           </Button>
         </form>
         <p
-          className={`border-t border-[#e3e6ef] px-5 py-3 text-[10px] dark:border-[#303034] ${mutedClass}`}
+          className={`border-t border-zinc-200 px-5 py-3 text-[10px] dark:border-zinc-800 ${mutedClass}`}
         >
           Escape to close · Your current access applies to every search
         </p>

@@ -777,7 +777,7 @@ export default function WorkspaceSettings({
       {toast && (
         <div
           role="status"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl border border-violet-400/30 bg-[#161520]/95 px-4 py-3 text-[12px] font-medium text-white shadow-2xl backdrop-blur-md dark:border-violet-400/40 dark:bg-[#12111a]/95"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-900/95 px-4 py-3 text-[12px] font-medium text-white shadow-2xl backdrop-blur-md dark:border-zinc-700 dark:bg-zinc-900/95"
         >
           <Icon
             name={toast.tone === "error" ? "close" : "check"}
@@ -787,10 +787,10 @@ export default function WorkspaceSettings({
         </div>
       )}
 
-      <header className="border-b border-[#e4e6ef] pb-4 dark:border-[#303034]">
+      <header className="border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-violet-500/10 text-xl font-semibold text-violet-600 dark:bg-violet-400/15 dark:text-violet-300">
+            <span className="grid size-10 place-items-center rounded-xl border border-zinc-200 bg-zinc-100 text-xl font-semibold text-zinc-900 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-100">
               {workspaceEmoji}
             </span>
             <div>
@@ -798,7 +798,7 @@ export default function WorkspaceSettings({
                 <h1 className={`${headingClass} text-[22px]`}>
                   {workspace.name}
                 </h1>
-                <Badge tone="violet">{workspace.role}</Badge>
+                <Badge tone="neutral">{workspace.role}</Badge>
               </div>
               <p className={`text-[11px] ${mutedClass}`}>
                 Workspace Settings, People &amp; Permissions
@@ -820,8 +820,8 @@ export default function WorkspaceSettings({
                 onClick={() => setActiveTab(tab.id)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[12px] font-medium transition-colors ${
                   active
-                    ? "bg-violet-500/10 text-violet-600 dark:bg-violet-400/15 dark:text-violet-300"
-                    : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-[#28282b]"
+                    ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-zinc-950"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                 }`}
               >
                 <Icon name={tab.icon} className="size-3.5" />
@@ -857,8 +857,8 @@ export default function WorkspaceSettings({
                       onClick={() => setWorkspaceEmoji(emoji)}
                       className={`grid size-9 place-items-center rounded-lg border text-lg transition-transform hover:scale-110 ${
                         workspaceEmoji === emoji
-                          ? "border-violet-500 bg-violet-50 dark:border-violet-400 dark:bg-violet-950/40"
-                          : "border-[#e4e6ef] dark:border-[#303034]"
+                          ? "border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-800"
+                          : "border-zinc-200 dark:border-zinc-800"
                       }`}
                     >
                       {emoji}
@@ -958,21 +958,21 @@ export default function WorkspaceSettings({
       {activeTab === "members" && (
         <div className="grid gap-6">
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-[#141416]">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-[12px] font-semibold text-violet-600 dark:text-violet-400">
+                <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">
                   Owner
                 </span>
-                <Badge tone="violet">Full</Badge>
+                <Badge tone="neutral">Full</Badge>
               </div>
               <p className={`text-[11px] leading-relaxed ${mutedClass}`}>
                 Full workspace custody, ownership transfer, and member
                 administration.
               </p>
             </div>
-            <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-[#141416]">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-[12px] font-semibold text-slate-800 dark:text-zinc-100">
+                <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">
                   Administrator
                 </span>
                 <Badge>Admin</Badge>
@@ -982,9 +982,9 @@ export default function WorkspaceSettings({
                 integrations.
               </p>
             </div>
-            <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-[#141416]">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-[12px] font-semibold text-slate-800 dark:text-zinc-100">
+                <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100">
                   Member
                 </span>
                 <Badge tone="neutral">Standard</Badge>
@@ -994,7 +994,7 @@ export default function WorkspaceSettings({
                 projects.
               </p>
             </div>
-            <div className="rounded-xl border border-[#e4e6ef] bg-white p-4 shadow-xs dark:border-[#2b2b30] dark:bg-[#1a1a1c]">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-[#141416]">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[12px] font-semibold text-amber-600 dark:text-amber-400">
                   Guest
@@ -1013,7 +1013,7 @@ export default function WorkspaceSettings({
               <section className={panelClass}>
                 <header className="flex items-center justify-between border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
                   <div className="flex items-center gap-2">
-                    <Icon name="users" className="size-4 text-violet-500" />
+                    <Icon name="users" className="size-4 text-zinc-400" />
                     <h2 className="text-[13px] font-medium">Invite Teammate</h2>
                   </div>
                   <Badge>72-hour validity</Badge>
@@ -1081,7 +1081,7 @@ export default function WorkspaceSettings({
                                 <button
                                   type="button"
                                   onClick={() => setManualRecordId(true)}
-                                  className="text-[10px] text-violet-600 underline dark:text-violet-400"
+                                  className="text-[10px] text-zinc-700 underline dark:text-zinc-300"
                                 >
                                   Enter UUID manually
                                 </button>
@@ -1114,7 +1114,7 @@ export default function WorkspaceSettings({
                                 <button
                                   type="button"
                                   onClick={() => setManualRecordId(false)}
-                                  className="text-[10px] text-violet-600 underline dark:text-violet-400"
+                                  className="text-[10px] text-zinc-700 underline dark:text-zinc-300"
                                 >
                                   Pick from list
                                 </button>
@@ -1141,12 +1141,12 @@ export default function WorkspaceSettings({
                   </form>
 
                   {token && (
-                    <div className="mt-5 grid gap-3 rounded-xl border border-violet-400/25 bg-violet-50/50 p-4 dark:border-violet-400/20 dark:bg-violet-950/20">
+                    <div className="mt-5 grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-violet-700 dark:text-violet-300">
+                        <span className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100">
                           Invitation Link Ready
                         </span>
-                        <Badge tone="violet">Valid 72 Hours</Badge>
+                        <Badge tone="neutral">Valid 72 Hours</Badge>
                       </div>
 
                       <Field label="Shareable Invite Link">
@@ -1194,8 +1194,8 @@ export default function WorkspaceSettings({
             )}
 
             <section className={panelClass}>
-              <header className="flex items-center gap-2 border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
-                <Icon name="mail" className="size-4 text-violet-500" />
+              <header className="flex items-center gap-2 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+                <Icon name="mail" className="size-4 text-zinc-400" />
                 <h2 className="text-[13px] font-medium">
                   Accept an Invitation
                 </h2>
@@ -1249,7 +1249,7 @@ export default function WorkspaceSettings({
                         {inv.email}
                       </span>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <Badge tone="violet">{inv.role}</Badge>
+                        <Badge tone="neutral">{inv.role}</Badge>
                         <span className={`text-[10px] ${mutedClass}`}>
                           Permission: {inv.permission}
                         </span>
@@ -1313,7 +1313,7 @@ export default function WorkspaceSettings({
                       className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="grid size-8 place-items-center rounded-full bg-violet-100 text-[10px] font-semibold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                        <span className="grid size-8 place-items-center rounded-full border border-zinc-300 bg-zinc-200 text-[10px] font-semibold text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
                           {item.name.slice(0, 2).toUpperCase()}
                         </span>
                         <div>
@@ -1346,7 +1346,7 @@ export default function WorkspaceSettings({
                           </select>
                         ) : (
                           <Badge
-                            tone={item.role === "owner" ? "violet" : "neutral"}
+                            tone="neutral"
                           >
                             {item.role}
                           </Badge>
@@ -1463,7 +1463,7 @@ export default function WorkspaceSettings({
                 </span>
                 <div className="mt-2.5 h-1.5 w-full rounded-full bg-slate-100 dark:bg-zinc-800">
                   <div
-                    className="h-full rounded-full bg-violet-500"
+                    className="h-full rounded-full bg-zinc-900 dark:bg-zinc-100"
                     style={{
                       width: `${Math.min(
                         100,
@@ -1822,7 +1822,7 @@ export default function WorkspaceSettings({
           <div className="grid max-w-xl gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e4e6ef] p-4 dark:border-[#303034]">
               <div className="flex items-center gap-3">
-                <Icon name="calendar" className="size-5 text-violet-500" />
+                <Icon name="calendar" className="size-5 text-zinc-400" />
                 <div>
                   <strong className="block text-[13px] font-medium">
                     Google Workspace
