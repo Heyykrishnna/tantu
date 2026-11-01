@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, file, items, record, string } from "../lib/api";
 import type { FileItem } from "../lib/api";
+import { pollWhileVisible } from "../lib/visible-polling";
 import { Icon } from "../components/icon";
 import { Badge, Button, Field, inputClass, mutedClass } from "../components/ui";
 
@@ -39,13 +40,11 @@ export default function FilePanel({
     [path],
   );
   useEffect(() => {
-    const controller = new AbortController();
-    void refresh(controller.signal);
-    const interval = setInterval(() => void refresh(controller.signal), 15_000);
-    return () => {
-      controller.abort();
-      clearInterval(interval);
-    };
+    return pollWhileVisible(
+      refresh,
+      error => setMessage(error instanceof Error ? error.message : "Files are unavailable."),
+      document,
+    );
   }, [refresh]);
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

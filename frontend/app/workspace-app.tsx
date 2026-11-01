@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { pollWhileVisible } from "../lib/visible-polling";
 import type { FormEvent } from "react";
 import {
   acknowledgment,
@@ -16,26 +18,7 @@ import {
 } from "../lib/api";
 import type { User, Workspace } from "../lib/api";
 import type { CanonicalRecord } from "../lib/contracts";
-import CollectionPanel from "./collection-panel";
-import MailPanel from "./mail-panel";
-import CalendarPanel from "./calendar-panel";
-import ProjectPanel from "./project-panel";
-import CapturePanel from "./capture-panel";
-import PromisePanel from "./promise-panel";
-import RulesPanel from "./rules-panel";
-import DecisionPanel from "./decision-panel";
-import ContextGraphPanel from "./context-graph-panel";
-import PlanningPanel from "./planning-panel";
-import KitsPanel from "./kits-panel";
-import MeetingBriefsPanel from "./meeting-briefs-panel";
-import IntegrationsPanel from "./integrations-panel";
-import EnterprisePanel from "./enterprise-panel";
-import FutureDiscoveryPanel from "./future-discovery-panel";
-import SearchModal from "./search-modal";
 import SignIn from "./sign-in";
-import RecordEditor from "./record-editor";
-import WorkspaceSettings from "./workspace-settings";
-import ActivityPanel from "./activity-panel";
 import WorkspaceNavigation from "./workspace-navigation";
 import { resolveView } from "../lib/navigation";
 import type { WorkspaceView } from "../lib/navigation";
@@ -55,6 +38,29 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
+
+const CollectionPanel = dynamic(() => import("./collection-panel"), { loading: PanelLoading });
+const MailPanel = dynamic(() => import("./mail-panel"), { loading: PanelLoading });
+const CalendarPanel = dynamic(() => import("./calendar-panel"), { loading: PanelLoading });
+const ProjectPanel = dynamic(() => import("./project-panel"), { loading: PanelLoading });
+const CapturePanel = dynamic(() => import("./capture-panel"), { loading: PanelLoading });
+const PromisePanel = dynamic(() => import("./promise-panel"), { loading: PanelLoading });
+const RulesPanel = dynamic(() => import("./rules-panel"), { loading: PanelLoading });
+const DecisionPanel = dynamic(() => import("./decision-panel"), { loading: PanelLoading });
+const ContextGraphPanel = dynamic(() => import("./context-graph-panel"), { loading: PanelLoading });
+const PlanningPanel = dynamic(() => import("./planning-panel"), { loading: PanelLoading });
+const KitsPanel = dynamic(() => import("./kits-panel"), { loading: PanelLoading });
+const MeetingBriefsPanel = dynamic(() => import("./meeting-briefs-panel"), { loading: PanelLoading });
+const IntegrationsPanel = dynamic(() => import("./integrations-panel"), { loading: PanelLoading });
+const EnterprisePanel = dynamic(() => import("./enterprise-panel"), { loading: PanelLoading });
+const FutureDiscoveryPanel = dynamic(() => import("./future-discovery-panel"), { loading: PanelLoading });
+const SearchModal = dynamic(() => import("./search-modal"), { loading: PanelLoading });
+const RecordEditor = dynamic(() => import("./record-editor"), { loading: PanelLoading });
+const WorkspaceSettings = dynamic(() => import("./workspace-settings"), { loading: PanelLoading });
+const ActivityPanel = dynamic(() => import("./activity-panel"), { loading: PanelLoading });
+function PanelLoading() {
+  return <div role="status" className="min-h-48 animate-pulse rounded-xl border border-zinc-200 p-6 text-sm text-zinc-500 motion-reduce:animate-none dark:border-zinc-800">Loading workspace view…</div>;
+}
 
 type View = WorkspaceView;
 function forgetDrafts() {
@@ -313,11 +319,10 @@ export default function WorkspaceApp({
 
   useEffect(() => {
     if (!workspaceId || !user) return;
-    const controller = new AbortController();
-    const interval = setInterval(async () => {
+    return pollWhileVisible(async (signal) => {
       try {
         const spaces = await api("/workspaces", items(workspace), {
-          signal: controller.signal,
+          signal,
         });
         if (!spaces.some((item) => item.id === workspaceId)) {
           setWorkspaces(spaces);
@@ -331,7 +336,7 @@ export default function WorkspaceApp({
           await api(
             `/workspaces/${workspaceId}/${selected.kind === "task" ? "tasks" : "pages"}/${selected.id}`,
             canonical,
-            { signal: controller.signal },
+            { signal },
           );
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
@@ -341,11 +346,7 @@ export default function WorkspaceApp({
         }
         handleError(error);
       }
-    }, 15_000);
-    return () => {
-      controller.abort();
-      clearInterval(interval);
-    };
+    }, handleError, document, { immediate: false });
   }, [workspaceId, user, selected, handleError]);
 
   function navigate(target: View, space = workspaceId) {
@@ -1013,7 +1014,8 @@ export default function WorkspaceApp({
           Escape to close · Your current access applies to every search
         </p>
       </dialog>
-      <SearchModal
+      {searchModalOpen && <SearchModal
+        key={workspaceId}
         isOpen={searchModalOpen}
         workspaceId={workspaceId}
         onClose={() => setSearchModalOpen(false)}
@@ -1030,7 +1032,7 @@ export default function WorkspaceApp({
             navigate("promises");
           }
         }}
-      />
+      />}
       <Toaster
         items={toasts}
         onDismiss={(id) => {
