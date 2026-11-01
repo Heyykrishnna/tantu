@@ -6,11 +6,6 @@ import { motion } from "motion/react";
 import { api } from "../lib/api";
 import { Orb } from "@/components/ui/orb";
 import {
-  AccessRequest,
-  type AccessRequester,
-  type AccessDecision,
-} from "@/components/ui/access-request";
-import {
   Button,
   Field,
   Notice,
@@ -99,31 +94,6 @@ export default function EnterprisePanel({
   const [evaluation, setEvaluation] = useState<OperatingModelEvaluation | null>(
     null,
   );
-  const [accessRequests, setAccessRequests] = useState<AccessRequester[]>([
-    {
-      id: "req-1",
-      name: "Marcus Aurelius",
-      handle: "@marcus",
-      description: "Audit Logs & DLP Policies",
-    },
-    {
-      id: "req-2",
-      name: "Elena Rostova",
-      handle: "@elena",
-      description: "SSO Policy Elevation",
-    },
-  ]);
-
-  const handleAccessDecision = (
-    person: AccessRequester,
-    decision: AccessDecision,
-  ) => {
-    setAccessRequests((prev) => prev.filter((r) => r.id !== person.id));
-    setNotice(
-      `Access request for ${person.name} has been ${decision === "approved" ? "approved" : "declined"}.`,
-    );
-  };
-
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -760,18 +730,7 @@ export default function EnterprisePanel({
                 Review elevated role requests, DLP policy exemptions, and audit log access from workspace members.
               </p>
             </div>
-            {accessRequests.length === 0 ? (
-              <div className="p-8 text-center text-xs text-zinc-500">
-                No pending access requests. All workspace access permissions are settled.
-              </div>
-            ) : (
-              <div className="flex justify-center py-4">
-                <AccessRequest
-                  requests={accessRequests}
-                  onDecision={handleAccessDecision}
-                />
-              </div>
-            )}
+            <Notice>Access request reviews are not available yet. Manage current members and invitations in Workspace settings. No role changes can be made from this panel.</Notice>
           </div>
         </div>
       )}
