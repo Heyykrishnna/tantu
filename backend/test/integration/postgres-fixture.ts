@@ -39,7 +39,18 @@ export async function startPostgresFixture() {
 
   async function stop(): Promise<void> {
     if (running) {
-      await execute(control, ["-D", data, "-m", "fast", "-w", "stop"]);
+      try {
+        await execute(control, ["-D", data, "-m", "smart", "-t", "10", "-w", "stop"]);
+      } catch (error) {
+        try {
+          await execute(control, ["-D", data, "-m", "fast", "-t", "10", "-w", "stop"]);
+        } catch (cleanupError) {
+          throw new AggregateError([error, cleanupError], "The isolated PostgreSQL fixture could not shut down.", { cause: cleanupError });
+        }
+        running = false;
+        await rm(directory, { recursive: true, force: true });
+        throw error;
+      }
       running = false;
     }
     await rm(directory, { recursive: true, force: true });

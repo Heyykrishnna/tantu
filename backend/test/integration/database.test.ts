@@ -1,11 +1,31 @@
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { test } from "node:test";
+import { setImmediate } from "node:timers/promises";
 import { Pool } from "pg";
 import { startPostgresFixture } from "./postgres-fixture.js";
 import { Database } from "../../src/platform/database/database.js";
 import { migrate } from "../../src/platform/database/migrate.js";
 import { initializeJobs } from "../../src/workers/queue.js";
+
+test("fixture shutdown lets pooled sockets disconnect without administrative termination", { timeout: 30_000 }, async () => {
+  const fixture = await startPostgresFixture();
+  const pool = new Pool({ ...fixture.configuration, max: 12 });
+  const errors: Error[] = [];
+  pool.on("error", (error: Error) => errors.push(error));
+  let closed = false;
+  try {
+    await Promise.all(Array.from({ length: 12 }, () => pool.query("SELECT pg_sleep(0.01)")));
+    await pool.end();
+    closed = true;
+    await fixture.stop();
+    await setImmediate();
+    assert.deepEqual(errors, []);
+  } finally {
+    if (!closed) await pool.end();
+    await fixture.stop();
+  }
+});
 
 test("ordered migrations, least-privilege runtime and transactional rollback", { timeout: 30_000 }, async () => {
   const fixture = await startPostgresFixture();
