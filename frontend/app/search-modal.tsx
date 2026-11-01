@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { api } from "../lib/api";
+import { api, searchResults } from "../lib/api";
+import type { SearchResultItem } from "../lib/api";
 import { Icon } from "../components/icon";
 import { SearchInput } from "@/components/ui/search-input";
 import { Orb } from "@/components/ui/orb";
@@ -11,16 +12,6 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
-
-export interface SearchResultItem {
-  recordId: string;
-  targetType: "task" | "page" | "project" | "mail" | "promise";
-  title: string;
-  snippet: string;
-  status: string;
-  updatedAt: string;
-  relevance: number;
-}
 
 export default function SearchModal({
   isOpen,
@@ -49,6 +40,7 @@ export default function SearchModal({
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen || !workspaceId) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
       if (!query.trim()) {
@@ -58,9 +50,9 @@ export default function SearchModal({
       setLoading(true);
       setError("");
       const typeParam = typeFilter !== "all" ? `&type=${typeFilter}` : "";
-      api<{ results: SearchResultItem[] }>(
+      api(
         `/workspaces/${workspaceId}/search?q=${encodeURIComponent(query.trim())}${typeParam}`,
-        (v) => v as { results: SearchResultItem[] },
+        searchResults,
         { signal: controller.signal }
       )
         .then((res) => {
@@ -78,7 +70,7 @@ export default function SearchModal({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, typeFilter, workspaceId]);
+  }, [isOpen, query, typeFilter, workspaceId]);
 
   const handleSelect = (item: SearchResultItem) => {
     onSelectResult(item.targetType, item.recordId);

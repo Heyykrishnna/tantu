@@ -1,8 +1,15 @@
 import type { CanonicalRecord, Document } from "./contracts";
-import { apiPath } from "./paths";
+import { apiPath } from "./paths.ts";
 
 export class ApiError extends Error {
-  constructor(readonly status: number, readonly code: string, message: string) { super(message); }
+  readonly status: number;
+  readonly code: string;
+
+  constructor(status: number, code: string, message: string) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
 }
 export function record(value: unknown): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("The server returned an invalid response.");
@@ -57,6 +64,34 @@ export function items<T>(parse: (value: unknown) => T) { return (value: unknown)
 export function page(value: unknown) { const data = record(value); return { items: list(data.items, canonical), nextCursor: nullable(data.nextCursor) }; }
 export function acknowledgment(value: unknown): void { record(value); }
 
+export interface SearchResultItem {
+  recordId: string;
+  targetType: "task" | "page" | "project" | "mail" | "promise";
+  title: string;
+  snippet: string;
+  status: string;
+  updatedAt: string;
+  relevance: number;
+}
+
+export function searchResults(value: unknown): { results: SearchResultItem[] } {
+  const results = list(record(value).results, (value): SearchResultItem => {
+    const item = record(value);
+    if (typeof item.relevance !== "number" || !Number.isFinite(item.relevance))
+      throw new Error("The server returned invalid search relevance.");
+    return {
+      recordId: string(item.recordId),
+      targetType: choice(item.targetType, ["task", "page", "project", "mail", "promise"]),
+      title: string(item.title),
+      snippet: string(item.snippet),
+      status: string(item.status),
+      updatedAt: string(item.updatedAt),
+      relevance: item.relevance,
+    };
+  });
+  return { results };
+}
+
 export async function api<T>(path: string, parser: (value: unknown) => T, options: { method?: string; csrf?: string; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
   let response: Response;
   const endpoint = apiPath(path);
@@ -73,5 +108,6 @@ export async function api<T>(path: string, parser: (value: unknown) => T, option
     const failure = record(body);
     throw new ApiError(response.status, string(failure.code), string(failure.message));
   }
+  options.signal?.throwIfAborted();
   return parser(body);
 }
