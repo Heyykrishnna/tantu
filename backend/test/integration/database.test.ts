@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { test } from "node:test";
 import { Pool } from "pg";
 import { startPostgresFixture } from "./postgres-fixture.js";
@@ -14,7 +14,9 @@ test("ordered migrations, least-privilege runtime and transactional rollback", {
   try {
     await migrate(pool);
     await migrate(pool);
-    assert.equal((await pool.query("SELECT * FROM public.tantu_migrations")).rowCount, 22);
+    const migrationNames = (await readdir(new URL("../../migrations/", import.meta.url))).filter((name) => /^\d{3}_[a-z0-9_]+\.sql$/.test(name)).sort();
+    const applied = await pool.query<{ name: string }>("SELECT name FROM public.tantu_migrations ORDER BY name");
+    assert.deepEqual(applied.rows.map(({ name }) => name), migrationNames);
     await initializeJobs(pool);
     await pool.query("CREATE ROLE tantu_runtime LOGIN NOSUPERUSER NOBYPASSRLS");
     await pool.query(await readFile(new URL("../../migrations/runtime-grants.sql", import.meta.url), "utf8"));
