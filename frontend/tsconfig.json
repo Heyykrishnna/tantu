@@ -21,7 +21,8 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@gsap/react": ["./lib/use-gsap.ts"]
+      "@gsap/react": ["./lib/use-gsap.ts"],
+      "clsx": ["./lib/utils.ts"]
     }
   },
   "include": [
