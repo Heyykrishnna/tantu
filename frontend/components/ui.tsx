@@ -13,7 +13,7 @@ export const panelClass =
   "min-w-0 rounded-xl border border-zinc-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)] transition-all dark:border-zinc-800/80 dark:bg-[#141416] dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]";
 export const mutedClass = "text-zinc-500 dark:text-zinc-400";
 export const headingClass =
-  "font-heading font-semibold tracking-tight text-zinc-900 dark:text-zinc-100";
+  "font-[family-name:var(--font-poppins)] font-semibold tracking-tight text-zinc-900 dark:text-zinc-100";
 
 const candyVariantMap: Record<string, CandyButtonVariant> = {
   primary: "obsidian",
@@ -112,7 +112,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
         </svg>
       </span>
       {!compact && (
-        <span className="font-heading text-[18px] font-semibold tracking-[-0.04em] text-zinc-900 dark:text-zinc-100">
+        <span className="font-[family-name:var(--font-poppins)] text-[18px] font-semibold tracking-[-0.04em] text-zinc-900 dark:text-zinc-100">
           tantu<span className="text-zinc-400 dark:text-zinc-500">.</span>
         </span>
       )}

@@ -8,13 +8,10 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { useGSAP } from "@/lib/use-gsap";
-import gsap from "gsap";
-import { calcGeneratorDuration, spring } from "motion";
+import { useGSAP, gsap, type Timeline } from "@/lib/use-gsap";
+import { calcGeneratorDuration, spring } from "motion/react";
 import { Check, LoaderCircle, Mail, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-gsap.registerPlugin(useGSAP);
 
 export interface MorphInviteMember {
   id: string;
@@ -75,7 +72,7 @@ export function MorphInvite({
   const requestRef = useRef<AbortController | null>(null);
   const focusRef = useRef<"input" | "trigger" | null>(null);
   const layoutRef = useRef<((immediate?: boolean) => void) | null>(null);
-  const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const timelineRef = useRef<Timeline | null>(null);
   const seenRef = useRef(new Set<string>());
   const expanded = state !== "idle";
   const busy = state === "sending" || state === "sent";

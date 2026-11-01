@@ -8,8 +8,7 @@ import {
   useState,
   type Ref,
 } from "react";
-import { useGSAP } from "@/lib/use-gsap";
-import gsap from "gsap";
+import { useGSAP, gsap } from "@/lib/use-gsap";
 import { Check, ChevronDown, ShieldCheck, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -25,8 +24,6 @@ import {
 import { useAccessRequestMotion } from "./use-access-request-motion";
 
 export type { AccessDecision, AccessRequester } from "./access-request-state";
-
-gsap.registerPlugin(useGSAP);
 
 export interface AccessRequestProps {
   requests: readonly AccessRequester[];

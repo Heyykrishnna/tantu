@@ -1,11 +1,8 @@
 "use client";
 
 import { useRef, type RefObject } from "react";
-import { useGSAP } from "@/lib/use-gsap";
-import gsap from "gsap";
-import { calcGeneratorDuration, spring } from "motion";
-
-gsap.registerPlugin(useGSAP);
+import { useGSAP, gsap, type Timeline } from "@/lib/use-gsap";
+import { calcGeneratorDuration, spring } from "motion/react";
 
 const bounded = (value: number, fallback: number, min: number, max: number) =>
   Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
@@ -68,7 +65,7 @@ export function useAccessRequestMotion({
           standard: "(prefers-reduced-motion: no-preference)",
         },
         (context) => {
-          let timeline: gsap.core.Timeline | null = null;
+          let timeline: Timeline | null = null;
           let positions = new Map<string, number>();
           let wasOpen = root.dataset.expanded === "true";
           const sync = context.add("sync", (immediate = false) => {

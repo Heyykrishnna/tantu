@@ -1,13 +1,10 @@
 "use client";
 
 import { useId, useMemo, useRef, useState, type CSSProperties } from "react";
-import { useGSAP } from "@/lib/use-gsap";
-import gsap from "gsap";
+import { useGSAP, gsap, type Timeline, type Tween } from "@/lib/use-gsap";
 import { spring, useReducedMotion } from "motion/react";
 import { ArrowRight, Check, CircleDashed, CircleDot, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-gsap.registerPlugin(useGSAP);
 
 export const WORKFLOW_STATUSES = {
   todo: { label: "To do", color: "#71717a", Icon: CircleDashed },
@@ -197,17 +194,17 @@ function WorkflowRow({
       }}
     >
       <span
-        className="relative flex size-3.5 shrink-0 items-center justify-center rounded-full border border-[var(--wf-line)]"
+        className="relative flex size-3.5 shrink-0 items-center justify-center rounded-full border border-(--wf-line)"
         aria-hidden="true"
       >
         <span
           data-check
-          className="absolute -inset-px rounded-full bg-[var(--wf-ink)]"
+          className="absolute -inset-px rounded-full bg-(--wf-ink)"
           style={{ transform: `scale(${initialDone ? 1 : 0})` }}
         />
         <svg
           viewBox="0 0 14 14"
-          className="relative size-3.5 text-[var(--wf-surface)]"
+          className="relative size-3.5 text-(--wf-surface)"
           fill="none"
         >
           <path
@@ -234,7 +231,7 @@ function WorkflowRow({
           aria-hidden="true"
           title={person.name}
           data-row-person
-          className="flex size-4 shrink-0 items-center justify-center rounded-[4px] text-[9px] font-semibold opacity-0"
+          className="flex size-4 shrink-0 items-center justify-center rounded-sm text-[9px] font-semibold opacity-0"
           style={{
             background: `color-mix(in srgb, ${person.color ?? "var(--wf-accent)"}, transparent 80%)`,
             color: person.color ?? "var(--wf-accent)",
@@ -296,7 +293,7 @@ export function WorkflowCard({
   const pressedRef = useRef<HTMLElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const statusRef = useRef<HTMLButtonElement>(null);
-  const closeRef = useRef<gsap.core.Tween | null>(null);
+  const closeRef = useRef<Tween | null>(null);
   const syncRef = useRef<((immediate?: boolean) => void) | null>(null);
   const id = useId();
   const currentSections = sections ?? ownSections;
@@ -352,7 +349,7 @@ export function WorkflowCard({
           animate: "(prefers-reduced-motion: no-preference)",
         },
         (context) => {
-          let reveal: gsap.core.Timeline | null = null;
+          let reveal: Timeline | null = null;
           const sync = context.add("sync", (immediate = false) => {
             const open = root.dataset.expanded === "true";
             const choosing = open && root.dataset.pickerOpen === "true";
@@ -618,7 +615,7 @@ export function WorkflowCard({
       data-picker-open={pickerOpen}
       data-theme={theme}
       aria-labelledby={`${id}-title`}
-      className={cn("relative isolate w-full max-w-full font-sans", className)}
+      className={cn("relative isolate w-full max-w-full font-[family-name:var(--font-inter)]", className)}
       style={
         {
           width: bounded(width, 260, 480, 320),
@@ -699,7 +696,7 @@ export function WorkflowCard({
       onLostPointerCapture={releasePress}
     >
       <div
-        className="relative overflow-hidden bg-[var(--wf-surface)]"
+        className="relative overflow-hidden bg-(--wf-surface)"
         style={{
           borderRadius: curve,
           boxShadow: light ? "0 1px 3px #00000008" : "0 1px 3px #00000030",
@@ -754,7 +751,7 @@ export function WorkflowCard({
           <div className="min-w-0 flex-1">
             <h3
               id={`${id}-title`}
-              className="text-[13px] leading-5 font-semibold tracking-[-0.025em]"
+              className="text-[13px] leading-5 font-semibold tracking-tight"
             >
               <button
                 type="button"
@@ -793,7 +790,7 @@ export function WorkflowCard({
                 {statusSpec.label}
               </button>
               {showDueDate && dueDate && (
-                <span className="text-[var(--wf-muted)]">Due {dueDate}</span>
+                <span className="text-(--wf-muted)">Due {dueDate}</span>
               )}
             </div>
           </div>
@@ -815,7 +812,7 @@ export function WorkflowCard({
                     setFilter(filter === person.id ? null : person.id);
                   }}
                   className={cn(
-                    "relative flex size-6 cursor-pointer pointer-coarse:size-8 items-center justify-center rounded-full border-2 border-[var(--wf-surface)] text-[9px] font-semibold hover:z-10",
+                    "relative flex size-6 cursor-pointer pointer-coarse:size-8 items-center justify-center rounded-full border-2 border-(--wf-surface) text-[9px] font-semibold hover:z-10",
                     focusClass,
                   )}
                   style={{
@@ -853,7 +850,7 @@ export function WorkflowCard({
             <fieldset
               ref={pickerContentRef}
               id={`${id}-status`}
-              className="mx-3 flex flex-wrap gap-1.5 border-b border-[var(--wf-line)] pb-3 pt-1"
+              className="mx-3 flex flex-wrap gap-1.5 border-b border-(--wf-line) pb-3 pt-1"
             >
               <legend className="sr-only">Workflow status</legend>
               {(
@@ -909,11 +906,11 @@ export function WorkflowCard({
               ref={highlightRef}
               data-hover-highlight
               aria-hidden="true"
-              className="pointer-events-none absolute top-0 left-0 rounded-md bg-[var(--wf-hover)] opacity-0"
+              className="pointer-events-none absolute top-0 left-0 rounded-md bg-(--wf-hover) opacity-0"
             />
             <div className="relative px-2 pb-2">
               {description && (
-                <p className="px-2 pb-3 text-[11px] leading-relaxed text-[var(--wf-muted)] wrap-anywhere">
+                <p className="px-2 pb-3 text-[11px] leading-relaxed text-(--wf-muted) wrap-anywhere">
                   {description}
                 </p>
               )}
@@ -923,9 +920,7 @@ export function WorkflowCard({
                   key={section.id}
                   aria-label={section.label ?? `Checklist ${index + 1}`}
                   className={
-                    index > 0
-                      ? "mt-2 border-t border-[var(--wf-line)] pt-2"
-                      : ""
+                    index > 0 ? "mt-2 border-t border-(--wf-line) pt-2" : ""
                   }
                 >
                   {showSectionLabels && section.label && (
@@ -955,7 +950,7 @@ export function WorkflowCard({
                 </section>
               ))}
               {tasks.length === 0 && (
-                <p className="px-2 py-4 text-[12px] text-[var(--wf-muted)]">
+                <p className="px-2 py-4 text-[12px] text-(--wf-muted)">
                   A fresh start. Add your first task.
                 </p>
               )}

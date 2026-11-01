@@ -8,14 +8,11 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
-import { useGSAP } from "@/lib/use-gsap";
-import gsap from "gsap";
-import { calcGeneratorDuration, spring } from "motion";
+import { useGSAP, gsap, type Timeline } from "@/lib/use-gsap";
+import { calcGeneratorDuration, spring } from "motion/react";
 import { ArrowRight, Check, Info, LoaderCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/use-media-query";
-
-gsap.registerPlugin(useGSAP);
 
 export type ToastDismissReason = "dismiss" | "timeout" | "action";
 
@@ -95,7 +92,7 @@ function ToastCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const secondsRef = useRef<HTMLSpanElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<gsap.core.Timeline | null>(null);
+  const timerRef = useRef<Timeline | null>(null);
   const pausesRef = useRef(new Set<string>());
   const closingRef = useRef(false);
   const restoreFocusRef = useRef(false);

@@ -1,16 +1,13 @@
 "use client";
 
 import { useRef } from "react";
-import { useGSAP } from "@/lib/use-gsap";
-import gsap from "gsap";
+import { useGSAP, gsap } from "@/lib/use-gsap";
 import { Check, LoaderCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
   AccessDecision,
   AccessRequestEntry,
 } from "./access-request-state";
-
-gsap.registerPlugin(useGSAP);
 
 interface AccessRequestRowProps {
   entry: AccessRequestEntry;

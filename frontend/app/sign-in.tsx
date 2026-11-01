@@ -122,7 +122,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           aria-label="tantu home"
         >
           <Brand compact />
-          <span className="font-heading text-[22px] font-semibold tracking-[-0.04em] text-white">
+          <span className="font-[family-name:var(--font-poppins)] text-[22px] font-semibold tracking-[-0.04em] text-white">
             tantu.
           </span>
         </Link>
@@ -139,7 +139,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             <span className="size-1.5 rounded-full bg-emerald-400" />
             ORGANIZED WORKSPACE
           </div>
-          <h1 className="mb-5 font-heading text-[40px] leading-[1.2] font-semibold tracking-tight xl:text-[46px]">
+          <h1 className="mb-5 font-[family-name:var(--font-poppins)] text-[40px] leading-[1.2] font-semibold tracking-tight xl:text-[46px]">
             Your work.
             <br />A place to think.
           </h1>

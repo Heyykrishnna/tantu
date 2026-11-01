@@ -1,13 +1,10 @@
 "use client";
 
 import { useId, useRef, type CSSProperties } from "react";
-import { useGSAP } from "@/lib/use-gsap";
-import gsap from "gsap";
+import { useGSAP, gsap } from "@/lib/use-gsap";
 import { FolderClosed, Link2, MessagesSquare } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-
-gsap.registerPlugin(useGSAP);
 
 export const TASK_CARD_PRIORITIES = {
   moderate: { label: "Moderate priority", color: "#ff7415" },
@@ -153,7 +150,7 @@ export function TaskCard({
       aria-labelledby={titleId}
       data-slot="task-card"
       data-priority={priority}
-      className={cn("relative isolate w-full min-w-0 font-sans", className)}
+      className={cn("relative isolate w-full min-w-0 font-[family-name:var(--font-inter)]", className)}
       style={
         {
           "--task-radius": `${curve}px`,
