@@ -303,6 +303,16 @@ export default function WorkspaceApp({
   }, [workspaceId, user?.id, appearanceVersion, handleError]);
 
   useEffect(() => {
+    const preferences =
+      appearance?.workspaceId === workspaceId ? appearance.preferences : null;
+    if (preferences?.theme !== "system") return;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const update = () => applyTheme(media.matches ? "dark" : "light");
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [appearance, workspaceId]);
+
+  useEffect(() => {
     const keyboard = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();

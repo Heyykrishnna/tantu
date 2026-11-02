@@ -496,15 +496,24 @@ test("unavailable operations show an explicit permission state", async ({
   ).toBeVisible();
 });
 
-
-test("device theme changes apply immediately while preserving the system preference", async ({ page }) => {
-  await page.route("**/api/v1/workspaces/*/preferences", route => route.fulfill({ json: { preferences: { ...preferences, theme: "system" } } }));
+test("device theme changes apply immediately while preserving the system preference", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/workspaces/*/preferences", (route) =>
+    route.fulfill({
+      json: { preferences: { ...preferences, theme: "system" } },
+    }),
+  );
   await page.goto(`/settings?w=${workspaceId}&section=preferences`);
-  await expect(page.getByRole("radio", { name: "Follow device", exact: true })).toBeChecked();
+  await expect(
+    page.getByRole("radio", { name: "Follow device", exact: true }),
+  ).toBeChecked();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.emulateMedia({ colorScheme: "light" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("radio", { name: "Follow device", exact: true })).toBeChecked();
+  await expect(
+    page.getByRole("radio", { name: "Follow device", exact: true }),
+  ).toBeChecked();
 });
