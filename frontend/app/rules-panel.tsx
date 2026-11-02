@@ -1,7 +1,8 @@
 "use client";
 
+import { Modal } from "../components/ui/modal";
+import { Select } from "@/components/ui/select";
 import { LoadingState } from "../components/ui/loading-state";
-import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../lib/api";
@@ -288,23 +289,12 @@ export default function RulesPanel({
       </section>
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+        <Modal open onClose={() => setModalOpen(false)} title="Create Automation Rule" busy={busy}>
           <form
             onSubmit={handleCreateRule}
-            className={`${panelClass} max-h-[90vh] w-full max-w-lg overflow-y-auto space-y-4 p-6 shadow-2xl`}
+            className="space-y-4"
           >
-            <div className="flex items-center justify-between border-b border-[#e3e6ef] pb-3 dark:border-[#2d2d31]">
-              <h3 className="text-sm font-semibold text-[#1e2025] dark:text-white">
-                Create Automation Rule
-              </h3>
-              <CandyButton variant="ghost" size="unstyled"
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="text-[#677287] hover:text-black dark:hover:text-white"
-              >
-                <Icon name="close" className="size-4" />
-              </CandyButton>
-            </div>
+            
 
             <Notice tone="neutral">
               Rules execute automatically for app-owned changes. Actions with external side effects require manual review and cannot be executed automatically.
@@ -323,7 +313,7 @@ export default function RulesPanel({
             </Field>
 
             <Field label="When Event Occurs (Trigger)">
-              <select
+              <Select
                 className={inputClass}
                 value={triggerType}
                 onChange={(e) => setTriggerType(e.target.value as AutomationRule["triggerType"])}
@@ -332,14 +322,14 @@ export default function RulesPanel({
                 <option value="task.completed">Task Completed</option>
                 <option value="capture.created">Capture Item Added</option>
                 <option value="promise.confirmed">Promise Confirmed</option>
-              </select>
+              </Select>
             </Field>
 
             <div className="space-y-2 rounded-lg border border-[#e3e6ef] p-3 dark:border-[#2d2d31]">
               <h4 className="text-xs font-semibold text-[#1e2025] dark:text-[#e4e4e7]">Condition</h4>
               <div className="grid grid-cols-3 gap-2">
                 <Field label="Field">
-                  <select
+                  <Select
                     className={inputClass}
                     value={conditionField}
                     onChange={(e) => setConditionField(e.target.value)}
@@ -348,10 +338,10 @@ export default function RulesPanel({
                     <option value="status">Status</option>
                     <option value="title">Title</option>
                     <option value="kind">Kind</option>
-                  </select>
+                  </Select>
                 </Field>
                 <Field label="Operator">
-                  <select
+                  <Select
                     className={inputClass}
                     value={conditionOp}
                     onChange={(e) => setConditionOp(e.target.value as RuleCondition["operator"])}
@@ -359,7 +349,7 @@ export default function RulesPanel({
                     <option value="equals">Equals</option>
                     <option value="not_equals">Does Not Equal</option>
                     <option value="contains">Contains</option>
-                  </select>
+                  </Select>
                 </Field>
                 <Field label="Value">
                   <input
@@ -377,7 +367,7 @@ export default function RulesPanel({
               <h4 className="text-xs font-semibold text-[#1e2025] dark:text-[#e4e4e7]">Action</h4>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Action Type">
-                  <select
+                  <Select
                     className={inputClass}
                     value={actionType}
                     onChange={(e) => setActionType(e.target.value as RuleAction["type"])}
@@ -385,7 +375,7 @@ export default function RulesPanel({
                     <option value="set_priority">Set Priority</option>
                     <option value="create_capture">Create Triage Capture</option>
                     <option value="request_review">Request Manual Review</option>
-                  </select>
+                  </Select>
                 </Field>
                 <Field label="Action Value">
                   <input
@@ -408,29 +398,13 @@ export default function RulesPanel({
               </Button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
 
       {selectedRuleRuns && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className={`${panelClass} max-h-[90vh] w-full max-w-xl overflow-y-auto space-y-4 p-6 shadow-2xl`}>
-            <div className="flex items-center justify-between border-b border-[#e3e6ef] pb-3 dark:border-[#2d2d31]">
-              <div>
-                <h3 className="text-sm font-semibold text-[#1e2025] dark:text-white">
-                  Run History: {selectedRuleRuns.rule.name}
-                </h3>
-                <span className={`text-[10px] ${mutedClass}`}>
-                  Quota: {selectedRuleRuns.rule.quotaUsed}/500 executed
-                </span>
-              </div>
-              <CandyButton variant="ghost" size="unstyled"
-                type="button"
-                onClick={() => setSelectedRuleRuns(null)}
-                className="text-[#677287] hover:text-black dark:hover:text-white"
-              >
-                <Icon name="close" className="size-4" />
-              </CandyButton>
-            </div>
+        <Modal open onClose={() => setSelectedRuleRuns(null)} title={`Run History: ${selectedRuleRuns.rule.name}`} description={`Quota: ${selectedRuleRuns.rule.quotaUsed}/500 executed`} busy={busy}>
+          <div className="space-y-4">
+            
 
             {selectedRuleRuns.runs.length === 0 ? (
               <p className={`p-4 text-center text-xs ${mutedClass}`}>
@@ -475,7 +449,7 @@ export default function RulesPanel({
               </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

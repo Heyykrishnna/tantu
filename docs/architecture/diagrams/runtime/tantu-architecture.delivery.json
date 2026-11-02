@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "da4731ee-f7fc-43ab-bbab-1a06074946f4",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/Yatharth/Documents/Project-Code/tantu/docs/architecture/diagrams/runtime/candidate.json",
+  "output": "/Users/Yatharth/Documents/Project-Code/tantu/docs/architecture/diagrams/runtime/tantu-architecture.html",
+  "specification": {
+    "sha256": "80f16672aa86873588f8151ed5a5cd96c9a709fc31572feda10ca157dac9e8c0",
+    "bytes": 11319
+  },
+  "artifact": {
+    "sha256": "2f88a59ed96c3655dd2a6aad96e27207083b27f8a1d0cd9a37565c3c61cb7f5c",
+    "bytes": 857255
+  }
+}

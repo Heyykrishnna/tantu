@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -226,7 +227,7 @@ export default function ContextGraphPanel({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Source Entity">
-              <select
+              <Select
                 value={sourceId}
                 onChange={(e) => setSourceId(e.target.value)}
                 className={inputClass}
@@ -238,10 +239,10 @@ export default function ContextGraphPanel({
                     [{n.entityType}] {n.title}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label="Relationship Type">
-              <select
+              <Select
                 value={relType}
                 onChange={(e) => setRelType(e.target.value as typeof relType)}
                 className={inputClass}
@@ -251,10 +252,10 @@ export default function ContextGraphPanel({
                 <option value="blocks">blocks</option>
                 <option value="references">references</option>
                 <option value="derives">derives</option>
-              </select>
+              </Select>
             </Field>
             <Field label="Target Entity">
-              <select
+              <Select
                 value={targetId}
                 onChange={(e) => setTargetId(e.target.value)}
                 className={inputClass}
@@ -268,7 +269,7 @@ export default function ContextGraphPanel({
                       [{n.entityType}] {n.title}
                     </option>
                   ))}
-              </select>
+              </Select>
             </Field>
           </div>
           <div className="flex justify-end gap-2 pt-2">

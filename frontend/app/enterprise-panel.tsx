@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -380,7 +381,7 @@ export default function EnterprisePanel({
               </label>
 
               <Field label="Identity Provider Protocol">
-                <select
+                <Select
                   disabled
                   value={ssoProvider}
                   onChange={(e) =>
@@ -391,7 +392,7 @@ export default function EnterprisePanel({
                   <option value="none">None (Password / Magic Link)</option>
                   <option value="saml">SAML 2.0 (Okta, Azure AD, Ping)</option>
                   <option value="oidc">OpenID Connect (OIDC)</option>
-                </select>
+                </Select>
               </Field>
             </div>
           </div>
@@ -586,7 +587,7 @@ export default function EnterprisePanel({
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <select
+              <Select
                 value={exportFormat}
                 onChange={(e) =>
                   setExportFormat(e.target.value as "ndjson" | "csv")
@@ -595,7 +596,7 @@ export default function EnterprisePanel({
               >
                 <option value="ndjson">NDJSON Stream</option>
                 <option value="csv">CSV Flat File</option>
-              </select>
+              </Select>
               <Button onClick={handleCreateAuditExport} disabled={busy}>
                 Generate Export
               </Button>

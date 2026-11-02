@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { acknowledgment, api, items, record, string } from "../lib/api";
 import { integer } from "../lib/projects";
@@ -124,7 +125,7 @@ export default function CollectionViews({
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Group collection by">
-            <select
+            <Select
               className={inputClass}
               value={current.propertyGroup}
               onChange={(event) =>
@@ -137,10 +138,10 @@ export default function CollectionViews({
                   {property.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Filter property">
-            <select
+            <Select
               className={inputClass}
               value={current.propertyFilter.propertyId}
               onChange={(event) =>
@@ -159,7 +160,7 @@ export default function CollectionViews({
                   {property.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Property contains">
             <input

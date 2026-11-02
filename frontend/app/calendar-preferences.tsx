@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, choice, list, record, string } from "../lib/api";
@@ -120,7 +121,7 @@ export default function CalendarPreferences({
             />
           </Field>
           <Field label="Preferred week start">
-            <select
+            <Select
               aria-label="Preferred week start"
               name="weekStart"
               defaultValue={data.weekStart}
@@ -128,7 +129,7 @@ export default function CalendarPreferences({
             >
               <option value="1">Monday</option>
               <option value="0">Sunday</option>
-            </select>
+            </Select>
           </Field>
           <Field label="Working day starts">
             <input
@@ -164,7 +165,7 @@ export default function CalendarPreferences({
             />
           </Field>
           <Field label="Calendar density">
-            <select
+            <Select
               aria-label="Calendar density"
               name="density"
               defaultValue={data.density}
@@ -172,7 +173,7 @@ export default function CalendarPreferences({
             >
               <option>comfortable</option>
               <option>compact</option>
-            </select>
+            </Select>
           </Field>
           <fieldset className="grid gap-2">
             <legend className="mb-2 text-[11px]">Working days</legend>

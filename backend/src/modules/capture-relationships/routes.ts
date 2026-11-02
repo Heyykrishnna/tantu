@@ -255,6 +255,17 @@ export function captureRoutes(app: FastifyInstance, identity: Identity): void {
     }
   );
 
+  app.get<{ Params: { workspaceId: string } }>(root + "/promises/people", { schema: { params: workspaceParams } }, async (request) => {
+    const scope = await identity.scope(request, request.params.workspaceId);
+    return db.transaction(scope, async (client) => {
+      const people = await client.query<{ id: string; name: string }>(
+        "SELECT u.id,u.display_name AS name FROM tantu.memberships m JOIN tantu.users u ON u.id=m.user_id WHERE m.workspace_id=$1 AND m.active AND (m.user_id=$2 OR tantu.member_role(m.workspace_id) IN ('owner','admin','member')) ORDER BY (m.user_id=$2) DESC,u.display_name,u.id LIMIT 100",
+        [scope.workspaceId, scope.userId],
+      );
+      return { items: people.rows };
+    });
+  });
+
   app.get<{
     Params: { workspaceId: string };
     Querystring: {

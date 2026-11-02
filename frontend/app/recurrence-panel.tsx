@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { LoadingState } from "../components/ui/loading-state";
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -225,7 +226,7 @@ export default function RecurrencePanel({
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Repeat">
-                <select
+                <Select
                   aria-label="Repeat"
                   name="frequency"
                   className={inputClass}
@@ -233,7 +234,7 @@ export default function RecurrencePanel({
                   {["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].map((frequency) => (
                     <option key={frequency}>{frequency}</option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Occurrences">
                 <input

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "b219c5bb-59c3-4f88-88cc-4e472e4c0b10",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "/Users/Yatharth/Documents/Project-Code/tantu/docs/architecture/diagrams/workflow/candidate.json",
+  "output": "/Users/Yatharth/Documents/Project-Code/tantu/docs/architecture/diagrams/workflow/canonical-save.html",
+  "specification": {
+    "sha256": "22cbde669d7b2cbd9dbf642a778d516e46f5b6b56dc1cf5e0dbc0de68182d9cd",
+    "bytes": 9856
+  },
+  "artifact": {
+    "sha256": "7b8f1a21c7cea9c300786c51482d75c4a3887dc0c32578fe4205dfbee6fac59a",
+    "bytes": 855176
+  }
+}

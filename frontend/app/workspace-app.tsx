@@ -3,6 +3,7 @@
 import { CandyButton } from "@/components/ui/candy-button";
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { locationInvitation } from "../lib/invitations";
 import { applyTheme } from "../lib/theme";
 import type { WorkspacePreferences } from "../lib/appearance";
 import {
@@ -244,8 +245,7 @@ export default function WorkspaceApp({
               window.location.pathname.replace(/^\//, "").split("/")[0],
             )
           : null;
-      const inviteToken =
-        url.get("invite") || url.get("invitation") || url.get("token");
+      const inviteToken = locationInvitation(window.location);
       const targetView =
         (inviteToken ? "settings" : null) ??
         resolveView(url.get("view")) ??
@@ -882,6 +882,7 @@ export default function WorkspaceApp({
                   workspaces={workspaces}
                   onSwitchWorkspace={(id) => navigate("settings", id)}
                   onJoined={() => void authenticate()}
+                  onAccessChanged={authenticate}
                   onWorkspaceCreated={async (id) => {
                     setWorkspaces(await api("/workspaces", items(workspace)));
                     navigate("settings", id);

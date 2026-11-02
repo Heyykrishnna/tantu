@@ -1,5 +1,7 @@
 "use client";
 
+import { Modal } from "../components/ui/modal";
+import { Select } from "@/components/ui/select";
 import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -361,23 +363,12 @@ export default function CapturePanel({
       </section>
 
       {reviewing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+        <Modal open onClose={() => setReviewing(null)} title="Review Task Conversion" busy={busy}>
           <form
             onSubmit={handleConvert}
-            className={`${panelClass} max-h-[90vh] w-full max-w-lg overflow-y-auto space-y-4 p-6 shadow-2xl`}
+            className="space-y-4"
           >
-            <div className="flex items-center justify-between border-b border-[#e3e6ef] pb-3 dark:border-[#2d2d31]">
-              <h3 className="text-sm font-semibold text-[#1e2025] dark:text-white">
-                Review Task Conversion
-              </h3>
-              <CandyButton variant="ghost" size="unstyled"
-                type="button"
-                onClick={() => setReviewing(null)}
-                className="text-[#677287] hover:text-black dark:hover:text-white"
-              >
-                <Icon name="close" className="size-4" />
-              </CandyButton>
-            </div>
+            
 
             <Notice tone="neutral">{reviewing.audienceNotice}</Notice>
 
@@ -394,7 +385,7 @@ export default function CapturePanel({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Visibility & Audience">
-                <select
+                <Select
                   className={inputClass}
                   value={convertVisibility}
                   onChange={(e) =>
@@ -405,11 +396,11 @@ export default function CapturePanel({
                 >
                   <option value="private">Private (Only you)</option>
                   <option value="workspace">Workspace (All members)</option>
-                </select>
+                </Select>
               </Field>
 
               <Field label="Target Project (Optional)">
-                <select
+                <Select
                   className={inputClass}
                   value={convertProjectId}
                   onChange={(e) => setConvertProjectId(e.target.value)}
@@ -420,13 +411,13 @@ export default function CapturePanel({
                       {p.title}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Assignee (Optional)">
-                <select
+                <Select
                   className={inputClass}
                   value={convertAssigneeId}
                   onChange={(e) => setConvertAssigneeId(e.target.value)}
@@ -437,7 +428,7 @@ export default function CapturePanel({
                       {m.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
 
               <Field label="Deadline (Optional)">
@@ -476,7 +467,7 @@ export default function CapturePanel({
               </Button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
     </div>
   );

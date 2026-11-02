@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "artifacts": [
+    {
+      "candidate": "docs/architecture/diagrams/runtime/candidate.json"
+    },
+    {
+      "candidate": "docs/architecture/diagrams/workflow/candidate.json"
+    }
+  ]
+}

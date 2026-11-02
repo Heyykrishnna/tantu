@@ -1,5 +1,6 @@
 "use client";
 
+import { Modal } from "../components/ui/modal";
 import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -372,18 +373,9 @@ export default function KitsPanel({
       )}
 
       {previewKit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 max-w-lg w-full space-y-4 shadow-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm">Install Kit: {previewKit.kitName}</h3>
-              <CandyButton variant="ghost" size="unstyled"
-                type="button"
-                onClick={() => setPreviewKit(null)}
-                className="text-neutral-400 hover:text-neutral-600 text-xs"
-              >
-                Close
-              </CandyButton>
-            </div>
+        <Modal open onClose={() => setPreviewKit(null)} title={`Install Kit: ${previewKit.kitName}`} busy={busy}>
+          <div className="space-y-4">
+            
             <p className="text-xs text-neutral-600 dark:text-neutral-400">
               {previewKit.summary}
             </p>
@@ -433,7 +425,7 @@ export default function KitsPanel({
               </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {loading ? (

@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { CandyButton } from "@/components/ui/candy-button";
 import CalendarPreferences, { preferences } from "./calendar-preferences";
 import { useCallback, useEffect, useState } from "react";
@@ -327,7 +328,7 @@ export default function CalendarPanel({
           />
         </Field>
         <Field label="Week starts">
-          <select
+          <Select
             aria-label="Week starts"
             value={weekStart}
             onChange={(event) => setWeekStart(event.target.value)}
@@ -335,7 +336,7 @@ export default function CalendarPanel({
           >
             <option value="1">Monday</option>
             <option value="0">Sunday</option>
-          </select>
+          </Select>
         </Field>
         <div
           className="flex flex-wrap gap-2"
@@ -498,7 +499,7 @@ export default function CalendarPanel({
           className="mt-4 grid gap-4 sm:grid-cols-2"
         >
           <Field label="Task to schedule">
-            <select
+            <Select
               aria-label="Task to schedule"
               name="taskId"
               required
@@ -518,7 +519,7 @@ export default function CalendarPanel({
                     {task.title}
                   </option>
                 ))}
-            </select>
+            </Select>
             {selected && (
               <input type="hidden" name="taskId" value={selected.taskId} />
             )}

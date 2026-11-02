@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, items, list, record, string } from "../lib/api";
@@ -129,7 +130,7 @@ export default function ProviderCalendarActions({
           className="grid gap-3 sm:grid-cols-2"
         >
           <Field label="Calendar action">
-            <select
+            <Select
               aria-label="Calendar action"
               name="action"
               className={inputClass}
@@ -137,10 +138,10 @@ export default function ProviderCalendarActions({
               <option value="create">Create event</option>
               <option value="update">Update event</option>
               <option value="delete">Cancel event</option>
-            </select>
+            </Select>
           </Field>
           <Field label="Existing provider event">
-            <select
+            <Select
               aria-label="Existing provider event"
               name="externalId"
               className={inputClass}
@@ -151,14 +152,14 @@ export default function ProviderCalendarActions({
                   {event.title}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Edit scope">
-            <select aria-label="Edit scope" name="scope" className={inputClass}>
+            <Select aria-label="Edit scope" name="scope" className={inputClass}>
               <option value="single">Single event</option>
               <option value="occurrence">This occurrence</option>
               <option value="series">Entire series</option>
-            </select>
+            </Select>
           </Field>
           <Field label="Event title">
             <input
@@ -208,7 +209,7 @@ export default function ProviderCalendarActions({
             />
           </Field>
           <Field label="Event recurrence">
-            <select
+            <Select
               aria-label="Event recurrence"
               name="frequency"
               className={inputClass}
@@ -216,7 +217,7 @@ export default function ProviderCalendarActions({
               {["none", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"].map((value) => (
                 <option key={value}>{value}</option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Event occurrence count">
             <input

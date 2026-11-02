@@ -1,0 +1,409 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Tantu \u00b7 Runtime Architecture",
+    "locale": "en",
+    "output": "docs/architecture/diagrams/runtime/tantu-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Heyykrishnna/tantu.git",
+      "revision": "4739adf6a360658bf57fb3e792b685dea42f9d2c",
+      "provider": "github",
+      "link_mode": "web"
+    }
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "external",
+      "label": "Workspace user",
+      "sublabel": "Browser \u00b7 session + CSRF",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        210,
+        84
+      ],
+      "sources": [
+        {
+          "path": "frontend/app/page.tsx",
+          "line": 1,
+          "end_line": 5
+        }
+      ],
+      "tag": "Private workspace"
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Next.js 16.4.3",
+      "sublabel": "React 19.3 \u00b7 Tailwind 4.3",
+      "pos": [
+        330,
+        40
+      ],
+      "size": [
+        210,
+        84
+      ],
+      "sources": [
+        {
+          "path": "frontend/next.config.ts",
+          "line": 4,
+          "end_line": 10
+        },
+        {
+          "path": "frontend/package.json",
+          "line": 1,
+          "end_line": 49
+        }
+      ],
+      "tag": "HTTP :3000"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Fastify 5.12.7",
+      "sublabel": "TypeScript modular backend",
+      "pos": [
+        640,
+        40
+      ],
+      "size": [
+        210,
+        84
+      ],
+      "sources": [
+        {
+          "path": "backend/src/app.ts",
+          "line": 79,
+          "end_line": 118
+        },
+        {
+          "path": "backend/src/modules/files/service.ts",
+          "line": 21,
+          "end_line": 48
+        },
+        {
+          "path": "backend/src/modules/workspace-access/service.ts",
+          "line": 108,
+          "end_line": 136
+        }
+      ],
+      "tag": "HTTP :4000"
+    },
+    {
+      "id": "smtp",
+      "type": "external",
+      "label": "SMTP relay",
+      "sublabel": "Signup verification mail",
+      "pos": [
+        990,
+        40
+      ],
+      "size": [
+        210,
+        84
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/mail/smtp.ts",
+          "line": 1,
+          "end_line": 12
+        },
+        {
+          "path": "backend/src/modules/workspace-access/service.ts",
+          "line": 122,
+          "end_line": 134
+        }
+      ],
+      "tag": "Configured relay"
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL 16+",
+      "sublabel": "tantu + tantu_jobs schemas",
+      "pos": [
+        640,
+        285
+      ],
+      "size": [
+        210,
+        84
+      ],
+      "sources": [
+        {
+          "path": "backend/src/platform/database/database.ts",
+          "line": 18,
+          "end_line": 35
+        },
+        {
+          "path": "backend/src/workers/queue.ts",
+          "line": 7,
+          "end_line": 25
+        },
+        {
+          "path": "backend/src/modules/work-management/service.ts",
+          "line": 70,
+          "end_line": 75
+        }
+      ],
+      "tag": "RLS \u00b7 records + jobs"
+    },
+    {
+      "id": "providers",
+      "type": "external",
+      "label": "Google / Microsoft",
+      "sublabel": "Gmail \u00b7 Calendar \u00b7 Graph",
+      "pos": [
+        990,
+        285
+      ],
+      "size": [
+        210,
+        84
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/providers/http.ts",
+          "line": 6,
+          "end_line": 27
+        },
+        {
+          "path": "backend/src/modules/providers/config.ts",
+          "line": 4,
+          "end_line": 21
+        },
+        {
+          "path": "backend/src/modules/providers/sending.ts",
+          "line": 8,
+          "end_line": 26
+        }
+      ],
+      "tag": "Opt-in OAuth + consent"
+    },
+    {
+      "id": "files",
+      "type": "database",
+      "label": "Private file store",
+      "sublabel": "Shared API / worker directory",
+      "pos": [
+        330,
+        530
+      ],
+      "size": [
+        210,
+        84
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/files/store.ts",
+          "line": 5,
+          "end_line": 37
+        },
+        {
+          "path": "backend/src/modules/files/routes.ts",
+          "line": 35,
+          "end_line": 45
+        }
+      ],
+      "tag": "5 MiB per file"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Worker \u00b7 pg-boss 12.30",
+      "sublabel": "Events \u00b7 scans \u00b7 provider jobs",
+      "pos": [
+        640,
+        530
+      ],
+      "size": [
+        210,
+        84
+      ],
+      "sources": [
+        {
+          "path": "backend/src/workers/server.ts",
+          "line": 32,
+          "end_line": 44
+        },
+        {
+          "path": "backend/src/modules/files/service.ts",
+          "line": 70,
+          "end_line": 85
+        },
+        {
+          "path": "backend/src/workers/queue.ts",
+          "line": 32,
+          "end_line": 33
+        }
+      ],
+      "tag": "Separate Node.js process"
+    },
+    {
+      "id": "scanner",
+      "type": "security",
+      "label": "Scan endpoint",
+      "sublabel": "Compose: synthetic stub",
+      "pos": [
+        990,
+        530
+      ],
+      "size": [
+        210,
+        84
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/files/scanner.ts",
+          "line": 7,
+          "end_line": 38
+        },
+        {
+          "path": "docker/scanner/server.mjs",
+          "line": 46,
+          "end_line": 59
+        }
+      ],
+      "tag": "ClamAV INSTREAM protocol"
+    }
+  ],
+  "connections": [
+    {
+      "id": "browser-web",
+      "from": "browser",
+      "to": "web",
+      "label": "HTTP UI",
+      "variant": "emphasis"
+    },
+    {
+      "id": "web-api",
+      "from": "web",
+      "to": "api",
+      "label": "/api/v1",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-smtp",
+      "from": "api",
+      "to": "smtp",
+      "label": "SMTP"
+    },
+    {
+      "id": "api-sql",
+      "from": "api",
+      "to": "postgres",
+      "label": "Scoped SQL + enqueue",
+      "variant": "security"
+    },
+    {
+      "id": "worker-sql",
+      "from": "worker",
+      "to": "postgres",
+      "label": "Claim + commit",
+      "variant": "dashed"
+    },
+    {
+      "id": "api-files",
+      "from": "api",
+      "to": "files",
+      "label": "Upload / download"
+    },
+    {
+      "id": "worker-files",
+      "from": "worker",
+      "to": "files",
+      "label": "Read / delete"
+    },
+    {
+      "id": "worker-scanner",
+      "from": "worker",
+      "to": "scanner",
+      "label": "TCP scan",
+      "variant": "security"
+    },
+    {
+      "id": "api-provider",
+      "from": "api",
+      "to": "providers",
+      "label": "Reviewed HTTPS"
+    },
+    {
+      "id": "worker-provider",
+      "from": "worker",
+      "to": "providers",
+      "label": "Sync / effects",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Browser and frontend",
+      "items": [
+        "Next.js App Router serves the workspace; /api/v1 rewrites to BACKEND_ORIGIN. No separate frontend database connection.",
+        "React 19.3.0, Next.js 16.4.3, Tailwind CSS 4.3.3, Tiptap 3.32.2 and Yjs 13.6.33 are lockfile versions.",
+        "Yjs updates and presence use HTTP polling; this is not a WebSocket deployment."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "One backend, multiple domains",
+      "items": [
+        "Node.js 24 / npm 11; TypeScript 5.9.3 and Fastify 5.12.7. Modules execute inside one backend, not separate microservices.",
+        "Identity, records, projects, work coordination, scheduling, knowledge, providers, capture, automation, search, portability, context, planning, kits, meeting briefs, integration settings, enterprise settings and future-discovery routes are registered.",
+        "The detailed source-to-module and technology inventories are in docs/architecture/README.md."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Identity and data authority",
+      "items": [
+        "Opaque server sessions, scrypt passwords, Origin + CSRF checks on authenticated mutations and live membership checks.",
+        "Scoped transactions set tantu.actor / tantu.tenant; PostgreSQL row security and grants govern record access. Runtime roles must not be superusers, bypass RLS or own canonical tables.",
+        "Canonical saves atomically persist the operation result, record version, revision, event and pg-boss enqueue. Changed-payload operation reuse and stale versions return conflicts."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Durable asynchronous work",
+      "items": [
+        "PostgreSQL contains both canonical data and the tantu_jobs queue; Redis, Kafka and a separate queue service are not part of this implementation.",
+        "Queues: canonical-events, file-scans, provider-sync, provider-effects; dead-letters receives exhausted internal jobs. Four retries with backoff and a 60-second job expiration.",
+        "Worker recovery checks every 30 seconds and queues due provider reads. External writes use separate uncertainty fences; unknown sends are reconciled rather than blindly replayed."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Integration boundaries",
+      "items": [
+        "Google and Microsoft require operator credentials, a 32-byte vault key and user consent. Tokens are AES-256-GCM encrypted; outbound API URLs are allowlisted and requests bounded.",
+        "The API performs reviewed mail-send operations; the worker performs queued calendar/mailbox effects and provider-read pages. SMTP is the separate signup verification path.",
+        "Real provider registration, public callbacks and production qualification are environment-dependent; source presence alone does not establish a live connection."
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Deployment and honest limits",
+      "items": [
+        "Docker Compose defines frontend, backend, worker, PostgreSQL, one-shot migrator and scanner with shared private file storage. Its commands run development watch processes.",
+        "The Compose scanner recognizes synthetic/EICAR markers only. Production file release requires a real qualified malware engine; an unavailable endpoint keeps files unavailable.",
+        "AI meeting briefs currently use deterministic database assembly. SSO enforcement is rejected as unconfigured. No hosting deployment adapter is configured in deploy.yml."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Evidence and scope",
+      "items": [
+        "Source links are pinned to Git revision 4739adf6a360658bf57fb3e792b685dea42f9d2c. Existing uncommitted UI/invitation work is not represented as committed evidence.",
+        "This is a runtime overview; module details, schema families, contracts, recovery and synchronization commands are documented alongside the diagrams.",
+        "Source inspection establishes implementation structure, not production certification or the outcome of every application test."
+      ]
+    }
+  ]
+}

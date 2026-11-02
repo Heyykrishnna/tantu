@@ -1,3 +1,4 @@
+import { chooseOption } from "./helpers/select.js";
 import { test, expect } from "@playwright/test";
 
 const workspaceId = "00000000-0000-4000-8000-000000000001";
@@ -250,9 +251,8 @@ test("file trees support keyboard selection and preserve collapsed folders", asy
     page.getByRole("heading", { name: "Workspace Profile", exact: true }),
   ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page
-    .getByLabel("Settings section", { exact: true })
-    .selectOption("preferences");
+  await chooseOption(page
+    .getByLabel("Settings section", { exact: true }), "preferences");
   await expect(
     page.getByRole("heading", {
       name: "Appearance & preferences",
@@ -516,4 +516,22 @@ test("device theme changes apply immediately while preserving the system prefere
   await expect(
     page.getByRole("radio", { name: "Follow device", exact: true }),
   ).toBeChecked();
+});
+
+test("promises handle the actual flat member response without a map error", async ({ page }) => {
+  await page.route("**/api/v1/workspaces/*/promises", route => route.fulfill({ json: { promises: [] } }));
+  await page.route("**/api/v1/workspaces/*/members", route => route.fulfill({ json: { items: [{ id: userId, name: "Navigation review", role: "owner", active: true, email: "navigation@example.test" }] } }));
+  await page.route("**/api/v1/workspaces/*/promises/people", route => route.fulfill({ json: { items: [{ id: userId, name: "Navigation review" }] } }));
+  await page.goto(`/promises?w=${workspaceId}`);
+  await expect(page.getByText("No promises found matching the current filters.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Cannot read properties" })).toHaveCount(0);
+  await page.getByRole("button", { name: "New Promise", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Record Promise Commitment", exact: true })).toBeVisible();
+});
+
+test("collection creation opens a focus-managed dialog", async ({ page }) => {
+  await page.route("**/api/v1/workspaces/*/collections", route => route.fulfill({ json: { items: [] } }));
+  await page.goto(`/collections?w=${workspaceId}`);
+  await page.getByText("Create a collection on a page", { exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Create a collection on a page", exact: true })).toBeVisible();
 });

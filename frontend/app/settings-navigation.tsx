@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { TreeView } from "../components/ui/file-tree";
 import { Icon } from "../components/icon";
 import type { IconName } from "../components/icon";
@@ -48,7 +49,7 @@ export default function SettingsNavigation({
     <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
       <label className="grid gap-2 text-xs font-medium lg:hidden">
         Settings section
-        <select
+        <Select
           aria-label="Settings section"
           className="rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
           value={active}
@@ -64,7 +65,7 @@ export default function SettingsNavigation({
               {section.label}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       <nav
         aria-label="Workspace settings sections"

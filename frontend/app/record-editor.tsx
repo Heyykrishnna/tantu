@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { Orb } from "../components/ui/orb";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -295,7 +296,7 @@ export default function RecordEditor({
               />
             </Field>
             <Field label="Visibility">
-              <select
+              <Select
                 aria-label="Visibility"
                 name="visibility"
                 disabled={entry !== null && entry.ownerId !== userId}
@@ -304,13 +305,13 @@ export default function RecordEditor({
               >
                 <option value="private">Private — invited people only</option>
                 <option value="workspace">Workspace — members can edit</option>
-              </select>
+              </Select>
             </Field>
             {kind === "task" ? (
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Status">
-                    <select
+                    <Select
                       aria-label="Status"
                       name="status"
                       defaultValue={entry?.status ?? "open"}
@@ -318,10 +319,10 @@ export default function RecordEditor({
                     >
                       <option value="open">Open</option>
                       <option value="done">Complete</option>
-                    </select>
+                    </Select>
                   </Field>
                   <Field label="Priority">
-                    <select
+                    <Select
                       aria-label="Priority"
                       name="priority"
                       defaultValue={entry?.priority ?? "normal"}
@@ -330,7 +331,7 @@ export default function RecordEditor({
                       {["low", "normal", "high", "urgent"].map((value) => (
                         <option key={value}>{value}</option>
                       ))}
-                    </select>
+                    </Select>
                   </Field>
                 </div>
                 <div className="grid grid-cols-2 gap-3">

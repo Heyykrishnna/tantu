@@ -1,4 +1,6 @@
 "use client";
+import { Select } from "@/components/ui/select";
+import { Modal } from "../components/ui/modal";
 import { LoadingState } from "../components/ui/loading-state";
 import { CandyButton } from "@/components/ui/candy-button";
 import CollectionViews from "./collection-views";
@@ -78,6 +80,8 @@ export default function CollectionPanel({
   });
   const [mode, setMode] = useState<"table" | "list">("table");
   const [message, setMessage] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createPageId, setCreatePageId] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const base = `/workspaces/${workspaceId}/collections`;
@@ -157,6 +161,8 @@ export default function CollectionPanel({
       });
       await load();
       await select(String(data.get("pageId")));
+      setCreateOpen(false);
+      setCreatePageId("");
     });
   }
   function addProperty(event: FormEvent<HTMLFormElement>) {
@@ -292,7 +298,7 @@ export default function CollectionPanel({
         Computed from numeric properties.
       </p>
     ) : property.type === "boolean" ? (
-      <select
+      <Select
         name={property.id}
         defaultValue={typeof value === "boolean" ? String(value) : ""}
         className={inputClass}
@@ -300,9 +306,9 @@ export default function CollectionPanel({
         <option value="">Unset</option>
         <option value="true">Yes</option>
         <option value="false">No</option>
-      </select>
+      </Select>
     ) : property.type === "select" ? (
-      <select
+      <Select
         name={property.id}
         defaultValue={typeof value === "string" ? value : ""}
         className={inputClass}
@@ -311,7 +317,7 @@ export default function CollectionPanel({
         {property.options.map((option) => (
           <option key={option}>{option}</option>
         ))}
-      </select>
+      </Select>
     ) : (
       <input
         name={property.id}
@@ -342,18 +348,34 @@ export default function CollectionPanel({
       <Notice role="alert" tone="error">
         {message}
       </Notice>
-      <details className={`${panelClass} p-4`}>
-        <summary className="cursor-pointer text-[12px] font-medium">
-          Create a collection on a page
-        </summary>
-        <form
-          onSubmit={(event) => void create(event)}
-          className="mt-4 flex flex-wrap items-end gap-3"
+      <div className="flex justify-start">
+        <Button
+          variant="primary"
+          onClick={() => {
+            setMessage("");
+            setCreateOpen(true);
+          }}
         >
+          Create a collection on a page
+        </Button>
+      </div>
+      <Modal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Create a collection on a page"
+        description="Choose an editable page to organize existing work into a collection. Its source permissions remain in place."
+        busy={busy}
+      >
+        <Notice tone="error" role="alert">
+          {message}
+        </Notice>
+        <form onSubmit={(event) => void create(event)} className="grid gap-5">
           <Field label="Collection page">
-            <select
+            <Select
               aria-label="Collection page"
               name="pageId"
+              value={createPageId}
+              onChange={(event) => setCreatePageId(event.target.value)}
               required
               className={inputClass}
             >
@@ -365,13 +387,25 @@ export default function CollectionPanel({
                     {source.title}
                   </option>
                 ))}
-            </select>
+            </Select>
           </Field>
-          <Button type="submit" disabled={busy}>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={busy || loading || !createPageId}
+          >
             Create collection
           </Button>
         </form>
-      </details>
+        {!loading &&
+          !sources.some(
+            (source) => source.kind === "page" && source.canEdit,
+          ) && (
+            <Notice>
+              Create a page first, or ask for edit access to an existing page.
+            </Notice>
+          )}
+      </Modal>
       <div className="grid items-start gap-5 xl:grid-cols-[230px_minmax(0,1fr)]">
         <aside
           className={`${panelClass} grid gap-2 p-3`}
@@ -424,7 +458,7 @@ export default function CollectionPanel({
                 />
               </Field>
               <Field label="Sort by">
-                <select
+                <Select
                   aria-label="Sort by"
                   value={sort}
                   onChange={(event) => setSort(event.target.value)}
@@ -436,7 +470,7 @@ export default function CollectionPanel({
                       {property.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
             </div>
             <CollectionViews
@@ -493,7 +527,9 @@ export default function CollectionPanel({
                         key={row.record.id}
                       >
                         <td className="max-w-xs px-4 py-3">
-                          <CandyButton variant="ghost" size="unstyled"
+                          <CandyButton
+                            variant="ghost"
+                            size="unstyled"
                             className="max-w-xs truncate rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                             onClick={() =>
                               onOpen(row.record.id, row.record.kind)
@@ -542,7 +578,9 @@ export default function CollectionPanel({
                       className="flex items-center justify-between gap-3 p-4"
                       key={row.record.id}
                     >
-                      <CandyButton variant="ghost" size="unstyled"
+                      <CandyButton
+                        variant="ghost"
+                        size="unstyled"
                         className="truncate rounded text-left text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                         onClick={() => onOpen(row.record.id, row.record.kind)}
                       >
@@ -584,7 +622,7 @@ export default function CollectionPanel({
             {detail.canEdit && (
               <>
                 <Field label="Link or edit an existing record">
-                  <select
+                  <Select
                     disabled={busy}
                     aria-label="Link or edit an existing record"
                     value={editRow}
@@ -601,7 +639,7 @@ export default function CollectionPanel({
                           {source.title}
                         </option>
                       ))}
-                  </select>
+                  </Select>
                 </Field>
                 {editRow && (selectedRow || newSource) && (
                   <form
@@ -688,7 +726,7 @@ export default function CollectionPanel({
                         />
                       </Field>
                       <Field label="Property type">
-                        <select
+                        <Select
                           aria-label="Property type"
                           name="type"
                           className={inputClass}
@@ -703,7 +741,7 @@ export default function CollectionPanel({
                           ].map((type) => (
                             <option key={type}>{type}</option>
                           ))}
-                        </select>
+                        </Select>
                       </Field>
                       <Field label="Select options (comma separated)">
                         <input
@@ -713,7 +751,7 @@ export default function CollectionPanel({
                         />
                       </Field>
                       <Field label="Formula operator">
-                        <select
+                        <Select
                           aria-label="Formula operator"
                           name="operator"
                           className={inputClass}
@@ -723,11 +761,11 @@ export default function CollectionPanel({
                               <option key={operator}>{operator}</option>
                             ),
                           )}
-                        </select>
+                        </Select>
                       </Field>
                       {["left", "right"].map((side) => (
                         <Field key={side} label={`Formula ${side} input`}>
-                          <select name={side} className={inputClass}>
+                          <Select name={side} className={inputClass}>
                             <option value="">Choose numeric property</option>
                             {definitions
                               .filter(
@@ -740,7 +778,7 @@ export default function CollectionPanel({
                                   {item.name}
                                 </option>
                               ))}
-                          </select>
+                          </Select>
                         </Field>
                       ))}
                       <Button

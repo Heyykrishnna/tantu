@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, list, page, record, string } from "../lib/api";
@@ -170,7 +171,7 @@ export default function ProjectCoordination({
           className="grid gap-3"
         >
           <Field label="Source page">
-            <select
+            <Select
               name="recordId"
               aria-label="Source page"
               required
@@ -182,13 +183,13 @@ export default function ProjectCoordination({
                   {string(value.title)}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Source type">
-            <select name="type" aria-label="Source type" className={inputClass}>
+            <Select name="type" aria-label="Source type" className={inputClass}>
               <option value="page">Page</option>
               <option value="decision">Decision reference</option>
-            </select>
+            </Select>
           </Field>
           <Button type="submit" disabled={busy}>
             Link source page
@@ -224,7 +225,7 @@ export default function ProjectCoordination({
             className="grid gap-3"
           >
             <Field label="Project member">
-              <select
+              <Select
                 aria-label="Project member"
                 name="userId"
                 required
@@ -236,10 +237,10 @@ export default function ProjectCoordination({
                     {string(member.name)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label="Project permission">
-              <select
+              <Select
                 aria-label="Project permission"
                 name="permission"
                 className={inputClass}
@@ -247,7 +248,7 @@ export default function ProjectCoordination({
                 <option>read</option>
                 <option>edit</option>
                 <option>remove</option>
-              </select>
+              </Select>
             </Field>
             <Button type="submit" disabled={busy}>
               Save project member
@@ -339,7 +340,7 @@ export function TaskCoordination({
               className="grid gap-3"
             >
               <Field label="Parent task">
-                <select
+                <Select
                   aria-label="Parent task"
                   name="parentTaskId"
                   defaultValue={String(record(data.details).parentTaskId ?? "")}
@@ -353,10 +354,10 @@ export function TaskCoordination({
                         {task.title}
                       </option>
                     ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Assignee">
-                <select
+                <Select
                   aria-label="Assignee"
                   name="assigneeId"
                   defaultValue={String(record(data.details).assigneeId ?? "")}
@@ -368,10 +369,10 @@ export function TaskCoordination({
                       {string(member.name)}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Milestone">
-                <select
+                <Select
                   aria-label="Milestone"
                   name="milestoneId"
                   defaultValue={String(record(data.details).milestoneId ?? "")}
@@ -386,7 +387,7 @@ export function TaskCoordination({
                       {string(milestone.title)}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Button type="submit" disabled={busy}>
                 Save assignment and parent

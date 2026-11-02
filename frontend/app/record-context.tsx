@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import SourcePreviews from "./source-previews";
 
 import { useCallback, useEffect, useState } from "react";
@@ -174,7 +175,7 @@ export default function RecordContext({
             className="grid gap-3"
           >
             <Field label="Connect an existing record">
-              <select name="targetId" required className={inputClass}>
+              <Select name="targetId" required className={inputClass}>
                 <option value="">Choose a task or page (first 50 each)</option>
                 {sources
                   .filter((source) => source.id !== entry.id && source.canEdit)
@@ -183,13 +184,13 @@ export default function RecordContext({
                       {source.title}
                     </option>
                   ))}
-              </select>
+              </Select>
             </Field>
             <Field label="Relationship">
-              <select name="type" className={inputClass}>
+              <Select name="type" className={inputClass}>
                 <option value="related">Related</option>
                 <option value="source">Source reference</option>
-              </select>
+              </Select>
             </Field>
             <Button type="submit" size="sm" disabled={busy}>
               Add connection
@@ -216,7 +217,7 @@ export default function RecordContext({
             className="grid gap-3"
           >
             <Field label="Mention people with current source access">
-              <select
+              <Select
                 name="mentions"
                 multiple
                 className={inputClass}
@@ -227,7 +228,7 @@ export default function RecordContext({
                     {person.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label="Add a comment">
               <textarea

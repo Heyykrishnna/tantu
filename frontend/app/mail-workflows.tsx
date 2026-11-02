@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, items, list, record, string } from "../lib/api";
@@ -183,7 +184,7 @@ export default function MailWorkflows({
           {message}
         </Notice>
         <Field label="Draft to edit">
-          <select
+          <Select
             aria-label="Draft to edit"
             value={selected}
             onChange={(event) => setSelected(event.target.value)}
@@ -196,7 +197,7 @@ export default function MailWorkflows({
                 {item.subject || "No subject"} · v{item.version}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <form
           key={current ? current.id + current.version : "new"}
@@ -204,7 +205,7 @@ export default function MailWorkflows({
           className="grid gap-3 sm:grid-cols-2"
         >
           <Field label="Message mode">
-            <select
+            <Select
               aria-label="Message mode"
               name="mode"
               defaultValue={current?.mode ?? "new"}
@@ -213,10 +214,10 @@ export default function MailWorkflows({
               {["new", "reply", "replyAll", "forward"].map((mode) => (
                 <option key={mode}>{mode}</option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Source message">
-            <select
+            <Select
               aria-label="Source message"
               name="sourceId"
               defaultValue={current?.sourceId ?? ""}
@@ -228,7 +229,7 @@ export default function MailWorkflows({
                   {item.subject || "No subject"}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Draft recipients">
             <input
@@ -292,7 +293,7 @@ export default function MailWorkflows({
           className="grid gap-3 sm:grid-cols-2"
         >
           <Field label="Message to snooze">
-            <select
+            <Select
               aria-label="Message to snooze"
               name="messageId"
               required
@@ -303,7 +304,7 @@ export default function MailWorkflows({
                   {item.subject}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Snooze until (blank to clear)">
             <input name="until" type="datetime-local" className={inputClass} />
@@ -325,10 +326,10 @@ export default function MailWorkflows({
             />
           </Field>
           <Field label="Rule field">
-            <select aria-label="Rule field" name="field" className={inputClass}>
+            <Select aria-label="Rule field" name="field" className={inputClass}>
               <option>from</option>
               <option>subject</option>
-            </select>
+            </Select>
           </Field>
           <Field label="Contains text">
             <input

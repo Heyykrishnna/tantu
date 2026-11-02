@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useState } from "react";
 import {
   acknowledgment,
@@ -148,7 +149,7 @@ export default function WorkActions({
           ))}
         </div>
         <Field label="Work action">
-          <select
+          <Select
             aria-label="Work action"
             value={action}
             disabled={busy}
@@ -178,7 +179,7 @@ export default function WorkActions({
             ].map((value) => (
               <option key={value}>{value}</option>
             ))}
-          </select>
+          </Select>
         </Field>
         {["complete", "delete", "archive"].includes(action) && (
           <label className="flex items-center gap-2 text-[11px]">

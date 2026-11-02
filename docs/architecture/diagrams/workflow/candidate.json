@@ -1,0 +1,402 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Tantu \u00b7 Canonical Save and Durable Event",
+    "locale": "en",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "output": "docs/architecture/diagrams/workflow/canonical-save.html",
+    "repository": {
+      "url": "https://github.com/Heyykrishnna/tantu.git",
+      "revision": "4739adf6a360658bf57fb3e792b685dea42f9d2c",
+      "provider": "github",
+      "link_mode": "web"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Browser"
+        },
+        "backend": {
+          "label": "Application logic"
+        },
+        "security": {
+          "label": "Authorization"
+        },
+        "messagebus": {
+          "label": "Durable jobs"
+        },
+        "database": {
+          "label": "Persistence"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "browser",
+      "label": "Browser / response"
+    },
+    {
+      "id": "api",
+      "label": "Fastify / canonical write"
+    },
+    {
+      "id": "database",
+      "label": "PostgreSQL transaction"
+    },
+    {
+      "id": "worker",
+      "label": "Separate pg-boss worker"
+    },
+    {
+      "id": "recovery",
+      "label": "Rejection / recovery",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "request",
+    "auth",
+    "guard",
+    "mutate",
+    "commit",
+    "claim",
+    "publish"
+  ],
+  "nodes": [
+    {
+      "id": "request",
+      "lane": "browser",
+      "col": 0,
+      "type": "frontend",
+      "label": "Save task / page",
+      "sublabel": "UUID + expected version",
+      "sources": [
+        {
+          "path": "backend/src/modules/work-management/routes.ts",
+          "line": 1,
+          "end_line": 45
+        }
+      ]
+    },
+    {
+      "id": "saved",
+      "lane": "browser",
+      "col": 4,
+      "type": "frontend",
+      "label": "Saved result",
+      "sublabel": "Durable acknowledgement",
+      "sources": [
+        {
+          "path": "backend/src/modules/work-management/service.ts",
+          "line": 70,
+          "end_line": 76
+        }
+      ]
+    },
+    {
+      "id": "auth",
+      "lane": "api",
+      "col": 1,
+      "type": "security",
+      "label": "Authorize",
+      "sublabel": "Session \u00b7 CSRF \u00b7 tenant",
+      "sources": [
+        {
+          "path": "backend/src/modules/workspace-access/service.ts",
+          "line": 27,
+          "end_line": 50
+        }
+      ]
+    },
+    {
+      "id": "guard",
+      "lane": "api",
+      "col": 2,
+      "type": "security",
+      "label": "Replay / conflict",
+      "sublabel": "Payload digest + version",
+      "sources": [
+        {
+          "path": "backend/src/modules/work-management/service.ts",
+          "line": 24,
+          "end_line": 35
+        },
+        {
+          "path": "backend/src/modules/work-management/service.ts",
+          "line": 50,
+          "end_line": 60
+        }
+      ]
+    },
+    {
+      "id": "mutate",
+      "lane": "api",
+      "col": 3,
+      "type": "backend",
+      "label": "Write canonical",
+      "sublabel": "Record + revision + event",
+      "sources": [
+        {
+          "path": "backend/src/modules/work-management/service.ts",
+          "line": 39,
+          "end_line": 75
+        }
+      ]
+    },
+    {
+      "id": "commit",
+      "lane": "database",
+      "col": 3,
+      "type": "database",
+      "label": "Commit atomically",
+      "sublabel": "Result + pg-boss job",
+      "sources": [
+        {
+          "path": "backend/src/modules/work-management/service.ts",
+          "line": 70,
+          "end_line": 75
+        },
+        {
+          "path": "backend/src/platform/database/database.ts",
+          "line": 24,
+          "end_line": 35
+        },
+        {
+          "path": "backend/src/workers/queue.ts",
+          "line": 32,
+          "end_line": 33
+        }
+      ]
+    },
+    {
+      "id": "claim",
+      "lane": "worker",
+      "col": 4,
+      "type": "messagebus",
+      "label": "Claim event job",
+      "sublabel": "Attempt / token fences",
+      "sources": [
+        {
+          "path": "backend/src/workers/queue.ts",
+          "line": 46,
+          "end_line": 68
+        }
+      ]
+    },
+    {
+      "id": "publish",
+      "lane": "worker",
+      "col": 5,
+      "type": "backend",
+      "label": "Checkpoint event",
+      "sublabel": "Recheck access + acknowledge",
+      "sources": [
+        {
+          "path": "backend/src/workers/events.ts",
+          "line": 12,
+          "end_line": 24
+        },
+        {
+          "path": "backend/src/workers/queue.ts",
+          "line": 56,
+          "end_line": 68
+        }
+      ]
+    },
+    {
+      "id": "reject",
+      "lane": "recovery",
+      "col": 2,
+      "type": "security",
+      "label": "Reject / reload",
+      "sublabel": "401 \u00b7 403 \u00b7 404 \u00b7 409",
+      "sources": [
+        {
+          "path": "backend/src/modules/workspace-access/service.ts",
+          "line": 27,
+          "end_line": 50
+        },
+        {
+          "path": "backend/src/modules/work-management/service.ts",
+          "line": 24,
+          "end_line": 60
+        }
+      ]
+    },
+    {
+      "id": "retry",
+      "lane": "recovery",
+      "col": 4,
+      "type": "backend",
+      "label": "Retry with backoff",
+      "sublabel": "Internal failures only",
+      "sources": [
+        {
+          "path": "backend/src/workers/queue.ts",
+          "line": 12,
+          "end_line": 18
+        },
+        {
+          "path": "backend/src/workers/queue.ts",
+          "line": 36,
+          "end_line": 44
+        }
+      ]
+    },
+    {
+      "id": "dead",
+      "lane": "recovery",
+      "col": 5,
+      "type": "database",
+      "label": "Dead letters",
+      "sublabel": "After retry budget",
+      "sources": [
+        {
+          "path": "backend/src/workers/queue.ts",
+          "line": 12,
+          "end_line": 18
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "save-auth",
+      "from": "request",
+      "to": "auth",
+      "role": "main",
+      "variant": "emphasis"
+    },
+    {
+      "id": "auth-guard",
+      "from": "auth",
+      "to": "guard",
+      "role": "main",
+      "variant": "security"
+    },
+    {
+      "id": "guard-write",
+      "from": "guard",
+      "to": "mutate",
+      "label": "New valid operation",
+      "role": "main"
+    },
+    {
+      "id": "write-commit",
+      "from": "mutate",
+      "to": "commit",
+      "role": "main"
+    },
+    {
+      "id": "commit-saved",
+      "from": "commit",
+      "to": "saved",
+      "label": "After commit",
+      "role": "branch"
+    },
+    {
+      "id": "commit-claim",
+      "from": "commit",
+      "to": "claim",
+      "label": "Async",
+      "role": "async",
+      "variant": "dashed"
+    },
+    {
+      "id": "claim-publish",
+      "from": "claim",
+      "to": "publish",
+      "role": "main"
+    },
+    {
+      "id": "auth-reject",
+      "from": "auth",
+      "to": "reject",
+      "label": "Denied",
+      "role": "error",
+      "variant": "security"
+    },
+    {
+      "id": "guard-reject",
+      "from": "guard",
+      "to": "reject",
+      "label": "Conflict",
+      "role": "error",
+      "variant": "security"
+    },
+    {
+      "id": "guard-replay",
+      "from": "guard",
+      "to": "saved",
+      "label": "Same payload replay",
+      "role": "branch"
+    },
+    {
+      "id": "claim-retry",
+      "from": "claim",
+      "to": "retry",
+      "label": "Handler fails",
+      "role": "error"
+    },
+    {
+      "id": "retry-claim",
+      "from": "retry",
+      "to": "claim",
+      "label": "Budget remains",
+      "role": "return",
+      "variant": "dashed"
+    },
+    {
+      "id": "retry-dead",
+      "from": "retry",
+      "to": "dead",
+      "label": "Exhausted",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Canonical write contract",
+      "items": [
+        "This flow covers task/page canonical mutations, not every registered module or provider side effect.",
+        "A replay returns the original durable result only for an identical operation fingerprint and current record access. Changed payloads cannot reuse the same operation ID."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Atomicity and concurrency",
+      "items": [
+        "An advisory transaction lock serializes the operation key; current membership and row access are checked. Existing-record edits lock the row and compare expectedVersion.",
+        "The record change, operation result, revision (for non-deletes), canonical event and queued job share the same PostgreSQL transaction. Errors roll it back."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Authorization still applies after enqueue",
+      "items": [
+        "The worker validates the envelope, fences attempts with a token and locks the active job before applying effects.",
+        "Event publication rechecks current membership and readable record access. Revoked or unreadable work is marked discarded, not published; acknowledgement commits with that checkpoint."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Retry boundaries",
+      "items": [
+        "Internal job failures retry with bounded backoff, then dead-letter. A lost HTTP acknowledgement is recovered with the original operation ID.",
+        "Provider sends and external effects have separate committed uncertainty handling. This internal-event flow must not be read as permission to retry remote sends blindly."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Repository evidence",
+      "items": [
+        "Source links are pinned to 4739adf6a360658bf57fb3e792b685dea42f9d2c. Working-tree UI and invitation changes are outside this committed canonical-save slice.",
+        "No network calls, real provider sends, deployment or production certification are implied by this diagram."
+      ]
+    }
+  ]
+}

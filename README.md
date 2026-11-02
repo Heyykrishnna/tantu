@@ -54,6 +54,8 @@ This runs application/discovery lint and strict type checks, unit tests, both pr
 
 ## Architecture and contracts
 
+Open the [interactive architecture atlas](docs/architecture/README.md) for source-linked runtime and save-workflow diagrams, exact technology versions, module responsibilities, implementation limits and synchronization commands. Run `npm run architecture:check` to detect drift.
+
 The application uses Next.js/React with one TypeScript/Fastify modular backend. PostgreSQL owns identity, membership, canonical records, operation results, revisions, audit metadata and outbox events. A separate pg-boss worker processes internal events, file scans and provider-read continuation pages and reviewed external calendar/mailbox effects, with periodic recovery and optional authenticated notification hints. External send uncertainty is persisted before remote mutation; unknown sends are reconciled without blindly retrying. Accepted record writes, durable results and queued work commit atomically.
 
 Runtime connections cannot be superusers or bypass row security. Record/file policies enforce current tenant, membership, visibility, grants and ancestor deletion state. Structured edits use expected versions; operation keys reject changed-payload reuse. Operational logs exclude content and credentials.

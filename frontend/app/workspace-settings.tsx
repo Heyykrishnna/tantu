@@ -1,7 +1,8 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { CandyButton } from "@/components/ui/candy-button";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import dynamic from "next/dynamic";
 import {
@@ -16,11 +17,13 @@ import SettingsOverview, { PermissionsSummary } from "./settings-overview";
 import SettingsAppearance from "./settings-appearance";
 import SettingsSpaces from "./settings-spaces";
 
-import { acknowledgment, api, choice, items, record, string } from "../lib/api";
+import { acknowledgment, api, choice, items, page, record, string } from "../lib/api";
 import type { User, Workspace } from "../lib/api";
 import { Icon } from "../components/icon";
 
-import { MorphInvite } from "@/components/ui/morph-invite";
+import WorkspaceInvitations from "./workspace-invitations";
+import { locationInvitation } from "../lib/invitations";
+import { Modal } from "../components/ui/modal";
 import { ConfirmMorph } from "@/components/ui/confirm-morph";
 import {
   Badge,
@@ -39,15 +42,6 @@ interface Member {
   email: string;
   role: string;
   active: boolean;
-}
-
-interface PendingInvitation {
-  id: string;
-  email: string;
-  role: string;
-  recordId: string | null;
-  permission: string;
-  expiresAt: string;
 }
 
 interface RecordOption {
@@ -122,18 +116,6 @@ function parseMember(value: unknown): Member {
   };
 }
 
-function parsePendingInvitation(value: unknown): PendingInvitation {
-  const data = record(value);
-  return {
-    id: string(data.id),
-    email: string(data.email),
-    role: string(data.role),
-    recordId: data.recordId ? string(data.recordId) : null,
-    permission: string(data.permission),
-    expiresAt: string(data.expiresAt),
-  };
-}
-
 function parseQuota(value: unknown): Quota {
   const root = record(value);
   const data = record(root.quota ?? value);
@@ -176,6 +158,7 @@ export default function WorkspaceSettings({
   workspaces = [],
   onSwitchWorkspace,
   onJoined,
+  onAccessChanged,
   onWorkspaceCreated,
   onWorkspaceRenamed,
   onWorkspaceLeft,
@@ -188,6 +171,7 @@ export default function WorkspaceSettings({
   workspaces?: Workspace[];
   onSwitchWorkspace?: (id: string) => void;
   onJoined: () => void;
+  onAccessChanged: () => Promise<void>;
   onWorkspaceCreated?: (id: string) => Promise<void>;
   onWorkspaceRenamed?: (newName: string, icon?: string) => void;
   onWorkspaceLeft?: () => void;
@@ -195,9 +179,7 @@ export default function WorkspaceSettings({
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (typeof window === "undefined") return "overview";
     const search = new URLSearchParams(window.location.search);
-    return search.get("invite") ||
-      search.get("invitation") ||
-      search.get("token")
+    return locationInvitation(window.location)
       ? "members"
       : (settingsSections.find(
           (section) => section.id === search.get("section"),
@@ -205,32 +187,16 @@ export default function WorkspaceSettings({
   });
 
   const [members, setMembers] = useState<Member[]>([]);
-  const [pendingInvites, setPendingInvites] = useState<PendingInvitation[]>([]);
   const [recordOptions, setRecordOptions] = useState<RecordOption[]>([]);
-  const [selectedRecordId, setSelectedRecordId] = useState("");
-  const [manualRecordId, setManualRecordId] = useState(false);
 
   const [quota, setQuota] = useState<Quota | null>(null);
   const [policy, setPolicy] = useState<EnterprisePolicy | null>(null);
 
   const [workspaceName, setWorkspaceName] = useState(workspace.name);
   const [workspaceEmoji, setWorkspaceEmoji] = useState(workspace.icon ?? "⚡");
+  const [transferTarget, setTransferTarget] = useState<Member | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [selectedInviteRole, setSelectedInviteRole] =
-    useState<string>("member");
-
-  const [token, setToken] = useState("");
-  const [acceptTokenInput, setAcceptTokenInput] = useState(() => {
-    if (typeof window === "undefined") return "";
-    const search = new URLSearchParams(window.location.search);
-    return (
-      search.get("invite") ||
-      search.get("invitation") ||
-      search.get("token") ||
-      ""
-    );
-  });
   const [importContent, setImportContent] = useState("");
   const [userSessions, setUserSessions] = useState<UserSession[]>([]);
   const [currentPasswordInput, setCurrentPasswordInput] = useState("");
@@ -269,17 +235,6 @@ export default function WorkspaceSettings({
       setMessage(
         error instanceof Error ? error.message : "Members are unavailable.",
       );
-    }
-  }, [isManager, path]);
-
-  const refreshPendingInvites = useCallback(async () => {
-    if (!isManager) return;
-    try {
-      setPendingInvites(
-        await api(path + "/invitations", items(parsePendingInvitation)),
-      );
-    } catch {
-      setPendingInvites([]);
     }
   }, [isManager, path]);
 
@@ -328,37 +283,22 @@ export default function WorkspaceSettings({
         api(path + "/members", items(parseMember), options).then(setMembers),
       );
       if (activeTab === "members") {
-        load("invitations", () =>
-          api(
-            path + "/invitations",
-            items(parsePendingInvitation),
-            options,
-          ).then(setPendingInvites),
-        );
         load("record-options", () =>
           Promise.all([
             api(
               path + "/tasks?limit=25",
-              (value) =>
-                items((value) => {
-                  const data = record(value);
-                  return { id: string(data.id), title: string(data.title) };
-                })(value),
+              page,
               options,
             ),
             api(
               path + "/pages?limit=25",
-              (value) =>
-                items((value) => {
-                  const data = record(value);
-                  return { id: string(data.id), title: string(data.title) };
-                })(value),
+              page,
               options,
             ),
           ]).then(([tasks, pages]) =>
             setRecordOptions([
-              ...tasks.map((item) => ({ ...item, kind: "task" as const })),
-              ...pages.map((item) => ({ ...item, kind: "page" as const })),
+              ...tasks.items.filter((item) => item.canEdit).map((item) => ({ ...item, kind: "task" as const })),
+              ...pages.items.filter((item) => item.canEdit).map((item) => ({ ...item, kind: "page" as const })),
             ]),
           ),
         );
@@ -489,138 +429,10 @@ export default function WorkspaceSettings({
     }
   }
 
-  async function invite(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setMessage("");
-    setToken("");
-    const data = new FormData(event.currentTarget);
-    const roleValue = String(data.get("role"));
-    const permissionValue = String(data.get("permission"));
-    const recordIdValue = String(
-      manualRecordId
-        ? data.get("manualRecordId") || ""
-        : selectedRecordId || data.get("recordId") || "",
-    ).trim();
-
-    if (roleValue === "guest" && !recordIdValue) {
-      setMessage("Guests require a specific Record ID.");
-      setBusy(false);
+  async function updateMemberRole(memberId: string, newRole: string, confirmed = false) {
+    if (newRole === "owner" && !confirmed) {
+      setTransferTarget(members.find(member => member.id === memberId) ?? null);
       return;
-    }
-
-    try {
-      const generatedToken = await api(
-        path + "/invitations",
-        (value) => string(record(value).token),
-        {
-          method: "POST",
-          csrf,
-          body: {
-            email: String(data.get("email")).trim(),
-            role: roleValue,
-            permission: permissionValue,
-            ...(recordIdValue ? { recordId: recordIdValue } : {}),
-          },
-        },
-      );
-      setToken(generatedToken);
-      showToast("Invitation created successfully.");
-      await refreshPendingInvites();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Invitation failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const morphMembers = useMemo(
-    () =>
-      members.map((m) => ({
-        id: m.id,
-        name: m.name,
-        email: m.email,
-        color: "#71717a",
-      })),
-    [members],
-  );
-
-  const handleMorphInvite = async (emailToInvite: string) => {
-    try {
-      const generatedToken = await api(
-        path + "/invitations",
-        (value) => string(record(value).token),
-        {
-          method: "POST",
-          csrf,
-          body: {
-            email: emailToInvite.trim(),
-            role: "member",
-            permission: "edit",
-          },
-        },
-      );
-      setToken(generatedToken);
-      showToast("Invitation created successfully.");
-      await refreshPendingInvites();
-      return {
-        id: crypto.randomUUID(),
-        name: emailToInvite.split("@")[0] || "Teammate",
-        email: emailToInvite,
-      };
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Invitation failed.");
-    }
-  };
-
-  async function revokeInvitation(tokenHash: string) {
-    if (!window.confirm("Revoke this invitation? It will become invalid."))
-      return;
-    setBusy(true);
-    try {
-      await api(path + "/invitations/" + tokenHash, acknowledgment, {
-        method: "DELETE",
-        csrf,
-      });
-      showToast("Invitation revoked.");
-      await refreshPendingInvites();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Revocation failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function join(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setMessage("");
-    try {
-      await api("/invitations/accept", acknowledgment, {
-        method: "POST",
-        csrf,
-        body: { token: acceptTokenInput.trim() },
-      });
-      showToast("Joined workspace successfully.");
-      onJoined();
-    } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Invitation acceptance failed.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function updateMemberRole(memberId: string, newRole: string) {
-    const memberName = members.find((m) => m.id === memberId)?.name ?? "member";
-    if (newRole === "owner") {
-      const confirmed = window.confirm(
-        `Transfer primary workspace ownership to ${memberName}? You will become an Administrator.`,
-      );
-      if (!confirmed) return;
     }
     setBusy(true);
     setMessage("");
@@ -635,7 +447,9 @@ export default function WorkspaceSettings({
           ? "Workspace ownership transferred."
           : "Member role updated.",
       );
+      setTransferTarget(null);
       await refreshMembers();
+      await onAccessChanged();
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Role update failed.",
@@ -831,13 +645,8 @@ export default function WorkspaceSettings({
       m.name.toLowerCase().includes(memberSearch.toLowerCase()) ||
       m.email.toLowerCase().includes(memberSearch.toLowerCase());
     const matchesRole = roleFilter === "all" || m.role === roleFilter;
-    return matchesSearch && matchesRole;
+    return m.active && matchesSearch && matchesRole;
   });
-
-  const inviteLink =
-    token && typeof window !== "undefined"
-      ? `${window.location.origin}/?invite=${encodeURIComponent(token)}`
-      : "";
 
   function selectSection(section: string) {
     setActiveTab(section);
@@ -1082,287 +891,9 @@ export default function WorkspaceSettings({
                 </div>
               </section>
 
-              <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                {isManager && (
-                  <section className={panelClass}>
-                    <header className="flex items-center justify-between border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
-                      <div className="flex items-center gap-2">
-                        <Icon name="users" className="size-4 text-zinc-400" />
-                        <h2 className="text-[13px] font-medium">
-                          Invite Teammate
-                        </h2>
-                      </div>
-                      <Badge>72-hour validity</Badge>
-                    </header>
-                    <div className="p-5 sm:p-6">
-                      <p
-                        className={`mb-5 text-[11px] leading-relaxed ${mutedClass}`}
-                      >
-                        Quickly invite collaborators with animated invitation
-                        link creation or configure role-based access below.
-                      </p>
-                      <div className="mb-6 flex justify-center">
-                        <MorphInvite
-                          members={morphMembers}
-                          onInvite={handleMorphInvite}
-                        />
-                      </div>
-                      <form onSubmit={invite} className="grid gap-4">
-                        <Field label="Teammate Email">
-                          <input
-                            name="email"
-                            type="email"
-                            required
-                            maxLength={254}
-                            placeholder="teammate@example.com"
-                            className={inputClass}
-                          />
-                        </Field>
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <Field label="Assigned Role">
-                            <select
-                              name="role"
-                              aria-label="Role"
-                              value={selectedInviteRole}
-                              onChange={(e) =>
-                                setSelectedInviteRole(e.target.value)
-                              }
-                              className={inputClass}
-                            >
-                              <option value="member">
-                                Member (Workspace wide)
-                              </option>
-                              <option value="guest">
-                                Guest (Single record only)
-                              </option>
-                              {isOwner && (
-                                <option value="admin">
-                                  Administrator (Settings + Members)
-                                </option>
-                              )}
-                            </select>
-                          </Field>
-                          <Field label="Record Permission">
-                            <select
-                              name="permission"
-                              aria-label="Record permission"
-                              className={inputClass}
-                            >
-                              <option value="read">Read Only</option>
-                              <option value="edit">Can Edit</option>
-                            </select>
-                          </Field>
-                        </div>
+              <WorkspaceInvitations workspace={workspace} csrf={csrf} currentUser={currentUser} records={recordOptions} onJoined={onJoined} onMembersChanged={refreshMembers} />
 
-                        {selectedInviteRole === "guest" && (
-                          <div className="grid gap-2">
-                            {!manualRecordId ? (
-                              <Field
-                                label={
-                                  <div className="flex items-center justify-between">
-                                    <span>Target Record</span>
-                                    <CandyButton
-                                      variant="ghost"
-                                      size="unstyled"
-                                      type="button"
-                                      onClick={() => setManualRecordId(true)}
-                                      className="text-[10px] text-zinc-700 underline dark:text-zinc-300"
-                                    >
-                                      Enter UUID manually
-                                    </CandyButton>
-                                  </div>
-                                }
-                              >
-                                <select
-                                  value={selectedRecordId}
-                                  onChange={(e) =>
-                                    setSelectedRecordId(e.target.value)
-                                  }
-                                  className={inputClass}
-                                >
-                                  <option value="">
-                                    Choose a record to share...
-                                  </option>
-                                  {recordOptions.map((rec) => (
-                                    <option key={rec.id} value={rec.id}>
-                                      [{rec.kind.toUpperCase()}]{" "}
-                                      {rec.title || "Untitled"}
-                                    </option>
-                                  ))}
-                                </select>
-                              </Field>
-                            ) : (
-                              <Field
-                                label={
-                                  <div className="flex items-center justify-between">
-                                    <span>Record UUID</span>
-                                    <CandyButton
-                                      variant="ghost"
-                                      size="unstyled"
-                                      type="button"
-                                      onClick={() => setManualRecordId(false)}
-                                      className="text-[10px] text-zinc-700 underline dark:text-zinc-300"
-                                    >
-                                      Pick from list
-                                    </CandyButton>
-                                  </div>
-                                }
-                              >
-                                <input
-                                  name="manualRecordId"
-                                  placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
-                                  pattern="[0-9a-f-]{36}"
-                                  className={inputClass}
-                                />
-                              </Field>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="border-t border-[#e4e6ef] pt-4 dark:border-[#303034]">
-                          <Button
-                            type="submit"
-                            variant="primary"
-                            disabled={busy}
-                          >
-                            <Icon name="plus" className="size-3.5" />
-                            Generate Invitation Link
-                          </Button>
-                        </div>
-                      </form>
-
-                      {token && (
-                        <div className="mt-5 grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100">
-                              Invitation Link Ready
-                            </span>
-                            <Badge tone="neutral">Valid 72 Hours</Badge>
-                          </div>
-
-                          <Field label="Shareable Invite Link">
-                            <div className="flex items-center gap-2">
-                              <input
-                                readOnly
-                                value={inviteLink}
-                                aria-label="Invitation Link"
-                                className={`${inputClass} font-mono text-[11px]`}
-                              />
-                              <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={() =>
-                                  void copyLink(inviteLink, "Invite link")
-                                }
-                              >
-                                <Icon name="check" className="size-3.5" />
-                                Copy Link
-                              </Button>
-                            </div>
-                          </Field>
-
-                          <Field label="Raw Invitation Token">
-                            <div className="flex items-center gap-2">
-                              <input
-                                readOnly
-                                value={token}
-                                aria-label="Invitation Token"
-                                className={`${inputClass} font-mono text-[11px]`}
-                              />
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => void copyLink(token, "Token")}
-                              >
-                                Copy Token
-                              </Button>
-                            </div>
-                          </Field>
-                        </div>
-                      )}
-                    </div>
-                  </section>
-                )}
-
-                <section className={panelClass}>
-                  <header className="flex items-center gap-2 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
-                    <Icon name="mail" className="size-4 text-zinc-400" />
-                    <h2 className="text-[13px] font-medium">
-                      Accept an Invitation
-                    </h2>
-                  </header>
-                  <div className="p-5 sm:p-6">
-                    <p
-                      className={`mb-4 text-[11px] leading-relaxed ${mutedClass}`}
-                    >
-                      Have an invitation token for this account? Paste the token
-                      below to join this workspace.
-                    </p>
-                    <form onSubmit={join} className="grid gap-4">
-                      <Field label="Invitation Token">
-                        <input
-                          name="token"
-                          value={acceptTokenInput}
-                          onChange={(e) => setAcceptTokenInput(e.target.value)}
-                          required
-                          maxLength={100}
-                          autoComplete="off"
-                          placeholder="Paste token here"
-                          className={inputClass}
-                        />
-                      </Field>
-                      <Button type="submit" disabled={busy}>
-                        Join Workspace
-                        <Icon name="arrow" className="size-3.5" />
-                      </Button>
-                    </form>
-                  </div>
-                </section>
-              </div>
-
-              {isManager && pendingInvites.length > 0 && (
-                <section className={`${panelClass} overflow-hidden`}>
-                  <header className="flex items-center justify-between border-b border-[#e4e6ef] px-5 py-4 dark:border-[#303034]">
-                    <div className="flex items-center gap-2">
-                      <Icon name="clock" className="size-4 text-amber-500" />
-                      <h3 className="text-[13px] font-medium">
-                        Pending Invitations
-                      </h3>
-                    </div>
-                    <Badge tone="neutral">
-                      {pendingInvites.length} pending
-                    </Badge>
-                  </header>
-                  <ul className="divide-y divide-[#e6e9f1] dark:divide-[#2e2e32]">
-                    {pendingInvites.map((inv) => (
-                      <li
-                        key={inv.id}
-                        className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5"
-                      >
-                        <div>
-                          <span className="text-[12px] font-medium">
-                            {inv.email}
-                          </span>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <Badge tone="neutral">{inv.role}</Badge>
-                            <span className={`text-[10px] ${mutedClass}`}>
-                              Permission: {inv.permission}
-                            </span>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          disabled={busy}
-                          onClick={() => void revokeInvitation(inv.id)}
-                        >
-                          Revoke
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
+              
 
               {isManager && (
                 <section className={`${panelClass} overflow-hidden`}>
@@ -1384,7 +915,7 @@ export default function WorkspaceSettings({
                           className="bg-transparent outline-none"
                         />
                       </div>
-                      <select
+                      <Select
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value)}
                         aria-label="Filter by role"
@@ -1395,7 +926,7 @@ export default function WorkspaceSettings({
                         <option value="admin">Admins</option>
                         <option value="member">Members</option>
                         <option value="guest">Guests</option>
-                      </select>
+                      </Select>
                     </div>
                   </header>
 
@@ -1427,27 +958,26 @@ export default function WorkspaceSettings({
                           </div>
 
                           <div className="flex items-center gap-3">
-                            {isOwner && item.role !== "owner" ? (
-                              <select
+                            {isManager && (isOwner || item.role !== "admin") && item.role !== "owner" ? (
+                              <Select
                                 value={item.role}
                                 onChange={(e) =>
                                   void updateMemberRole(item.id, e.target.value)
                                 }
+                                disabled={busy}
                                 aria-label={`Role for ${item.name}`}
                                 className="rounded-md border border-[#e4e6ef] bg-transparent px-2 py-1 text-[11px] outline-none dark:border-[#303034]"
                               >
-                                <option value="admin">Administrator</option>
+                                {isOwner && <option value="admin">Administrator</option>}
                                 <option value="member">Member</option>
                                 <option value="guest">Guest</option>
-                                <option value="owner">
-                                  Transfer Ownership
-                                </option>
-                              </select>
+                                {isOwner && item.role !== "guest" && <option value="owner">Transfer Ownership</option>}
+                              </Select>
                             ) : (
                               <Badge tone="neutral">{item.role}</Badge>
                             )}
 
-                            {item.active && item.role !== "owner" && (
+                            {item.active && item.role !== "owner" && (isOwner || item.role !== "admin") && (
                               <ConfirmMorph
                                 label="Remove"
                                 prompt={`Remove ${item.name}?`}
@@ -1927,6 +1457,6 @@ export default function WorkspaceSettings({
             )}
         </div>
       </div>
-    </section>
+    <Modal open={Boolean(transferTarget)} onClose={() => setTransferTarget(null)} title="Transfer workspace ownership" description="You will become an administrator. The new owner will control workspace access." busy={busy}><Notice tone="error" role="alert">{message}</Notice><p className="mb-5 text-sm">Transfer ownership to {transferTarget?.name}?</p><div className="flex justify-end gap-2"><Button disabled={busy} onClick={() => setTransferTarget(null)}>Cancel</Button><Button variant="primary" disabled={busy} onClick={() => transferTarget && void updateMemberRole(transferTarget.id, "owner", true)}>Confirm transfer</Button></div></Modal></section>
   );
 }

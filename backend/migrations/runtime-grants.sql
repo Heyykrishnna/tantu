@@ -46,3 +46,4 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.sharing_exposure_previews,tantu.hando
 GRANT SELECT ON tantu.workspace_members TO tantu_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON tantu.email_verifications TO tantu_runtime;
 GRANT EXECUTE ON FUNCTION tantu.can_read_context_source(text,uuid) TO tantu_runtime;
+GRANT EXECUTE ON FUNCTION tantu.clear_member_access(uuid) TO tantu_runtime;

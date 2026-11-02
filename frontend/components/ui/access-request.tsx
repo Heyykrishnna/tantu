@@ -350,7 +350,9 @@ export function AccessRequest({
       }}
     >
       <div className="relative h-16">
-        <CandyButton variant="ghost" size="unstyled"
+        <CandyButton
+          variant="ghost"
+          size="unstyled"
           type="button"
           data-request-compact
           aria-expanded={isOpen}
@@ -389,13 +391,15 @@ export function AccessRequest({
         <h3
           id={`${uid}-heading`}
           data-request-heading
-          className="pointer-events-none absolute top-[22px] left-4 text-[13px] leading-5 font-medium"
+          className="pointer-events-none absolute top-5.5 left-4 text-[13px] leading-5 font-medium"
           style={{ opacity: initialExpanded ? 1 : 0 }}
         >
           Access requests
         </h3>
         <div className="absolute top-4 right-11 pointer-coarse:top-3">
-          <CandyButton variant="ghost" size="unstyled"
+          <CandyButton
+            variant="ghost"
+            size="unstyled"
             ref={triggerRef}
             type="button"
             aria-label={
@@ -418,7 +422,9 @@ export function AccessRequest({
           </CandyButton>
         </div>
         <div className="absolute top-4 right-2 pointer-coarse:top-3">
-          <CandyButton variant="ghost" size="unstyled"
+          <CandyButton
+            variant="ghost"
+            size="unstyled"
             type="button"
             aria-label="Dismiss access requests"
             onClick={dismiss}

@@ -1,3 +1,4 @@
+import { chooseOption } from "./helpers/select.js";
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
@@ -94,7 +95,7 @@ test("real task/page persistence, conflict recovery, keyboard and responsive she
   expect(id).toMatch(/^[a-f0-9-]{36}$/);
   await page.reload();
   await expect(page.getByLabel("Title", { exact: true })).toHaveValue("Prepare a considered release");
-  await page.getByLabel("Status", { exact: true }).selectOption("done");
+  await chooseOption(page.getByLabel("Status", { exact: true }), "done");
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByRole("button", { name: /Prepare a considered release/ })).toContainText("Complete");
   expect(new URL(page.url()).searchParams.get("r")).toBe(id);
@@ -261,7 +262,7 @@ test("connected project views, reviewed scheduling and private provider configur
   await page.getByRole("button", { name: "Create project", exact: true }).click();
   await page.getByRole("button", { name: /Connected journey project/ }).click();
   await page.getByText("Manage project and task links", { exact: true }).click();
-  await page.getByLabel("Existing task (first 50)", { exact: true }).selectOption(created.json<{ id: string }>().id);
+  await chooseOption(page.getByLabel("Existing task (first 50)", { exact: true }), created.json<{ id: string }>().id);
   await page.getByRole("button", { name: "Link task", exact: true }).click();
   await expect(page.getByRole("button", { name: title, exact: true })).toBeVisible();
   for (const mode of ["board", "table", "timeline", "list"]) {
@@ -271,7 +272,7 @@ test("connected project views, reviewed scheduling and private provider configur
   await page.getByRole("link", { name: "Calendar", exact: true }).click();
   await page.getByLabel("Calendar date", { exact: true }).fill("2026-11-03");
   await page.getByText("Schedule a task", { exact: true }).click();
-  await page.getByLabel("Task to schedule", { exact: true }).selectOption(created.json<{ id: string }>().id);
+  await chooseOption(page.getByLabel("Task to schedule", { exact: true }), created.json<{ id: string }>().id);
   await page.getByLabel("Start (local time)", { exact: true }).fill("2026-11-03T09:00");
   await page.getByLabel("End (local time)", { exact: true }).fill("2026-11-03T10:00");
   await page.getByRole("button", { name: "Review schedule", exact: true }).click();
@@ -294,16 +295,16 @@ test("typed collection UI keeps canonical identity and reviews shared schema edi
   await login(page);
   await page.getByRole("link", { name: "Collections", exact: true }).click();
   await page.getByText("Create a collection on a page", { exact: true }).click();
-  await page.getByLabel("Collection page", { exact: true }).selectOption(source.json<{ id: string }>().id);
+  await chooseOption(page.getByLabel("Collection page", { exact: true }), source.json<{ id: string }>().id);
   await page.getByRole("button", { name: "Create collection", exact: true }).click();
   await page.getByText("Shared collection schema", { exact: true }).click();
   await page.getByLabel("New property name", { exact: true }).fill("Hours");
-  await page.getByLabel("Property type", { exact: true }).selectOption("number");
+  await chooseOption(page.getByLabel("Property type", { exact: true }), "number");
   await page.getByRole("button", { name: "Add property to review", exact: true }).click();
   await page.getByRole("button", { name: "Review schema changes", exact: true }).click();
   await expect(page.getByRole("region", { name: "Schema change review" })).toBeVisible();
   await page.getByRole("button", { name: "Confirm schema changes", exact: true }).click();
-  await page.getByLabel("Link or edit an existing record", { exact: true }).selectOption(task.json<{ id: string }>().id);
+  await chooseOption(page.getByLabel("Link or edit an existing record", { exact: true }), task.json<{ id: string }>().id);
   await page.getByLabel("Hours", { exact: true }).fill("4");
   await page.getByRole("button", { name: "Save linked values", exact: true }).click();
   await expect(page.getByRole("cell", { name: "4", exact: true })).toBeVisible();
@@ -350,7 +351,7 @@ test("rich formatting persists through reload while canonical text remains compa
 test("reviewed archive recovery and saved collection views survive reload", async ({ page }) => {
   const user=await environment.account("recovery-browser@example.test");
   const title = "Reviewed archive browser task"; const task = await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${user.workspaceId}/tasks`, headers: user.headers, payload: { title, operationId: randomUUID() } }); expect(task.statusCode).toBe(201);
-  await login(page,"recovery-browser@example.test"); await page.getByRole("link", { name: "Tasks", exact: true }).click(); await page.getByText("Reviewed work actions and recovery", { exact: true }).first().click(); await page.getByRole("checkbox", { name: title, exact: true }).check(); await page.getByRole("combobox", { name: "Work action", exact: true }).selectOption("archive"); await page.getByRole("button", { name: "Review selected work", exact: true }).click(); await expect(page.getByRole("region", { name: "Work impact review" })).toBeVisible(); await page.getByRole("button", { name: "Confirm reviewed work", exact: true }).click(); await expect(page.getByRole("status").filter({ hasText: "Reviewed work action saved" })).toBeVisible();
+  await login(page,"recovery-browser@example.test"); await page.getByRole("link", { name: "Tasks", exact: true }).click(); await page.getByText("Reviewed work actions and recovery", { exact: true }).first().click(); await page.getByRole("checkbox", { name: title, exact: true }).check(); await chooseOption(page.getByRole("combobox", { name: "Work action", exact: true }), "archive"); await page.getByRole("button", { name: "Review selected work", exact: true }).click(); await expect(page.getByRole("region", { name: "Work impact review" })).toBeVisible(); await page.getByRole("button", { name: "Confirm reviewed work", exact: true }).click(); await expect(page.getByRole("status").filter({ hasText: "Reviewed work action saved" })).toBeVisible();
   await page.getByRole("button", { name: "Load archived tasks", exact: true }).click(); await page.getByRole("checkbox", { name: title, exact: true }).check(); await page.getByRole("button", { name: "Review selected work", exact: true }).click(); await page.getByRole("button", { name: "Confirm reviewed work", exact: true }).click(); await expect(page.getByRole("button", { name: title }).last()).toBeVisible();
   const source = await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${user.workspaceId}/pages`, headers: user.headers, payload: { title: "Saved view browser collection", operationId: randomUUID() } }); const sourceId = source.json<{ id: string }>().id; await environment.app.inject({ method: "POST", url: `/api/v1/workspaces/${user.workspaceId}/collections`, headers: user.headers, payload: { pageId: sourceId, operationId: randomUUID() } });
   await page.getByRole("link", { name: "Collections", exact: true }).click(); await page.getByRole("button", { name: "Saved view browser collection", exact: true }).click(); await page.getByText("Saved collection views", { exact: true }).click(); await page.getByLabel("Collection view name", { exact: true }).fill("Browser focus"); await page.getByRole("button", { name: "Save collection view", exact: true }).click(); await expect(page.getByRole("button", { name: "Browser focus · Personal", exact: true })).toBeVisible(); await page.reload(); await page.getByRole("button", { name: "Saved view browser collection", exact: true }).click(); await page.getByText("Saved collection views", { exact: true }).click(); await expect(page.getByRole("button", { name: "Browser focus · Personal", exact: true })).toBeVisible();

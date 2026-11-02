@@ -1,5 +1,6 @@
 "use client";
 
+import { Modal } from "../components/ui/modal";
 import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -445,20 +446,9 @@ export default function DecisionPanel({
       )}
 
       {showHistory && selectedDecision && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 max-w-lg w-full space-y-4 shadow-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm">
-                Decision History: {selectedDecision.title}
-              </h3>
-              <CandyButton variant="ghost" size="unstyled"
-                type="button"
-                onClick={() => setShowHistory(false)}
-                className="text-neutral-400 hover:text-neutral-600 text-xs"
-              >
-                Close
-              </CandyButton>
-            </div>
+        <Modal open onClose={() => setShowHistory(false)} title={`Decision History: ${selectedDecision.title}`} busy={busy}>
+          <div className="space-y-4">
+            
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {revisions.map((rev) => (
                 <div
@@ -480,7 +470,7 @@ export default function DecisionPanel({
               ))}
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -1,0 +1,27 @@
+name: Architecture synchronization
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  architecture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Test architecture drift detection
+        run: npm run test:architecture
+      - name: Verify source, candidate and delivered HTML synchronization
+        run: npm run architecture:check

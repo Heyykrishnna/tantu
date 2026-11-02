@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { acknowledgment, api, items, record, string } from "../lib/api";
 import type { CanonicalRecord } from "../lib/contracts";
@@ -112,14 +113,14 @@ export default function SourcePreviews({
           }}
         >
           <Field label="Preview an existing source">
-            <select className={inputClass} name="targetId" required>
+            <Select className={inputClass} name="targetId" required>
               <option value="">Choose an accessible record</option>
               {sources.map((source) => (
                 <option key={source.id} value={source.id}>
                   {source.title}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Button type="submit" disabled={busy}>
             Add source preview

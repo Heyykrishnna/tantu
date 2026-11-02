@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { acknowledgment, api, items, list, record, string } from "../lib/api";
 import { integer } from "../lib/projects";
@@ -111,7 +112,7 @@ export default function CollectionTemplates({
           </>
         )}
         <Field label="Use template">
-          <select
+          <Select
             className={inputClass}
             value={selected}
             onChange={(event) => {
@@ -126,7 +127,7 @@ export default function CollectionTemplates({
                 {!item.available ? " · source unavailable" : ""}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <Button
           disabled={busy || !selected}

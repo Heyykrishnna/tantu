@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import type { WorkspacePreferences } from "../lib/appearance";
@@ -126,7 +127,7 @@ export default function SettingsAppearance({
         />
         <div className="grid gap-5 border-t border-zinc-200 pt-6 sm:grid-cols-2 dark:border-zinc-800">
           <Field label="Week starts on">
-            <select
+            <Select
               name="weekStart"
               defaultValue={preferences.weekStart}
               className={inputClass}
@@ -134,7 +135,7 @@ export default function SettingsAppearance({
             >
               <option value="monday">Monday</option>
               <option value="sunday">Sunday</option>
-            </select>
+            </Select>
           </Field>
           <Field label="Timezone">
             <input

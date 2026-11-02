@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { acknowledgment, api, items, record, string } from "../lib/api";
@@ -106,7 +107,7 @@ export default function MailboxActions({
           />
         </Field>
         <Field label="Action">
-          <select className={inputClass} name="action">
+          <Select className={inputClass} name="action">
             <option value="read">Mark read</option>
             <option value="unread">Mark unread</option>
             <option value={provider === "google" ? "label" : "move"}>
@@ -114,19 +115,19 @@ export default function MailboxActions({
                 ? "Add Gmail label"
                 : "Move to Microsoft folder"}
             </option>
-          </select>
+          </Select>
         </Field>
         <Field
           label={provider === "google" ? "Gmail label" : "Microsoft folder"}
         >
-          <select className={inputClass} name="targetId">
+          <Select className={inputClass} name="targetId">
             <option value="">No organization change</option>
             {targets.map((target) => (
               <option key={target.id} value={target.id}>
                 {target.name}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <Button type="submit" disabled={busy}>
           Review mailbox change

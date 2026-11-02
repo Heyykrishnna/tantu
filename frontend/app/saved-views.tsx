@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import {
   acknowledgment,
@@ -97,7 +98,7 @@ export default function SavedViews({
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Sort tasks">
-            <select
+            <Select
               aria-label="Sort tasks"
               value={current.sort}
               onChange={(event) =>
@@ -115,10 +116,10 @@ export default function SavedViews({
               {["title", "deadline", "priority"].map((value) => (
                 <option key={value}>{value}</option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Group tasks">
-            <select
+            <Select
               aria-label="Group tasks"
               value={current.group}
               onChange={(event) =>
@@ -136,7 +137,7 @@ export default function SavedViews({
               {["none", "status", "priority"].map((value) => (
                 <option key={value}>{value}</option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Saved view name">
             <input

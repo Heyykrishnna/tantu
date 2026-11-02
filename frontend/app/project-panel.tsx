@@ -1,4 +1,6 @@
 "use client";
+import { Modal } from "../components/ui/modal";
+import { Select } from "@/components/ui/select";
 import { CandyButton } from "@/components/ui/candy-button";
 import ProjectTaskViews from "./project-task-views";
 import SavedViews from "./saved-views";
@@ -51,6 +53,7 @@ export default function ProjectPanel({
   const [mode, setMode] = useState<Mode>("list");
   const [filter, setFilter] = useState("all");
   const [message, setMessage] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const base = `/workspaces/${workspaceId}/projects`;
@@ -135,6 +138,7 @@ export default function ProjectPanel({
         });
       await load(detail?.project.id);
       if (action !== "update") form.reset();
+      if (action === "create") setCreateOpen(false);
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Could not save changes.",
@@ -171,13 +175,30 @@ export default function ProjectPanel({
       <Notice tone="error" role="alert">
         {message}
       </Notice>
-      <details className={`${panelClass} p-4`}>
-        <summary className="cursor-pointer text-[12px] font-medium">
+      <div className="flex justify-start">
+        <Button
+          variant="primary"
+          onClick={() => {
+            setMessage("");
+            setCreateOpen(true);
+          }}
+        >
           New project
-        </summary>
+        </Button>
+      </div>
+      <Modal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="New project"
+        description="Give your work a clear goal, visibility, and timeline."
+        busy={busy}
+      >
+        <Notice tone="error" role="alert">
+          {message}
+        </Notice>
         <form
           onSubmit={(event) => void submit(event, "create")}
-          className="mt-4 grid gap-3 sm:grid-cols-2"
+          className="grid gap-4 sm:grid-cols-2"
         >
           <Field label="Project title">
             <input
@@ -188,17 +209,17 @@ export default function ProjectPanel({
             />
           </Field>
           <Field label="Visibility">
-            <select
+            <Select
               aria-label="Visibility"
               name="visibility"
               className={inputClass}
             >
               <option value="private">Private</option>
               <option value="workspace">Workspace</option>
-            </select>
+            </Select>
           </Field>
           <Field label="Project status">
-            <select
+            <Select
               aria-label="Project status"
               name="state"
               className={inputClass}
@@ -208,7 +229,7 @@ export default function ProjectPanel({
                   <option key={state}>{state}</option>
                 ),
               )}
-            </select>
+            </Select>
           </Field>
           <Field label="Project deadline">
             <input name="deadline" type="date" className={inputClass} />
@@ -217,7 +238,7 @@ export default function ProjectPanel({
             Create project
           </Button>
         </form>
-      </details>
+      </Modal>
       <div className="grid items-start gap-5 xl:grid-cols-[240px_minmax(0,1fr)]">
         <aside className={`${panelClass} grid gap-2 p-3`} aria-label="Projects">
           {loading ? (
@@ -230,7 +251,9 @@ export default function ProjectPanel({
             </p>
           ) : (
             entries.items.map((item) => (
-              <CandyButton variant="ghost" size="unstyled"
+              <CandyButton
+                variant="ghost"
+                size="unstyled"
                 key={item.id}
                 onClick={() => void select(item.id)}
                 aria-pressed={detail?.project.id === item.id}
@@ -307,7 +330,7 @@ export default function ProjectPanel({
               ))}
               <label className="ml-auto flex items-center gap-2 text-[11px]">
                 Status
-                <select
+                <Select
                   value={filter}
                   onChange={(event) =>
                     setFilter(
@@ -319,7 +342,7 @@ export default function ProjectPanel({
                   <option value="all">All</option>
                   <option value="open">Open</option>
                   <option value="done">Done</option>
-                </select>
+                </Select>
               </label>
             </div>
             <SavedViews
@@ -387,7 +410,7 @@ export default function ProjectPanel({
                     />
                   </Field>
                   <Field label="Status">
-                    <select
+                    <Select
                       aria-label="Status"
                       name="state"
                       defaultValue={detail.project.state}
@@ -402,10 +425,10 @@ export default function ProjectPanel({
                       ].map((state) => (
                         <option key={state}>{state}</option>
                       ))}
-                    </select>
+                    </Select>
                   </Field>
                   <Field label="Visibility">
-                    <select
+                    <Select
                       aria-label="Visibility"
                       name="visibility"
                       defaultValue={detail.project.visibility}
@@ -413,7 +436,7 @@ export default function ProjectPanel({
                     >
                       <option value="private">Private</option>
                       <option value="workspace">Workspace</option>
-                    </select>
+                    </Select>
                   </Field>
                   <Field label="Deadline">
                     <input
@@ -432,7 +455,7 @@ export default function ProjectPanel({
                   className="mt-5 flex flex-wrap items-end gap-3"
                 >
                   <Field label="Existing task (first 50)">
-                    <select
+                    <Select
                       aria-label="Existing task (first 50)"
                       name="taskId"
                       required
@@ -446,7 +469,7 @@ export default function ProjectPanel({
                             {task.title}
                           </option>
                         ))}
-                    </select>
+                    </Select>
                   </Field>
                   <Button type="submit" disabled={busy}>
                     Link task
@@ -457,7 +480,7 @@ export default function ProjectPanel({
                   className="mt-5 flex flex-wrap items-end gap-3"
                 >
                   <Field label="Prerequisite">
-                    <select
+                    <Select
                       aria-label="Prerequisite"
                       name="prerequisiteId"
                       required
@@ -471,10 +494,10 @@ export default function ProjectPanel({
                             {task.title}
                           </option>
                         ))}
-                    </select>
+                    </Select>
                   </Field>
                   <Field label="Dependent task">
-                    <select
+                    <Select
                       aria-label="Dependent task"
                       name="dependentId"
                       required
@@ -488,7 +511,7 @@ export default function ProjectPanel({
                             {task.title}
                           </option>
                         ))}
-                    </select>
+                    </Select>
                   </Field>
                   <Button type="submit" disabled={busy}>
                     Add dependency

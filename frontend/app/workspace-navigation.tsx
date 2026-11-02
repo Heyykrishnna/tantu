@@ -1,3 +1,4 @@
+import { Select } from "@/components/ui/select";
 import Link from "next/link";
 import type { FormEvent } from "react";
 import { TreeView } from "../components/ui/file-tree";
@@ -67,11 +68,11 @@ export default function WorkspaceNavigation({
           <span className="mb-0.5 block text-[9px] font-semibold tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
             WORKSPACE
           </span>
-          <select
+          <Select
             aria-label="Switch workspace"
             value={workspaceId}
             onChange={(event) => onNavigate(view, event.target.value)}
-            className="w-full cursor-pointer appearance-none bg-transparent pr-5 text-[12px] font-medium text-zinc-900 outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:text-zinc-100 dark:scheme-dark"
+            className="min-h-0 w-full cursor-pointer appearance-none rounded-none border-0 bg-transparent p-0 pr-1 shadow-none text-[12px] font-medium text-zinc-900 outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:text-zinc-100 dark:scheme-dark"
           >
             <option value="" disabled>
               Select workspace
@@ -81,11 +82,7 @@ export default function WorkspaceNavigation({
                 {space.name}
               </option>
             ))}
-          </select>
-          <Icon
-            name="down"
-            className="pointer-events-none absolute right-3 top-6 size-3.5 text-zinc-400"
-          />
+          </Select>
         </label>
         <Button
           variant="ghost"

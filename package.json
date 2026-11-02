@@ -29,6 +29,11 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "test:tooling": "node --test tooling/minimatch-compat/test/*.test.mjs"
+    "test:tooling": "node --test tooling/minimatch-compat/test/*.test.mjs tooling/architecture/*.test.mjs",
+    "architecture:build": "node tooling/architecture/manage.mjs build",
+    "architecture:check": "node tooling/architecture/manage.mjs check",
+    "architecture:inventory": "node tooling/architecture/inventory.mjs",
+    "architecture:record-reviewed": "node tooling/architecture/manage.mjs record-reviewed",
+    "test:architecture": "node --test tooling/architecture/*.test.mjs"
   }
 }

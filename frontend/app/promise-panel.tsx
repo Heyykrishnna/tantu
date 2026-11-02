@@ -1,9 +1,16 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { LoadingState } from "../components/ui/loading-state";
-import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { Modal } from "../components/ui/modal";
+import {
+  promises as parsePromises,
+  promisePeople,
+  promiseResponse,
+} from "../lib/promises";
+import type { PromiseItem } from "../lib/promises";
 import { api } from "../lib/api";
 import { Icon } from "../components/icon";
 import {
@@ -15,26 +22,6 @@ import {
   mutedClass,
   panelClass,
 } from "../components/ui";
-
-export interface PromiseItem {
-  id: string;
-  workspaceId: string;
-  creatorId: string;
-  creatorName?: string;
-  responsibleId: string;
-  responsibleName?: string;
-  title: string;
-  agreedDate: string | null;
-  confirmationState: "inferred" | "confirmed";
-  status: "pending" | "fulfilled" | "broken";
-  sourceRecordId: string | null;
-  taskId: string | null;
-  taskTitle?: string | null;
-  notes: string;
-  version: number;
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface MemberOption {
   id: string;
@@ -81,47 +68,47 @@ export default function PromisePanel({
     if (statusFilter !== "all") params.set("status", statusFilter);
     const queryStr = params.toString() ? `?${params.toString()}` : "";
 
-    Promise.all([
-      api<{ promises: PromiseItem[] }>(
-        `/workspaces/${workspaceId}/promises${queryStr}`,
-        (v) => v as { promises: PromiseItem[] },
-        { signal: controller.signal },
-      ),
-      api<{ members: { user: { id: string; name: string } }[] }>(
-        `/workspaces/${workspaceId}/members`,
-        (v) => v as { members: { user: { id: string; name: string } }[] },
-        { signal: controller.signal },
-      ),
-    ])
-      .then(([resPromises, resMembers]) => {
-        setPromises(resPromises.promises);
-        const memberList = resMembers.members.map((m) => ({
-          id: m.user.id,
-          name: m.user.name,
-        }));
-        setMembers(memberList);
-        if (!newResponsibleId && memberList.length > 0) {
-          setNewResponsibleId(currentUserId || memberList[0]?.id || "");
-        }
-        setLoading(false);
+    api(`/workspaces/${workspaceId}/promises${queryStr}`, parsePromises, {
+      signal: controller.signal,
+    })
+      .then(setPromises)
+      .catch((err: unknown) => {
+        if (!controller.signal.aborted)
+          setError(
+            err instanceof Error ? err.message : "Failed to load promises.",
+          );
       })
-      .catch((err) => {
-        if (err instanceof Error && err.name === "AbortError") return;
-        setError(
-          err instanceof Error ? err.message : "Failed to load promises.",
-        );
-        setLoading(false);
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
-
     return () => controller.abort();
-  }, [
-    workspaceId,
-    stateFilter,
-    statusFilter,
-    dataVersion,
-    currentUserId,
-    newResponsibleId,
-  ]);
+  }, [workspaceId, stateFilter, statusFilter, dataVersion]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    api(`/workspaces/${workspaceId}/promises/people`, promisePeople, {
+      signal: controller.signal,
+    })
+      .then((people) => {
+        setMembers(people);
+        setNewResponsibleId((current) =>
+          people.some((person) => person.id === current)
+            ? current
+            : (people.find((person) => person.id === currentUserId)?.id ??
+              people[0]?.id ??
+              ""),
+        );
+      })
+      .catch((err: unknown) => {
+        if (!controller.signal.aborted)
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Responsible people are unavailable.",
+          );
+      });
+    return () => controller.abort();
+  }, [workspaceId, currentUserId]);
 
   const handleCreatePromise = async (e: FormEvent) => {
     e.preventDefault();
@@ -129,9 +116,9 @@ export default function PromisePanel({
     try {
       setBusy(true);
       setError("");
-      const res = await api<{ promise: PromiseItem }>(
+      const res = await api(
         `/workspaces/${workspaceId}/promises`,
-        (v) => v as { promise: PromiseItem },
+        promiseResponse,
         {
           method: "POST",
           csrf,
@@ -165,9 +152,9 @@ export default function PromisePanel({
       setBusy(true);
       setError("");
       const operationId = crypto.randomUUID();
-      const res = await api<{ promise: PromiseItem }>(
+      const res = await api(
         `/workspaces/${workspaceId}/promises/${promise.id}/confirm`,
-        (v) => v as { promise: PromiseItem },
+        promiseResponse,
         {
           method: "POST",
           csrf,
@@ -192,9 +179,9 @@ export default function PromisePanel({
     try {
       setBusy(true);
       setError("");
-      const res = await api<{ promise: PromiseItem }>(
+      const res = await api(
         `/workspaces/${workspaceId}/promises/${outcomeModal.id}`,
-        (v) => v as { promise: PromiseItem },
+        promiseResponse,
         {
           method: "PATCH",
           csrf,
@@ -235,7 +222,13 @@ export default function PromisePanel({
             confirmed.
           </p>
         </div>
-        <Button variant="primary" onClick={() => setModalOpen(true)}>
+        <Button
+          variant="primary"
+          onClick={() => {
+            setError("");
+            setModalOpen(true);
+          }}
+        >
           <Icon name="plus" className="size-4" />
           New Promise
         </Button>
@@ -249,7 +242,7 @@ export default function PromisePanel({
           <span className="text-[#677287] dark:text-[#8a8a93]">
             Confirmation:
           </span>
-          <select
+          <Select
             className={inputClass}
             value={stateFilter}
             onChange={(e) => setStateFilter(e.target.value)}
@@ -257,12 +250,12 @@ export default function PromisePanel({
             <option value="all">All States</option>
             <option value="confirmed">Confirmed</option>
             <option value="inferred">Inferred (Tentative)</option>
-          </select>
+          </Select>
         </div>
 
         <div className="flex items-center gap-2 text-xs">
           <span className="text-[#677287] dark:text-[#8a8a93]">Status:</span>
-          <select
+          <Select
             className={inputClass}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -271,7 +264,7 @@ export default function PromisePanel({
             <option value="pending">Pending</option>
             <option value="fulfilled">Fulfilled</option>
             <option value="broken">Broken</option>
-          </select>
+          </Select>
         </div>
       </div>
 
@@ -376,24 +369,17 @@ export default function PromisePanel({
       </section>
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <form
-            onSubmit={handleCreatePromise}
-            className={`${panelClass} max-h-[90vh] w-full max-w-md overflow-y-auto space-y-4 p-6 shadow-2xl`}
-          >
-            <div className="flex items-center justify-between border-b border-[#e3e6ef] pb-3 dark:border-[#2d2d31]">
-              <h3 className="text-sm font-semibold text-[#1e2025] dark:text-white">
-                Record Promise Commitment
-              </h3>
-              <CandyButton variant="ghost" size="unstyled"
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="text-[#677287] hover:text-black dark:hover:text-white"
-              >
-                <Icon name="close" className="size-4" />
-              </CandyButton>
-            </div>
-
+        <Modal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          title="Record Promise Commitment"
+          description="Record a clear commitment and the person responsible for it."
+          busy={busy}
+        >
+          <Notice tone="error" role="alert">
+            {error}
+          </Notice>
+          <form onSubmit={handleCreatePromise} className="space-y-4">
             <Field label="What is the commitment?">
               <input
                 type="text"
@@ -407,7 +393,7 @@ export default function PromisePanel({
             </Field>
 
             <Field label="Responsible Person">
-              <select
+              <Select
                 className={inputClass}
                 value={newResponsibleId}
                 onChange={(e) => setNewResponsibleId(e.target.value)}
@@ -418,7 +404,7 @@ export default function PromisePanel({
                     {m.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
 
             <Field label="Agreed Date">
@@ -450,51 +436,46 @@ export default function PromisePanel({
               <Button
                 type="submit"
                 variant="primary"
-                disabled={busy || !newTitle.trim()}
+                disabled={busy || !newTitle.trim() || !newResponsibleId}
               >
                 Create Promise
               </Button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
 
       {outcomeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <form
-            onSubmit={handleOutcomeSubmit}
-            className={`${panelClass} max-h-[90vh] w-full max-w-md overflow-y-auto space-y-4 p-6 shadow-2xl`}
-          >
-            <div className="flex items-center justify-between border-b border-[#e3e6ef] pb-3 dark:border-[#2d2d31]">
-              <h3 className="text-sm font-semibold text-[#1e2025] dark:text-white">
-                Review Promise Outcome
-              </h3>
-              <CandyButton variant="ghost" size="unstyled"
-                type="button"
-                onClick={() => setOutcomeModal(null)}
-                className="text-[#677287] hover:text-black dark:hover:text-white"
-              >
-                <Icon name="close" className="size-4" />
-              </CandyButton>
-            </div>
-
+        <Modal
+          open={Boolean(outcomeModal)}
+          onClose={() => setOutcomeModal(null)}
+          title="Review Promise Outcome"
+          description="Record the delivery outcome and any supporting context."
+          busy={busy}
+        >
+          <Notice tone="error" role="alert">
+            {error}
+          </Notice>
+          <form onSubmit={handleOutcomeSubmit} className="space-y-4">
             <p className="text-xs text-[#1e2025] dark:text-[#e4e4e7] font-medium">
               {outcomeModal.title}
             </p>
 
             <Field label="Outcome Result">
-              <select
+              <Select
                 className={inputClass}
                 value={outcomeStatus}
                 onChange={(e) =>
-                  setOutcomeStatus(e.target.value as "fulfilled" | "broken")
+                  setOutcomeStatus(
+                    e.target.value === "broken" ? "broken" : "fulfilled",
+                  )
                 }
               >
                 <option value="fulfilled">
                   Fulfilled (Delivered as agreed)
                 </option>
                 <option value="broken">Broken (Missed or not delivered)</option>
-              </select>
+              </Select>
             </Field>
 
             <Field label="Outcome Notes">
@@ -519,7 +500,7 @@ export default function PromisePanel({
               </Button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
     </div>
   );

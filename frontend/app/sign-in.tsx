@@ -2,8 +2,9 @@
 
 import { CandyButton } from "@/components/ui/candy-button";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { invitationAccepted, invitationDestination, invitationPreview, invitationToken, locationInvitation } from "../lib/invitations";
 import { api, record, string } from "../lib/api";
 import { Icon } from "../components/icon";
 import { Stepper } from "@/components/ui/stepper";
@@ -21,14 +22,22 @@ import {
 export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   const [invitation, setInvitation] = useState(() => {
     if (typeof window === "undefined") return "";
-    const search = new URLSearchParams(window.location.search);
-    return (
-      search.get("invite") ||
-      search.get("invitation") ||
-      search.get("token") ||
-      ""
-    );
+    return locationInvitation(window.location) ?? "";
   });
+  const [preview, setPreview] = useState<{ token: string; value: ReturnType<typeof invitationPreview> } | null>(null);
+  const [previewFailure, setPreviewFailure] = useState<{ token: string; message: string } | null>(null);
+  const token = invitationToken(invitation);
+  const invitationInfo = preview?.token === token ? preview.value : null;
+  useEffect(() => {
+    if (!token) return;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      api("/invitations/preview", invitationPreview, { method: "POST", body: { token }, signal: controller.signal })
+        .then(value => setPreview({ token, value }))
+        .catch((failure: unknown) => { if (!controller.signal.aborted) setPreviewFailure({ token, message: failure instanceof Error ? failure.message : "Invitation could not be loaded." }); });
+    }, 250);
+    return () => { clearTimeout(timeout); controller.abort(); };
+  }, [token]);
   const [mode, setMode] = useState<"signin" | "register" | "verify">("signin");
   const [pendingEmail, setPendingEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
@@ -62,14 +71,14 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     const data = new FormData(event.currentTarget);
     try {
       if (invitation) {
-        await api("/invitations/accept", record, {
-          method: "POST",
-          body: {
-            token: invitation,
-            name: String(data.get("name")),
-            password: String(data.get("password")),
-          },
+        if (!token || !invitationInfo) throw new Error("Paste a valid invitation link or token, and wait for its details to load.");
+        let csrf: string | undefined;
+        if (mode === "signin") csrf = await api("/auth/login", value => string(record(value).csrf), { method: "POST", body: { email: invitationInfo.email, password: String(data.get("password")) } });
+        const accepted = await api("/invitations/accept", invitationAccepted, {
+          method: "POST", ...(csrf ? { csrf } : {}),
+          body: { token, ...(mode === "register" ? { name: String(data.get("name")).trim(), password: String(data.get("password")) } : {}) },
         });
+        window.history.replaceState(null, "", invitationDestination(accepted.workspaceId));
         onSignedIn();
       } else if (mode === "register") {
         const emailVal = String(data.get("email")).toLowerCase().trim();
@@ -241,6 +250,10 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             />
           )}
 
+          {invitation && <div className="mb-4 grid gap-2">
+            {invitationInfo ? <Notice>Invitation to {invitationInfo.workspaceName} for {invitationInfo.email}. Your role will be {invitationInfo.role}.</Notice> : <Notice tone={previewFailure?.token === token ? "error" : "neutral"}>{previewFailure?.token === token ? previewFailure.message : token ? "Checking invitation…" : "Paste a complete invitation link or token."}</Notice>}
+            <Button variant="ghost" size="sm" onClick={() => { setInvitation(""); setMessage(""); window.history.replaceState(null, "", "/"); }}>Continue without invitation</Button>
+          </div>}
           <form onSubmit={submit} className="grid gap-4">
             {mode === "verify" ? (
               <>
@@ -280,7 +293,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
               </>
             ) : (
               <>
-                {(invitation || mode === "register") && (
+                {(mode === "register") && (
                   <Field label="Your name">
                     <input
                       name="name"
@@ -292,11 +305,14 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                     />
                   </Field>
                 )}
-                {!invitation && (
+                {(mode === "signin" || !invitation) && (
                   <Field label="Email address">
                     <input
+                      key={invitation ? token ?? "invitation" : "normal-signin"}
                       name="email"
                       type="email"
+                      defaultValue={invitationInfo?.email ?? ""}
+                      readOnly={Boolean(invitation)}
                       required
                       autoComplete="username"
                       maxLength={254}
@@ -310,15 +326,15 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                     name="password"
                     type="password"
                     required
-                    minLength={invitation || mode === "register" ? 12 : 1}
+                    minLength={mode === "register" ? 12 : 1}
                     autoComplete={
-                      invitation || mode === "register"
+                      mode === "register"
                         ? "new-password"
                         : "current-password"
                     }
                     maxLength={256}
                     placeholder={
-                      invitation || mode === "register"
+                      mode === "register"
                         ? "At least 12 characters"
                         : "Enter your password"
                     }
@@ -342,7 +358,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                     value={invitation}
                     onChange={(event) => setInvitation(event.target.value)}
                     autoComplete="off"
-                    maxLength={100}
+                    maxLength={2048}
                     placeholder="Have an invitation? Paste it here"
                     className={inputClass}
                   />
@@ -360,13 +376,13 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             <Button
               variant="primary"
               type="submit"
-              disabled={busy}
+              disabled={busy || Boolean(invitation && !invitationInfo)}
               className="mt-1 w-full"
             >
               {busy
                 ? "Please wait…"
                 : invitation
-                  ? "Create account & join"
+                  ? mode === "signin" ? "Sign in & accept invitation" : "Create account & join"
                   : mode === "verify"
                     ? "Verify & Create Workspace"
                     : mode === "register"
@@ -374,7 +390,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                       : "Sign in"}
               <Icon name="arrow" className="size-4" />
             </Button>
-            {!invitation && mode !== "verify" && (
+            {mode !== "verify" && (
               <div className="mt-2 text-center">
                 <CandyButton variant="ghost" size="unstyled"
                   type="button"
@@ -394,7 +410,7 @@ export default function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           </form>
           <div className="mt-6 border-t border-zinc-200 pt-5 dark:border-zinc-800">
             <p className={`text-[10px] leading-5 ${mutedClass}`}>
-              Already have an account? Sign in first, then accept the invitation
+              Use Sign in for an existing invited account, or Create one for a new invited account. Accept the invitation
               in Workspace settings. For a new installation, ask its operator to
               create the first account.
             </p>

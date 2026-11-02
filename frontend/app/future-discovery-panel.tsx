@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { CandyButton } from "@/components/ui/candy-button";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -516,7 +517,7 @@ export default function FutureDiscoveryPanel({
                 />
               </Field>
               <Field label="Record Type">
-                <select
+                <Select
                   value={targetType}
                   onChange={(e) =>
                     setTargetType(
@@ -533,7 +534,7 @@ export default function FutureDiscoveryPanel({
                   <option value="task">Task</option>
                   <option value="project">Project</option>
                   <option value="collection">Collection</option>
-                </select>
+                </Select>
               </Field>
               <Field label="Recipient Email">
                 <input
@@ -545,7 +546,7 @@ export default function FutureDiscoveryPanel({
                 />
               </Field>
               <Field label="Granted Access">
-                <select
+                <Select
                   value={accessLevel}
                   onChange={(e) =>
                     setAccessLevel(
@@ -558,7 +559,7 @@ export default function FutureDiscoveryPanel({
                   <option value="comment">Comment</option>
                   <option value="edit">Edit</option>
                   <option value="admin">Admin</option>
-                </select>
+                </Select>
               </Field>
             </div>
             <Button type="submit" disabled={busy}>
